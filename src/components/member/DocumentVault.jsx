@@ -8,17 +8,17 @@ export const DocumentVault = () => {
   const [selectedCategory, setSelectedCategory] = useState('Minden');
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  // New Doc Form
+  // New Doc Form (Admin only)
   const [newTitle, setNewTitle] = useState('');
   const [newCategory, setNewCategory] = useState('Közgyűlés');
   const [newAccess, setNewAccess] = useState('members');
   const [newDesc, setNewDesc] = useState('');
 
-  const categories = ['Minden', 'Alapszabály', 'Közgyűlés', 'Pénzügyek', 'Szabályzatok'];
+  const categories = ['Minden', 'Munkaterv', 'Alapszabály', 'Közgyűlés', 'Pénzügyek', 'Szabályzatok'];
 
   const filteredDocs = documents.filter(doc => {
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
+                          (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = selectedCategory === 'Minden' || doc.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -26,6 +26,10 @@ export const DocumentVault = () => {
   const handleCreateDocument = (e) => {
     e.preventDefault();
     if (!newTitle) return;
+    if (role !== 'admin') {
+      alert("Hiba: Csak egyesületi adminisztrátor tölthet fel hivatalos dokumentumot!");
+      return;
+    }
     addDocument({
       title: newTitle,
       category: newCategory,
@@ -37,6 +41,7 @@ export const DocumentVault = () => {
     setShowUploadModal(false);
     setNewTitle('');
     setNewDesc('');
+    alert("Dokumentum sikeresen rögzítve!");
   };
 
   return (
@@ -45,22 +50,33 @@ export const DocumentVault = () => {
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#E2D7C7] shadow-sm">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#63534B] uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#6B1D2F] uppercase tracking-wider mb-1">
             <ShieldCheck className="w-4 h-4 text-[#6B1D2F]" />
-            Hivatalos Belső Dokumentumtár
+            Hivatalos Egyesületi Irattár & Szabályzatok
           </div>
           <h2 className="font-serif text-2xl font-bold text-[#2C221E]">
-            Egyesületi Jegyzőkönyvek & Beszámolók
+            Dokumentumtár & Beszámolók
           </h2>
+          <p className="text-xs text-[#63534B] mt-0.5">
+            A hatályos Alapszabály, elnökségi munkatervek és jegyzőkönyvek megtekintése és letöltése.
+          </p>
         </div>
 
-        <button 
-          onClick={() => setShowUploadModal(true)}
-          className="btn-wine text-xs uppercase tracking-wider font-semibold self-start md:self-auto"
-        >
-          <Upload className="w-4 h-4" />
-          Dokumentum Feltöltése
-        </button>
+        {/* Upload Button - ONLY VISIBLE TO ADMIN */}
+        {role === 'admin' ? (
+          <button 
+            onClick={() => setShowUploadModal(true)}
+            className="btn-wine text-xs uppercase tracking-wider font-bold self-start md:self-auto"
+          >
+            <Upload className="w-4 h-4" />
+            Dokumentum Feltöltése (Admin)
+          </button>
+        ) : (
+          <div className="p-3 bg-[#FAF3E8] border border-[#E5D2B8] rounded-xl text-xs text-[#7A5B2E] font-semibold flex items-center gap-2">
+            <Lock className="w-4 h-4 text-[#6B1D2F]" />
+            <span>Dokumentum feltöltési jog: Kizárólag Adminisztrátornak</span>
+          </div>
+        )}
       </div>
 
       {/* Filter and Search Bar */}
@@ -108,7 +124,7 @@ export const DocumentVault = () => {
                 </span>
                 <span className="text-[0.65rem] font-medium text-[#63534B] flex items-center gap-1">
                   {doc.access_level === 'public' ? (
-                    <span className="text-green-7rem text-green-700 font-bold">Publikus</span>
+                    <span className="text-green-700 font-bold">Publikus Elérés</span>
                   ) : (
                     <span className="text-[#6B1D2F] font-bold flex items-center gap-1">
                       <Lock className="w-3 h-3" /> Csak Tagoknak
@@ -135,15 +151,13 @@ export const DocumentVault = () => {
                   onClick={() => alert(`Dokumentum megtekintése: ${doc.title}`)}
                   className="btn-wine-outline text-xs py-1 px-2.5"
                 >
-                  <Eye className="w-3.5 h-3.5" />
-                  Megtekintés
+                  <Eye className="w-3.5 h-3.5" /> Megtekintés
                 </button>
                 <button 
                   onClick={() => alert(`Letöltés elindult: ${doc.title}`)}
                   className="btn-wine text-xs py-1 px-2.5"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  Letöltés
+                  <Download className="w-3.5 h-3.5" /> Letöltés
                 </button>
               </div>
             </div>
@@ -151,12 +165,12 @@ export const DocumentVault = () => {
         ))}
       </div>
 
-      {/* Upload Modal */}
-      {showUploadModal && (
+      {/* Admin Upload Modal */}
+      {showUploadModal && role === 'admin' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#FAF6F0] rounded-2xl max-w-md w-full p-6 border-2 border-[#C5A880] shadow-2xl relative">
             <h3 className="font-serif text-xl font-bold text-[#2C221E] mb-4">
-              Új Egyesületi Dokumentum Feltöltése
+              Új Egyesületi Dokumentum Feltöltése (Admin)
             </h3>
 
             <form onSubmit={handleCreateDocument} className="space-y-4 text-xs">
@@ -179,6 +193,7 @@ export const DocumentVault = () => {
                   onChange={(e) => setNewCategory(e.target.value)}
                   className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
                 >
+                  <option value="Munkaterv">Munkaterv</option>
                   <option value="Közgyűlés">Közgyűlés</option>
                   <option value="Alapszabály">Alapszabály</option>
                   <option value="Pénzügyek">Pénzügyek</option>

@@ -3,25 +3,29 @@ import {
   INITIAL_NEWS_PROJECTS, 
   INITIAL_MEMBERS, 
   INITIAL_DOCUMENTS, 
-  INITIAL_DRIVE_FOLDERS 
+  INITIAL_DRIVE_FOLDERS,
+  INITIAL_WORKGROUPS 
 } from '../mock/initialData';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // Current user state (default: guest, can switch between guest, member [Jurisics Vár Hotel], and admin)
   const [currentUser, setCurrentUser] = useState(null);
-  const [role, setRole] = useState('guest'); // 'guest', 'member', 'admin'
-
-  // Application Data States (synced in memory / localStorage fallback)
-  const [newsProjects, setNewsProjects] = useState(() => {
-    const saved = localStorage.getItem('ktsze_news');
-    return saved ? JSON.parse(saved) : INITIAL_NEWS_PROJECTS;
-  });
+  const [role, setRole] = useState('guest'); // 'guest', 'member', 'patron', 'admin'
 
   const [members, setMembers] = useState(() => {
     const saved = localStorage.getItem('ktsze_members');
     return saved ? JSON.parse(saved) : INITIAL_MEMBERS;
+  });
+
+  const [workgroups, setWorkgroups] = useState(() => {
+    const saved = localStorage.getItem('ktsze_workgroups');
+    return saved ? JSON.parse(saved) : INITIAL_WORKGROUPS;
+  });
+
+  const [newsProjects, setNewsProjects] = useState(() => {
+    const saved = localStorage.getItem('ktsze_news');
+    return saved ? JSON.parse(saved) : INITIAL_NEWS_PROJECTS;
   });
 
   const [documents, setDocuments] = useState(() => {
@@ -34,14 +38,18 @@ export const AuthProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : INITIAL_DRIVE_FOLDERS;
   });
 
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem('ktsze_news', JSON.stringify(newsProjects));
-  }, [newsProjects]);
-
+  // Sync state to localStorage
   useEffect(() => {
     localStorage.setItem('ktsze_members', JSON.stringify(members));
   }, [members]);
+
+  useEffect(() => {
+    localStorage.setItem('ktsze_workgroups', JSON.stringify(workgroups));
+  }, [workgroups]);
+
+  useEffect(() => {
+    localStorage.setItem('ktsze_news', JSON.stringify(newsProjects));
+  }, [newsProjects]);
 
   useEffect(() => {
     localStorage.setItem('ktsze_documents', JSON.stringify(documents));
@@ -58,9 +66,13 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(adminUser);
       setRole('admin');
     } else if (selectedRole === 'member') {
-      const memberUser = members.find(m => m.role === 'member') || members[1];
+      const memberUser = members.find(m => m.role === 'member') || members[5];
       setCurrentUser(memberUser);
       setRole('member');
+    } else if (selectedRole === 'patron') {
+      const patronUser = members.find(m => m.role === 'patron') || members[6];
+      setCurrentUser(patronUser);
+      setRole('patron');
     } else {
       setCurrentUser(null);
       setRole('guest');
@@ -72,19 +84,72 @@ export const AuthProvider = ({ children }) => {
     setRole('guest');
   };
 
-  // Data Manipulation Handlers
-  const addNewsProject = (newItem) => {
-    const created = {
-      ...newItem,
-      id: `np-${Date.now()}`,
-      slug: newItem.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      date: new Date().toISOString().split('T')[0],
-      published_at: new Date().toISOString(),
-      is_published: true
+  // Member Registration (Supabase Auth / Local State)
+  const registerMember = (registrationData) => {
+    const isPatron = registrationData.member_category === 'Pártoló tag';
+    const newProfile = {
+      id: `m-${Date.now()}`,
+      account_email: registrationData.account_email,
+      private_email: registrationData.private_email || '',
+      full_name: registrationData.full_name,
+      home_address: registrationData.home_address || '',
+      phone: registrationData.phone,
+      member_category: registrationData.member_category || 'Rendes tag',
+      business_activity: registrationData.business_activity || 'szolgáltató',
+      service_location_name: registrationData.service_location_name || 'Szolgáltatás',
+      service_street: registrationData.service_street || '',
+      service_house_number: registrationData.service_house_number || '',
+      service_contacts: registrationData.service_contacts || registrationData.phone,
+      workgroups: registrationData.workgroups || ["Kőszeg virágzik"],
+      role: isPatron ? 'patron' : 'member',
+      joined_date: new Date().toISOString().split('T')[0],
+      dues_2026: { 
+        status: "pending", 
+        amount: isPatron ? 15000 : (registrationData.business_activity === 'szállásadó' || registrationData.business_activity === 'vendéglős' ? 36000 : 24000), 
+        paid_at: null 
+      }
     };
-    setNewsProjects(prev => [created, ...prev]);
+
+    setMembers(prev => [newProfile, ...prev]);
+    setCurrentUser(newProfile);
+    setRole(newProfile.role);
+    return newProfile;
   };
 
+  // Member Profile Update (Admin or Member editing)
+  const updateMemberProfile = (profileId, updatedData) => {
+    setMembers(prev => prev.map(m => m.id === profileId ? { ...m, ...updatedData } : m));
+    if (currentUser?.id === profileId) {
+      setCurrentUser(prev => ({ ...prev, ...updatedData }));
+    }
+  };
+
+  // Admin Workgroup Management (Create / Rename / Update)
+  const addWorkgroup = (newGroup) => {
+    const created = {
+      ...newGroup,
+      id: `wg-${Date.now()}`,
+      slug: newGroup.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      is_active: true,
+      members: newGroup.members || []
+    };
+    setWorkgroups(prev => [created, ...prev]);
+  };
+
+  const updateWorkgroup = (workgroupId, updatedData) => {
+    setWorkgroups(prev => prev.map(wg => {
+      if (wg.id === workgroupId) {
+        return {
+          ...wg,
+          ...updatedData,
+          slug: updatedData.name ? updatedData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : wg.slug
+        };
+      }
+      return wg;
+    }));
+  };
+
+  // Member Dues Status Update (Admin tool)
   const updateMemberDuesStatus = (memberId, status, paidAt = null) => {
     setMembers(prev => prev.map(member => {
       if (member.id === memberId) {
@@ -101,13 +166,31 @@ export const AuthProvider = ({ children }) => {
     }));
   };
 
+  // Document Management (ADMIN ONLY FOR UPLOAD)
   const addDocument = (newDoc) => {
+    if (role !== 'admin') {
+      alert("Hiba: Csak egyesületi adminisztrátor tölthet fel hivatalos dokumentumot!");
+      return;
+    }
     const doc = {
       ...newDoc,
       id: `doc-${Date.now()}`,
       uploaded_at: new Date().toISOString().split('T')[0]
     };
     setDocuments(prev => [doc, ...prev]);
+  };
+
+  // CMS News & Projects
+  const addNewsProject = (newItem) => {
+    const created = {
+      ...newItem,
+      id: `np-${Date.now()}`,
+      slug: newItem.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      date: new Date().toISOString().split('T')[0],
+      published_at: new Date().toISOString(),
+      is_published: true
+    };
+    setNewsProjects(prev => [created, ...prev]);
   };
 
   const addFileToDriveFolder = (folderId, fileName, fileSize) => {
@@ -135,10 +218,15 @@ export const AuthProvider = ({ children }) => {
       role,
       loginAs,
       logout,
-      newsProjects,
-      addNewsProject,
+      registerMember,
+      updateMemberProfile,
       members,
       updateMemberDuesStatus,
+      workgroups,
+      addWorkgroup,
+      updateWorkgroup,
+      newsProjects,
+      addNewsProject,
       documents,
       addDocument,
       driveFolders,

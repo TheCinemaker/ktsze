@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { MemberManagement } from '../components/admin/MemberManagement';
+import { WorkgroupAdmin } from '../components/admin/WorkgroupAdmin';
 import { NewsEditor } from '../components/admin/NewsEditor';
 import { AdminSettings } from '../components/admin/AdminSettings';
-import { Users, FileEdit, Database, ShieldAlert, LogOut, Crown } from 'lucide-react';
+import { Users, FileEdit, Database, ShieldAlert, LogOut, Crown, Flower2 } from 'lucide-react';
 
 export const AdminDashboardPage = ({ setActiveTab }) => {
   const { currentUser, logout } = useAuth();
@@ -42,10 +43,10 @@ export const AdminDashboardPage = ({ setActiveTab }) => {
         </div>
 
         {/* Sub Navigation */}
-        <div className="flex border-b border-[#E2D7C7] space-x-2">
+        <div className="flex flex-wrap border-b border-[#E2D7C7] gap-1">
           <button
             onClick={() => setActiveSubTab('members')}
-            className={`py-3 px-5 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
+            className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
               activeSubTab === 'members'
                 ? 'border-[#6B1D2F] text-[#6B1D2F]'
                 : 'border-transparent text-[#63534B] hover:text-[#2C221E]'
@@ -56,8 +57,20 @@ export const AdminDashboardPage = ({ setActiveTab }) => {
           </button>
 
           <button
+            onClick={() => setActiveSubTab('workgroups')}
+            className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
+              activeSubTab === 'workgroups'
+                ? 'border-[#6B1D2F] text-[#6B1D2F]'
+                : 'border-transparent text-[#63534B] hover:text-[#2C221E]'
+            }`}
+          >
+            <Flower2 className="w-4 h-4" />
+            Munkacsoportok Kezelése
+          </button>
+
+          <button
             onClick={() => setActiveSubTab('cms')}
-            className={`py-3 px-5 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
+            className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
               activeSubTab === 'cms'
                 ? 'border-[#6B1D2F] text-[#6B1D2F]'
                 : 'border-transparent text-[#63534B] hover:text-[#2C221E]'
@@ -69,7 +82,7 @@ export const AdminDashboardPage = ({ setActiveTab }) => {
 
           <button
             onClick={() => setActiveSubTab('settings')}
-            className={`py-3 px-5 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
+            className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
               activeSubTab === 'settings'
                 ? 'border-[#6B1D2F] text-[#6B1D2F]'
                 : 'border-transparent text-[#63534B] hover:text-[#2C221E]'
@@ -82,6 +95,7 @@ export const AdminDashboardPage = ({ setActiveTab }) => {
 
         {/* Tab Content */}
         {activeSubTab === 'members' && <MemberManagement />}
+        {activeSubTab === 'workgroups' && <WorkgroupAdmin />}
         {activeSubTab === 'cms' && <NewsEditor />}
         {activeSubTab === 'settings' && <AdminSettings />}
 
