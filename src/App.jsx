@@ -17,6 +17,8 @@ import { ContactPage } from './pages/ContactPage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { DiagnosticsPage } from './pages/DiagnosticsPage';
+import { WorkgroupsPage } from './pages/WorkgroupsPage';
+import { WorkgroupDetailPage } from './pages/WorkgroupDetailPage';
 
 // A zárt felületek külön csomagban töltődnek be. Egy látogatónak, aki csak a
 // nyilvános oldalakat nézi, nem kell letöltenie az elnökségi felület kódját.
@@ -49,6 +51,8 @@ export default function App() {
           {/* Publikus */}
           <Route path="/" element={<HomePage />} />
           <Route path="/egyesulet" element={<AboutPage />} />
+          <Route path="/munkacsoportok" element={<WorkgroupsPage />} />
+          <Route path="/munkacsoportok/:slug" element={<WorkgroupDetailPage />} />
           <Route path="/hirek" element={<NewsPage />} />
           <Route path="/hirek/:slug" element={<NewsDetailPage />} />
           <Route path="/dokumentumok" element={<DocumentsPage />} />

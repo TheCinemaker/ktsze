@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Users, Pencil, Wallet, Trash2, FileCheck2 } from 'lucide-react';
+import { Search, Users, Pencil, Wallet, Trash2, FileCheck2, Flower2 } from 'lucide-react';
 
 import {
   listMembers,
   listDues,
+  listWorkgroups,
+  listAllWorkgroupMemberships,
   updateMemberProfile,
   setMemberRoles,
   upsertDues,
@@ -267,6 +269,7 @@ export const MemberManagement = () => {
   const { can } = useAuth();
   const toast = useToast();
   const [query, setQuery] = useState('');
+  const [groupFilter, setGroupFilter] = useState('all');
   const [editing, setEditing] = useState(null);
   const [duesFor, setDuesFor] = useState(null);
   const [deleting, setDeleting] = useState(null);
@@ -274,19 +277,40 @@ export const MemberManagement = () => {
 
   const members = useAsyncData(listMembers);
   const dues = useAsyncData(() => listDues(), [], { enabled: can('dues.view'), initialData: [] });
+  const groups = useAsyncData(listWorkgroups, [], { initialData: [] });
+  const wgMemberships = useAsyncData(listAllWorkgroupMemberships, [], { initialData: [] });
 
   const list = useMemo(() => members.data || [], [members.data]);
   const duesList = dues.data || [];
 
+  // Kinek melyik munkacsoportja van (csak a jovahagyott tagsagok).
+  const groupsByProfile = useMemo(() => {
+    const map = new Map();
+    (wgMemberships.data || [])
+      .filter((m) => m.status === 'approved' && m.workgroups)
+      .forEach((m) => {
+        const current = map.get(m.profile_id) || [];
+        current.push(m.workgroups);
+        map.set(m.profile_id, current);
+      });
+    return map;
+  }, [wgMemberships.data]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((m) =>
-      [m.full_name, m.account_email, m.service_location_name, m.custom_title]
+    return list.filter((m) => {
+      if (groupFilter === 'none') {
+        if ((groupsByProfile.get(m.id) || []).length > 0) return false;
+      } else if (groupFilter !== 'all') {
+        const mine = groupsByProfile.get(m.id) || [];
+        if (!mine.some((g) => g.id === groupFilter)) return false;
+      }
+      if (!q) return true;
+      return [m.full_name, m.account_email, m.service_location_name, m.custom_title]
         .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(q))
-    );
-  }, [list, query]);
+        .some((value) => value.toLowerCase().includes(q));
+    });
+  }, [list, query, groupFilter, groupsByProfile]);
 
   const currentYear = new Date().getFullYear();
   const duesOf = (memberId) => duesList.find((d) => d.profile_id === memberId && d.year === currentYear);
@@ -325,9 +349,29 @@ export const MemberManagement = () => {
             className="input pl-9"
           />
         </div>
-        <p className="text-sm text-ink-500">
-          {filtered.length} / {list.length} tag
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <label htmlFor="member-group-filter" className="text-sm text-ink-600">
+            Munkacsoport:
+          </label>
+          <select
+            id="member-group-filter"
+            value={groupFilter}
+            onChange={(e) => setGroupFilter(e.target.value)}
+            className="input w-auto py-1.5 text-sm"
+          >
+            <option value="all">Mindegyik</option>
+            <option value="none">Nincs csoportja</option>
+            {(groups.data || []).map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+
+          <p className="text-sm text-ink-500">
+            {filtered.length} / {list.length} tag
+          </p>
+        </div>
       </div>
 
       {list.length === 0 ? (
@@ -340,7 +384,7 @@ export const MemberManagement = () => {
         <EmptyState icon={Search} title="Nincs találat" description="Próbálj más keresőszót." />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-sand-400 bg-white">
-          <table className="w-full min-w-[52rem] border-collapse text-sm">
+          <table className="w-full min-w-[64rem] border-collapse text-sm">
             <caption className="sr-only">Tagnyilvántartás</caption>
             <thead className="bg-sand-50">
               <tr className="border-b border-sand-400 text-left">
@@ -352,6 +396,9 @@ export const MemberManagement = () => {
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium text-ink-600">
                   Jogosultság
+                </th>
+                <th scope="col" className="px-4 py-3 font-medium text-ink-600">
+                  Munkacsoportok
                 </th>
                 {can('dues.view') && (
                   <th scope="col" className="px-4 py-3 font-medium text-ink-600">
@@ -388,6 +435,21 @@ export const MemberManagement = () => {
                           {memberRoles.map((role) => (
                             <span key={role} className="badge-neutral">
                               {ROLE_LABELS[role] || role}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {(groupsByProfile.get(member.id) || []).length === 0 ? (
+                        <span className="text-xs text-ink-400">—</span>
+                      ) : (
+                        <span className="flex flex-wrap gap-1">
+                          {(groupsByProfile.get(member.id) || []).map((g) => (
+                            <span key={g.id} className="badge-wine">
+                              <Flower2 className="h-3 w-3" aria-hidden="true" />
+                              {g.name}
                             </span>
                           ))}
                         </span>

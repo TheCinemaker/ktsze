@@ -220,6 +220,101 @@ export const deleteWorkgroup = async (id) => {
   return true;
 };
 
+export const getWorkgroupBySlug = async (slug) =>
+  unwrap(await supabase.from('workgroups').select('*').eq('slug', slug).maybeSingle());
+
+// -----------------------------------------------------------------------------
+//  Munkacsoport-tagság
+//
+//  A jelentkezés jóváhagyásos: a felhasználó csak 'pending' állapotú sort tud
+//  létrehozni magának (ezt az RLS is kikényszeríti), a jóváhagyás a csoport
+//  vezetőjének vagy az elnökségnek a dolga.
+// -----------------------------------------------------------------------------
+
+/**
+ * Nyilvános taglétszámok. Nevet NEM ad vissza — az személyes adat.
+ * @returns {Promise<Record<string, {approved: number, pending: number}>>}
+ */
+export const getWorkgroupStats = async () => {
+  const rows = unwrap(await supabase.rpc('workgroup_stats')) || [];
+  return rows.reduce((acc, row) => {
+    acc[row.workgroup_id] = {
+      approved: Number(row.approved_count) || 0,
+      pending: Number(row.pending_count) || 0
+    };
+    return acc;
+  }, {});
+};
+
+/** A belépett felhasználó saját csoporttagságai és jelentkezései. */
+export const listMyWorkgroupMemberships = async (profileId) =>
+  unwrap(
+    await supabase
+      .from('workgroup_members')
+      .select('*, workgroups(id, name, slug, description, leader_name)')
+      .eq('profile_id', profileId)
+      .order('requested_at', { ascending: false })
+  ) || [];
+
+/** Jelentkezés egy munkacsoportba. */
+export const requestJoinWorkgroup = async (workgroupId, profileId, message = '') =>
+  unwrap(
+    await supabase
+      .from('workgroup_members')
+      .insert({
+        workgroup_id: workgroupId,
+        profile_id: profileId,
+        status: 'pending',
+        message: message?.trim() || null
+      })
+      .select()
+      .single()
+  );
+
+/** Jelentkezés visszavonása vagy kilépés a csoportból. */
+export const leaveWorkgroup = async (membershipId) => {
+  unwrap(await supabase.from('workgroup_members').delete().eq('id', membershipId));
+  return true;
+};
+
+/**
+ * Minden jelentkezés és tagság — elnökségi nézet.
+ * A profil adatait is hozza, hogy a listában név szerint lehessen látni.
+ */
+export const listAllWorkgroupMemberships = async () =>
+  unwrap(
+    await supabase
+      .from('workgroup_members')
+      .select(
+        '*, workgroups(id, name, slug), profiles(id, full_name, account_email, phone, service_location_name)'
+      )
+      .order('requested_at', { ascending: false })
+  ) || [];
+
+/** Jóváhagyás vagy elutasítás. A döntés időpontját trigger írja be. */
+export const decideWorkgroupMembership = async (membershipId, status, note = '') =>
+  unwrap(
+    await supabase
+      .from('workgroup_members')
+      .update({ status, decision_note: note?.trim() || null })
+      .eq('id', membershipId)
+      .select()
+      .single()
+  );
+
+/** Elnökségi felvitel: a tagot közvetlenül beteszi a csoportba. */
+export const addWorkgroupMemberDirectly = async (workgroupId, profileId) =>
+  unwrap(
+    await supabase
+      .from('workgroup_members')
+      .upsert(
+        { workgroup_id: workgroupId, profile_id: profileId, status: 'approved' },
+        { onConflict: 'workgroup_id,profile_id' }
+      )
+      .select()
+      .single()
+  );
+
 // -----------------------------------------------------------------------------
 //  Hírek és projektek
 // -----------------------------------------------------------------------------

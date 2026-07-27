@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Users, Flower2, Newspaper, FileText, Wallet, Settings } from 'lucide-react';
+import { Users, Flower2, Newspaper, FileText, Wallet, Settings, UserPlus } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import { PageHeader } from '../components/ui';
 
 import { MemberManagement } from '../components/admin/MemberManagement';
 import { WorkgroupAdmin } from '../components/admin/WorkgroupAdmin';
+import { WorkgroupApplications } from '../components/admin/WorkgroupApplications';
 import { NewsEditor } from '../components/admin/NewsEditor';
 import { DocumentAdmin } from '../components/admin/DocumentAdmin';
 import { DuesRatesAdmin } from '../components/admin/DuesRatesAdmin';
@@ -23,6 +24,7 @@ const ALL_TABS = [
   { id: 'members', label: 'Tagnyilvántartás', icon: Users, permission: 'members.view', Component: MemberManagement },
   { id: 'news', label: 'Hírek', icon: Newspaper, permission: 'news.manage', Component: NewsEditor },
   { id: 'workgroups', label: 'Munkacsoportok', icon: Flower2, permission: 'workgroups.manage', Component: WorkgroupAdmin },
+  { id: 'applications', label: 'Jelentkezések', icon: UserPlus, permission: 'workgroups.decide', Component: WorkgroupApplications },
   { id: 'documents', label: 'Dokumentumok', icon: FileText, permission: 'documents.manage', Component: DocumentAdmin },
   { id: 'dues', label: 'Tagdíjtételek', icon: Wallet, permission: 'duesRates.manage', Component: DuesRatesAdmin },
   { id: 'settings', label: 'Beállítások', icon: Settings, permission: 'settings.view', Component: AdminSettings }

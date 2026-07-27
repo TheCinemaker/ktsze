@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Users, Flower2 } from 'lucide-react';
 
 import { ORGANIZATION, formattedAddress } from '../config/organization';
@@ -56,6 +57,9 @@ export const AboutPage = () => {
             <p className="eyebrow">Szakmai munka</p>
             <h2 className="mt-2 font-display text-2xl text-ink-900">Munkacsoportok</h2>
           </div>
+          <Link to="/munkacsoportok" className="btn-secondary btn-sm">
+            Csatlakozási lehetőségek
+          </Link>
         </div>
 
         <div className="mt-6">
@@ -75,7 +79,14 @@ export const AboutPage = () => {
               {active.map((group) => (
                 <article key={group.id} className="card p-6">
                   <Users className="mb-3 h-5 w-5 text-wine-600" aria-hidden="true" />
-                  <h3 className="font-display text-lg text-ink-900">{group.name}</h3>
+                  <h3 className="font-display text-lg text-ink-900">
+                    <Link
+                      to={`/munkacsoportok/${group.slug}`}
+                      className="rounded transition-colors hover:text-wine-600"
+                    >
+                      {group.name}
+                    </Link>
+                  </h3>
 
                   {group.leader_name && (
                     <p className="mt-1 text-xs font-medium uppercase tracking-wide text-wine-600">

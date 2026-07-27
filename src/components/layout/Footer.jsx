@@ -9,6 +9,7 @@ import { ORGANIZATION, formattedAddress, socialLinks } from '../../config/organi
 
 const NAV = [
   { to: '/egyesulet', label: 'Egyesületünk' },
+  { to: '/munkacsoportok', label: 'Munkacsoportok' },
   { to: '/hirek', label: 'Hírek' },
   { to: '/dokumentumok', label: 'Dokumentumok' },
   { to: '/tagsag', label: 'Tagság' },

@@ -58,6 +58,14 @@ const PERMISSIONS = {
   'workgroups.manage': EDITORS,
   'documents.manage': EDITORS,
 
+  // Munkacsoport-jelentkezések elbírálása             -> can_decide_workgroup()
+  //
+  // FONTOS: az adatbázisban a csoport VEZETŐJE is elbírálhat, akkor is, ha
+  // egyébként csak sima tag. Ezt a kliens nem tudja előre eldönteni (a
+  // vezetőség csoportonként változik), ezért itt a szerkesztői kör szerepel,
+  // és a tényleges engedélyt a can_decide_workgroup() adja meg soronként.
+  'workgroups.decide': EDITORS,
+
   // Belső dokumentumok elnökségi szintje              -> is_board()
   'documents.viewBoard': STAFF,
 

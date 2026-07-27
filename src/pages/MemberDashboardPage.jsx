@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { CreditCard, FileText, UserCog } from 'lucide-react';
+import { CreditCard, FileText, UserCog, Flower2 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import { MembershipDues } from '../components/member/MembershipDues';
 import { DocumentVault } from '../components/member/DocumentVault';
 import { ProfileForm } from '../components/member/ProfileForm';
+import { MyWorkgroups } from '../components/member/MyWorkgroups';
 import { PageHeader, LoadingBlock } from '../components/ui';
 
 /*
@@ -17,6 +18,7 @@ import { PageHeader, LoadingBlock } from '../components/ui';
 
 const TABS = [
   { id: 'dues', label: 'Tagdíj', icon: CreditCard },
+  { id: 'workgroups', label: 'Munkacsoportjaim', icon: Flower2 },
   { id: 'documents', label: 'Dokumentumok', icon: FileText },
   { id: 'profile', label: 'Adatlapom', icon: UserCog }
 ];
@@ -80,6 +82,7 @@ export const MemberDashboardPage = () => {
 
           <div id={`panel-${active}`} role="tabpanel" aria-labelledby={`tab-${active}`}>
             {active === 'dues' && <MembershipDues />}
+            {active === 'workgroups' && <MyWorkgroups />}
             {active === 'documents' && <DocumentVault />}
             {active === 'profile' && <ProfileForm />}
           </div>

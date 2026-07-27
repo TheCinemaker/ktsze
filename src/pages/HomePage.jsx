@@ -143,15 +143,31 @@ const Workgroups = () => {
   return (
     <section className="section border-t border-sand-400">
       <div className="container-page space-y-8">
-        <div>
-          <p className="eyebrow">Szakmai munka</p>
-          <h2 className="mt-2 font-display text-3xl text-ink-900">Munkacsoportok</h2>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow">Szakmai munka</p>
+            <h2 className="mt-2 font-display text-3xl text-ink-900">Munkacsoportok</h2>
+            <p className="mt-2 max-w-prose text-base text-ink-600">
+              Az egyesület munkája munkacsoportokban zajlik, és bárki jelentkezhet, aki részt vállalna.
+            </p>
+          </div>
+          <Link to="/munkacsoportok" className="btn-primary btn-sm">
+            Csatlakozás
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {active.map((group) => (
             <article key={group.id} className="card p-6">
-              <h3 className="font-display text-lg text-ink-900">{group.name}</h3>
+              <h3 className="font-display text-lg text-ink-900">
+                <Link
+                  to={`/munkacsoportok/${group.slug}`}
+                  className="rounded transition-colors hover:text-wine-600"
+                >
+                  {group.name}
+                </Link>
+              </h3>
               {group.leader_name && (
                 <p className="mt-1 text-xs font-medium uppercase tracking-wide text-wine-600">
                   Vezető: {group.leader_name}
