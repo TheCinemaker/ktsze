@@ -5,8 +5,8 @@ export const HeaderLogo = ({ variant = 'full', className = '' }) => {
     <div className={`flex items-center gap-3 select-none ${className}`}>
       {/* Redesigned 2026 Elegant Emblem SVG */}
       <svg 
-        width="46" 
-        height="46" 
+        width="44" 
+        height="44" 
         viewBox="0 0 100 100" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
@@ -43,24 +43,23 @@ export const HeaderLogo = ({ variant = 'full', className = '' }) => {
         />
       </svg>
 
-      {/* Typography */}
+      {/* Typography - 100% Formal Sans Serif */}
       {variant === 'full' && (
         <div className="flex flex-col text-left">
           <span 
-            className="font-serif text-xl tracking-wider font-bold leading-none" 
+            className="font-bold text-lg tracking-wider uppercase leading-none font-sans" 
             style={{ color: '#6B1D2F' }}
           >
             KŐSZEGI
           </span>
           <span 
-            className="text-[0.68rem] tracking-[0.18em] uppercase font-semibold mt-1" 
-            style={{ color: '#2C221E' }}
+            className="text-[0.65rem] tracking-[0.18em] uppercase font-bold mt-1 text-[#2C221E]"
           >
             Turisztikai Szövetség
           </span>
           <div className="flex items-center gap-1.5 mt-0.5">
             <span className="h-[1px] w-3 bg-[#C5A880]"></span>
-            <span className="text-[0.58rem] tracking-[0.2em] uppercase font-medium text-[#63534B]">
+            <span className="text-[0.58rem] tracking-[0.2em] uppercase font-semibold text-[#63534B]">
               Egyesület
             </span>
             <span className="h-[1px] w-3 bg-[#C5A880]"></span>
