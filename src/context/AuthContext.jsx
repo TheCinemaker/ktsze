@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : INITIAL_DRIVE_FOLDERS;
   });
 
-  // Sync profiles from Supabase DB if live
+  // Sync profiles and workgroups from Supabase DB if live
   useEffect(() => {
     if (isSupabaseConfigured()) {
       supabase.from('profiles').select('*').then(({ data, error }) => {
@@ -95,6 +95,16 @@ export const AuthProvider = ({ children }) => {
           })));
         }
       }).catch(err => console.warn('Supabase fetch error:', err));
+
+      supabase.from('workgroups').select('*').then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setWorkgroups(data.map(w => ({
+            ...w,
+            leader_name: w.leader_name || '',
+            description: w.description || ''
+          })));
+        }
+      }).catch(err => console.warn('Supabase workgroups fetch error:', err));
     }
   }, []);
 
@@ -294,26 +304,47 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Admin Workgroup Management (Create / Rename / Update)
+  // Admin Workgroup Management (Create / Rename / Update with Supabase sync)
   const addWorkgroup = (newGroup) => {
+    const slug = (newGroup.name || 'munkacsoport').toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const created = {
       ...newGroup,
       id: `wg-${Date.now()}`,
-      slug: newGroup.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      slug,
       is_active: true,
       members: newGroup.members || []
     };
     setWorkgroups(prev => [created, ...prev]);
+
+    if (isSupabaseConfigured()) {
+      supabase.from('workgroups').upsert({
+        name: newGroup.name,
+        slug,
+        leader_name: newGroup.leader_name || newGroup.leader || '',
+        description: newGroup.description || newGroup.desc || '',
+        is_active: true
+      }, { onConflict: 'slug' }).then(({ error }) => {
+        if (error) console.error('Supabase workgroup insert error:', error);
+      }).catch(err => console.error('Supabase workgroup insert exception:', err));
+    }
   };
 
   const updateWorkgroup = (workgroupId, updatedData) => {
     setWorkgroups(prev => prev.map(wg => {
       if (wg.id === workgroupId) {
-        return {
+        const updated = {
           ...wg,
           ...updatedData,
           slug: updatedData.name ? updatedData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : wg.slug
         };
+        if (isSupabaseConfigured()) {
+          supabase.from('workgroups').update({
+            name: updated.name,
+            leader_name: updated.leader_name || '',
+            description: updated.description || ''
+          }).eq('slug', updated.slug).catch(() => {});
+        }
+        return updated;
       }
       return wg;
     }));
@@ -323,7 +354,7 @@ export const AuthProvider = ({ children }) => {
   const updateMemberDuesStatus = (memberId, status, paidAt = null) => {
     setMembers(prev => prev.map(member => {
       if (member.id === memberId) {
-        return {
+        const updated = {
           ...member,
           dues_2026: {
             ...member.dues_2026,
@@ -331,12 +362,14 @@ export const AuthProvider = ({ children }) => {
             paid_at: status === 'paid' ? (paidAt || new Date().toISOString().split('T')[0]) : null
           }
         };
+        syncProfileToSupabase(updated);
+        return updated;
       }
       return member;
     }));
   };
 
-  // Document Management (ADMIN ONLY FOR UPLOAD)
+  // Document Management (ADMIN ONLY FOR UPLOAD with Supabase sync)
   const addDocument = (newDoc) => {
     if (role !== 'admin') {
       alert("Hiba: Csak egyesületi adminisztrátor tölthet fel hivatalos dokumentumot!");
@@ -348,6 +381,18 @@ export const AuthProvider = ({ children }) => {
       uploaded_at: new Date().toISOString().split('T')[0]
     };
     setDocuments(prev => [doc, ...prev]);
+
+    if (isSupabaseConfigured()) {
+      supabase.from('documents').insert({
+        title: newDoc.title,
+        slug: (newDoc.title || 'dokumentum').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        category: newDoc.category || 'Általános',
+        access_level: newDoc.access_level || 'public',
+        file_size: newDoc.file_size || '1.2 MB',
+        file_type: newDoc.file_type || 'PDF',
+        description: newDoc.description || ''
+      }).catch(err => console.error('Supabase document insert error:', err));
+    }
   };
 
   // CMS News & Projects

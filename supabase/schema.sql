@@ -104,5 +104,16 @@ CREATE POLICY "Public read workgroups" ON workgroups FOR SELECT USING (true);
 CREATE POLICY "Public read public documents" ON documents FOR SELECT USING (access_level = 'public');
 CREATE POLICY "Members read internal documents" ON documents FOR SELECT USING (true);
 CREATE POLICY "Profiles read own or public profile" ON profiles FOR SELECT USING (true);
+
 CREATE POLICY "Public insert profiles" ON profiles FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public update profiles" ON profiles FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Public insert workgroups" ON workgroups;
+DROP POLICY IF EXISTS "Public update workgroups" ON workgroups;
+CREATE POLICY "Public insert workgroups" ON workgroups FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update workgroups" ON workgroups FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Public insert documents" ON documents;
+DROP POLICY IF EXISTS "Public update documents" ON documents;
+CREATE POLICY "Public insert documents" ON documents FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update documents" ON documents FOR UPDATE USING (true);
