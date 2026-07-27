@@ -1,7 +1,15 @@
 # Kőszegi Turisztikai Szövetség Egyesület — Részletes Projektnapló & Költségbecslés
 
 **Készült**: 2026. július 27.  
-**Szerző**: KTSZE Digitális Munkacsoport / "Digitalizáljuk Kőszeget" Elnökségi Kezdeményezés  
+**Szerző**: Avar Szilveszter Alelnök (SA Software) — „Digitális Kőszegért” Elnökségi Munkacsoport Felelőse  
+**Hivatalos Elnökségi Struktúra (2026)**:
+- **Drescher Gábor** — Elnök (Kőszegi Turisztikai Szövetség Egyesület)
+- **Szalók Adrienn** — Alelnök asszony („Kőszeg virágzik” városszépítő munkacsoport)
+- **Farkas Péter** — Alelnök (Ibrahim Boutique Hotel)
+- **Vörös Róbert** — Alelnök (Portré Étterem és Panzió)
+- **Avar Szilveszter** — Alelnök (SA Software — „Digitális Kőszegért” munkacsoport felelőse)
+- **Szekér Zoltán** — Turisztikai Menedzser (Jurisics-vár Művelődési Központ & Várszínház)
+
 **Alapul vett fejlesztői óradíj**: **13 000 Ft / óra**
 
 ---
@@ -25,10 +33,10 @@ Elkészült a Kőszegi Turisztikai Szövetség Egyesület teljesen új, 2026-os 
 |---|---|---|---|
 | **1.** | **Architektúra & Tervezés** | Vite 8 + React 18 projekt felépítése, Tailwind CSS v3 konfiguráció, egyedi szín- és betűkészlet tokenek rögzítése, mappastruktúra kialakítása. | **8 óra** |
 | **2.** | **Design System & Layout** | Reszponzív fejléc (Navbar), lábléc (Footer), mobil drawer menü, szerepkör-váltó dropdown (Látogató / Tag / Admin), SVG logó és egyedi gombstílusok. | **12 óra** |
-| **3.** | **Publikus Tájékoztató Portál** | Főoldal Hero szekció, Egyesületről oldal, Dresden Gábor elnöki köszöntő, Szekér Zoltán turisztikai akcióterv, hírek & fejlesztések kártyarács kategóriaszűréssel és részletes felugró modallal, kapcsolat oldal üzenetküldő űrlappal. | **18 óra** |
-| **4.** | **„Kőszeg virágzik” Munkacsoport Modul** | Örökbefogadható főtéri kaspók és virágládák programjának bemutatása, interaktív online jelentkezési modal űrlap a vállalkozók és lakosok részére. | **6 óra** |
+| **3.** | **Publikus Tájékoztató Portál** | Főoldal Hero szekció, Egyesületről oldal, Drescher Gábor elnöki köszöntő, a teljes 5 fős Elnökség (Drescher Gábor, Szalók Adrienn, Farkas Péter, Vörös Róbert, Avar Szilveszter) bemutatása, Szekér Zoltán turisztikai akcióterv, hírek & fejlesztések kártyarács. | **18 óra** |
+| **4.** | **„Kőszeg virágzik” Munkacsoport Modul** | Örökbefogadható főtéri kaspók és virágládák programjának bemutatása Szalók Adrienn alelnök vezetésével, interaktív online jelentkezési modal űrlap a vállalkozók és lakosok részére. | **6 óra** |
 | **5.** | **Tagi Portál (Zárt Felület)** | AuthContext állapotkezelő, Tagdíj-nyilvántartó felület (OTP banki átutalási adatok, közlemény generáló, befizetési bizonylat feltöltő modul), Belső dokumentumtár keresővel és kategória szűrővel. | **16 óra** |
-| **6.** | **Google Drive Felhő Integráció** | Kétirányú Google Drive fájl- és mappaszinkronizációs felület (`2026_Koszeg_Viragzik`, `Polgarmesteri_Egyeztetes_2026`, `Fototarak`), állományok listázása, megnyitása és feltöltés szimulációja. | **12 óra** |
+| **6.** | **Google Drive Felhő Integráció** | Kétirányú Google Drive fájl- és mappaszinkronizációs felület (`2026_Digitalis_Koszeg`, `2026_Koszeg_Viragzik`, `Elnokseg_Es_Polgarmesteri_Egyeztetes`), állományok listázása, megnyitása és feltöltés szimulációja. | **12 óra** |
 | **7.** | **Adminisztrációs Kezelőfelület** | Tagnyilvántartó és tagdíj státusz jóváhagyó modul (`Rendezett` / `Függőben`), Hírek & Projektek CMS tartalomkezelő, Supabase adatbázis & Drive integrációs beállítások. | **14 óra** |
 | **8.** | **Backend SQL Schema & RLS** | PostgreSQL adatbázis struktúra megtervezése (`profiles`, `membership_dues`, `news_projects`, `documents`, `drive_folders`) és Row Level Security szabályok írása (`supabase/schema.sql`). | **8 óra** |
 | **9.** | **Hiteles Adatintegráció** | Drescher Gábor elnöki tájékoztatójának, a Básthy Béla polgármesteri tárgyalás eredményeinek és a 12 oldalas *„Bővített Programfüzet 2026”* teljes cselekvési tervének struktúrált beépítése. | **6 óra** |
@@ -40,7 +48,7 @@ Elkészült a Kőszegi Turisztikai Szövetség Egyesület teljesen új, 2026-os 
 ## 💰 3. Költségbecslés (Hagyományos Szoftverfejlesztési Árazással)
 
 - **Becsült fejlesztői munkaidő**: **104 óra**
-- **Alapul vett óradíj**: **13 000 Ft / óra**
+- **Alapul vett óradíj**: **13 000 Ft / óra** (SA Software)
 
 ### 📊 Teljes Piaci Fejlesztési Érték:
 $$104 \text{ óra} \times 13\ 000 \text{ Ft/óra} = \mathbf{1\ 352\ 000 \text{ Ft}} + \text{ÁFA}$$
@@ -51,6 +59,6 @@ $$104 \text{ óra} \times 13\ 000 \text{ Ft/óra} = \mathbf{1\ 352\ 000 \text{ F
 
 ## 🎯 4. Az AI Agentic Fejlesztés Előnyei a KTSZE Számára
 
-1. **Rendkívüli Időmegtakarítás**: Az 104 órás hagyományos fejlesztési folyamat helyett a teljes rendszer **mindössze 2 óra alatt** elkészült és élesítésre került a GitHub/Netlify infrastruktúrában.
-2. **Költséghatékonyság**: Az Egyesület több mint **1,3 millió forintos fejlesztési költséget takarított meg**, miközben egy élesíthető, 2026-os prémium színvonalú digitális portált kapott a holnapi elnökségi ülésre.
-3. **Azonnali Rugalmasság**: A Drescher Gábor elnök úr által küldött e-mail és a 12 oldalas programfüzet adatai percek alatt élő, interaktív felületté váltak.
+1. **Rendkívüli Időmegtakarítás**: Az 104 órás hagyományos fejlesztési folyamat helyett a teljes rendszer mindössze 2 óra alatt elkészült és élesítésre került a GitHub/Netlify infrastruktúrában.
+2. **Költséghatékonyság**: Az Egyesület több mint **1,35 millió forintos fejlesztési költséget takarított meg**, miközben egy élesíthető, 2026-os prémium színvonalú digitális portált kapott a holnapi elnökségi ülésre.
+3. **Azonnali Rugalmasság**: Drescher Gábor elnök úr tájékoztatója és a 12 oldalas programfüzet adatai percek alatt élő, interaktív felületté váltak.
