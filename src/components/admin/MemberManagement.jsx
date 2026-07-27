@@ -49,6 +49,7 @@ const rolesOf = (member) => (Array.isArray(member.user_roles) ? member.user_role
 
 const EditMemberModal = ({ member, open, onClose, onSaved }) => {
   const { roles: actorRoles, profile: actor } = useAuth();
+  const isSelf = actor?.id === member.id;
   const toast = useToast();
 
   const [form, setForm] = useState({
@@ -74,7 +75,7 @@ const EditMemberModal = ({ member, open, onClose, onSaved }) => {
     try {
       await updateMemberProfile(member.id, form);
       if (canManageRoles) {
-        await setMemberRoles(member.id, selectedRoles, actor?.id || null);
+        await setMemberRoles(member.id, selectedRoles);
       }
       toast.success('A tag adatait elmentettük.');
       await onSaved();
@@ -146,6 +147,13 @@ const EditMemberModal = ({ member, open, onClose, onSaved }) => {
                 />
               ))}
             </div>
+            {isSelf && (
+              <p className="mt-3 rounded-lg border border-caution-300 bg-caution-50 p-2.5 text-xs text-ink-800">
+                A saját adatlapodat szerkeszted. Az utolsó rendszergazdától az adatbázis nem engedi elvenni az
+                admin jogot — így nem tudod véletlenül kizárni magadat.
+              </p>
+            )}
+
             <p className="mt-3 text-xs text-ink-500">
               A szerepkör dönti el, mit érhet el a felhasználó. Az adatbázis ugyanezt érvényesíti, tehát a kliens
               megkerülésével sem lát többet.

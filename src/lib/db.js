@@ -147,20 +147,40 @@ export const deleteMemberProfile = async (profileId) => {
 };
 
 /**
- * A tag szerepköreinek beállítása. Először töröljük a régieket, majd
- * beszúrjuk az újakat — így a UI-ban látott állapot lesz az érvényes.
+ * Nyilvános elnökségi tagok (Elnök és Alelnökök).
+ * Csak azokat a profilokat adja vissza, ahol van kitöltve custom_title (tisztségnév)
+ * és az tartalmazza az 'Elnök' szót.
  */
-export const setMemberRoles = async (userId, roles, grantedBy = null) => {
+export const listPublicBoardMembers = async () => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, custom_title, service_location_name, business_activity')
+    .not('custom_title', 'is', null)
+    .neq('custom_title', '');
+
+  if (error) return [];
+  return (data || []).filter(p => 
+    p.custom_title && p.custom_title.trim() !== '' && p.custom_title.toLowerCase().includes('elnök')
+  );
+};
+
+/**
+ * A tag szerepköreinek beállítása.
+ *
+ * EGYETLEN adatbázis-függvénnyel megy, NEM törlés + beszúrás párossal.
+ *
+ * Miért: a korábbi megoldás először törölte az összes szerepkört, majd
+ * beszúrta az újakat. Ha valaki saját magát szerkesztette, a törlés elvette a
+ * saját admin jogát, és az azt követő beszúrást az RLS már elutasította —
+ * a felhasználó pedig szerepkör nélkül maradt. A set_user_roles() a hívó
+ * jogosultságát a módosítás ELŐTT ellenőrzi, egy tranzakcióban dolgozik, és
+ * nem engedi, hogy az utolsó rendszergazda megfossza magát a jogától.
+ */
+export const setMemberRoles = async (userId, roles) => {
   const wanted = [...new Set(roles)].filter(Boolean);
-  unwrap(await supabase.from('user_roles').delete().eq('user_id', userId));
-  if (wanted.length > 0) {
-    unwrap(
-      await supabase
-        .from('user_roles')
-        .insert(wanted.map((role) => ({ user_id: userId, role, granted_by: grantedBy })))
-    );
-  }
-  return wanted;
+  return unwrap(
+    await supabase.rpc('set_user_roles', { target_user: userId, new_roles: wanted })
+  );
 };
 
 // -----------------------------------------------------------------------------

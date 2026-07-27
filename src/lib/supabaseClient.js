@@ -72,6 +72,11 @@ export const describeError = (error) => {
   if (code === 'PGRST205') {
     return `Hiányzó tábla az adatbázisban (${message}). ${RUN_SCHEMA}`;
   }
+  // A saját adatbázis-függvényeink raise exception-jei (P0001) már magyar,
+  // emberi szöveget adnak — ne tegyünk eléjük hibakódot.
+  if (code === 'P0001') {
+    return message;
+  }
   if (code === '23502') {
     return `Egy kötelező mező üresen maradt: ${message}`;
   }

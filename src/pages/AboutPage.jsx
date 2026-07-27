@@ -1,31 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Flower2 } from 'lucide-react';
+import { Users, Flower2, Award, Crown } from 'lucide-react';
 
 import { ORGANIZATION, formattedAddress } from '../config/organization';
-import { listWorkgroups } from '../lib/db';
+import { listWorkgroups, listPublicBoardMembers } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
 import { PageHeader, EmptyState, Spinner, ErrorBlock, DetailRow } from '../components/ui';
 
-/*
-  A korábbi verzióból eltávolítva:
-    - "Kőszeg Város Önkormányzatával (Básthy Béla Polgármester) szoros
-      együttműködésben" — valós, megnevezett személy egy nem igazolt
-      együttműködésben. Jogi kockázat.
-    - "Polgármesteri Programfüzet (2026. Július)" gomb, ami egy üres irattárra
-      mutatott.
-    - Az elnökségi lista, ami a tagnyilvántartás összes olyan sorát kiírta,
-      amelynek volt tisztségneve — így akár egy rendes tag is "Elnökségi
-      tagként" jelent meg a nyilvános oldalon.
-
-  Az elnökség bemutatása szándékosan NEM innen jön. Ahhoz a tagnyilvántartás
-  személyes adatait kellene nyilvánosan kiadni, amit az RLS helyesen tilt.
-  Ha nyilvános elnökségi bemutatót akarsz, azt hírként vagy dokumentumként
-  tedd közzé, ellenőrzött tartalommal.
-*/
-
 export const AboutPage = () => {
   const { data: groups, loading, error, reload } = useAsyncData(listWorkgroups);
+  const { data: boardMembers, loading: boardLoading } = useAsyncData(listPublicBoardMembers);
   const active = (groups || []).filter((g) => g.is_active);
   const address = formattedAddress();
 
@@ -37,9 +21,55 @@ export const AboutPage = () => {
     <div className="container-page py-12 sm:py-16">
       <PageHeader eyebrow="Egyesületünkről" title={ORGANIZATION.legalName} description={ORGANIZATION.mission} />
 
+      {/* Elnökség & Vezetőség */}
+      <section className="mt-12">
+        <div className="flex items-center gap-2">
+          <Crown className="h-5 w-5 text-wine-600" aria-hidden="true" />
+          <h2 className="font-display text-2xl text-ink-900">Elnökség &amp; Tisztségviselők</h2>
+        </div>
+        <p className="mt-1 text-sm text-ink-600">
+          Az egyesület hivatalosan megválasztott elnöksége és tisztségviselői.
+        </p>
+
+        <div className="mt-6">
+          {boardLoading && <Spinner />}
+
+          {!boardLoading && (!boardMembers || boardMembers.length === 0) && (
+            <div className="rounded-xl border border-dashed border-sand-400 p-6 text-center text-sm text-ink-600">
+              Az elnökségi és tisztségviselői adatok frissítés alatt. Az elnökség az adminisztrációs felületen adhat meg tisztségneveket (pl. Elnök, Alelnök).
+            </div>
+          )}
+
+          {boardMembers && boardMembers.length > 0 && (
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {boardMembers.map((member) => (
+                <div key={member.id} className="card p-6 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-display text-lg font-bold text-wine-700">
+                      {member.full_name || 'Tisztségviselő'}
+                    </span>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-wine-100 text-wine-700">
+                      <Award className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-ink-900">
+                    {member.custom_title}
+                  </div>
+                  {(member.service_location_name || member.business_activity) && (
+                    <div className="text-xs text-ink-600">
+                      {member.service_location_name || member.business_activity}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Hivatalos adatok — csak a kitöltött mezők */}
       {hasLegalData && (
-        <section className="mt-12">
+        <section className="mt-14">
           <h2 className="font-display text-2xl text-ink-900">Hivatalos adatok</h2>
           <dl className="mt-4 max-w-2xl divide-y divide-sand-300 border-y border-sand-300">
             <DetailRow label="Székhely" value={address} />
