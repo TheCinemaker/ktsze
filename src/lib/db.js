@@ -148,44 +148,43 @@ export const deleteMemberProfile = async (profileId) => {
 
 /**
  * Nyilvános elnökségi tagok (Elnök és Alelnökök).
- * Közvetlenül a `user_roles` táblából kéri le az 'admin' és 'vicepresident' szerepkörű tagokat.
+ * Kizárja a technikai rendszergazda fiókot, és megmutatja a valódi elnökségi tagokat
+ * (akiknek van kitöltött custom_title tisztségük vagy 'vicepresident' szerepkörük).
  */
 export const listPublicBoardMembers = async () => {
-  const { data: roles, error } = await supabase
-    .from('user_roles')
-    .select('role, user_id, profiles(id, full_name, custom_title, service_location_name, business_activity)')
-    .in('role', ['admin', 'vicepresident']);
+  const embedded = await supabase
+    .from('profiles')
+    .select('id, full_name, custom_title, service_location_name, business_activity, account_email, user_roles!user_roles_user_id_fkey(role)');
 
-  if (error || !roles) {
-    const rawProfiles = unwrap(await supabase.from('profiles').select('id, full_name, custom_title, service_location_name, business_activity')) || [];
-    const allRoles = unwrap(await supabase.from('user_roles').select('user_id, role').in('role', ['admin', 'vicepresident'])) || [];
-
-    return allRoles.map((r) => {
-      const p = rawProfiles.find((prof) => prof.id === r.user_id) || {};
-      const defaultTitle = r.role === 'admin' ? 'Elnök' : 'Alelnök';
-      return {
-        id: p.id || r.user_id,
-        full_name: p.full_name || 'Tisztségviselő',
-        custom_title: p.custom_title || defaultTitle,
-        service_location_name: p.service_location_name,
-        business_activity: p.business_activity,
-        role: r.role
-      };
-    });
+  let profiles = [];
+  if (!embedded.error && embedded.data) {
+    profiles = embedded.data;
+  } else {
+    const rawProfiles = unwrap(await supabase.from('profiles').select('id, full_name, custom_title, service_location_name, business_activity, account_email')) || [];
+    const allRoles = unwrap(await supabase.from('user_roles').select('user_id, role')) || [];
+    profiles = rawProfiles.map((p) => ({
+      ...p,
+      user_roles: allRoles.filter((r) => r.user_id === p.id)
+    }));
   }
 
-  return roles.map((r) => {
-    const p = r.profiles || {};
-    const defaultTitle = r.role === 'admin' ? 'Elnök' : 'Alelnök';
-    return {
-      id: p.id || r.user_id,
-      full_name: p.full_name || 'Tisztségviselő',
-      custom_title: p.custom_title || defaultTitle,
+  return profiles
+    .filter((p) => {
+      // Rendszergazda technikai fiók elrejtése a nyilvános felületről
+      if (p.account_email?.toLowerCase() === 'admin@visitkoszeg.hu') return false;
+      if (!p.full_name || p.full_name.trim() === '' || p.full_name.toLowerCase() === 'rendszergazda') return false;
+
+      const hasTitle = Boolean(p.custom_title && p.custom_title.trim() !== '');
+      const hasViceRole = Array.isArray(p.user_roles) && p.user_roles.some((r) => r.role === 'vicepresident');
+      return hasTitle || hasViceRole;
+    })
+    .map((p) => ({
+      id: p.id,
+      full_name: p.full_name,
+      custom_title: p.custom_title || 'Tisztségviselő',
       service_location_name: p.service_location_name,
-      business_activity: p.business_activity,
-      role: r.role
-    };
-  });
+      business_activity: p.business_activity
+    }));
 };
 
 /**
