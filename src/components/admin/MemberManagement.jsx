@@ -122,14 +122,27 @@ export const MemberManagement = () => {
                     </div>
                   </td>
 
-                  {/* Category & Activity */}
+                  {/* Category & Activity & Custom Title */}
                   <td className="p-4 space-y-1">
-                    <span className={`inline-block px-2 py-0.5 rounded text-[0.68rem] font-bold uppercase ${
-                      member.member_category === 'Pártoló tag' ? 'bg-[#FAF3E8] text-[#7A5B2E] border border-[#E5D2B8]' :
-                      member.member_category === 'Elnökségi tag' ? 'bg-[#6B1D2F] text-white' : 'bg-[#F7EBEF] text-[#6B1D2F] border border-[#D9AAB6]'
-                    }`}>
-                      {member.member_category}
-                    </span>
+                    {member.custom_title && (
+                      <div className="bg-[#6B1D2F] text-white px-2 py-0.5 rounded text-[0.7rem] font-bold tracking-wide flex items-center gap-1 w-max">
+                        <Crown className="w-3 h-3 text-[#C5A880]" />
+                        {member.custom_title}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span className={`inline-block px-2 py-0.5 rounded text-[0.68rem] font-bold uppercase ${
+                        member.member_category === 'Pártoló tag' ? 'bg-[#FAF3E8] text-[#7A5B2E] border border-[#E5D2B8]' :
+                        member.member_category === 'Elnökségi tag' ? 'bg-[#F3ECE0] text-[#6B1D2F] border border-[#C5A880]' : 'bg-[#F7EBEF] text-[#6B1D2F] border border-[#D9AAB6]'
+                      }`}>
+                        {member.member_category}
+                      </span>
+                      {member.role === 'admin' && (
+                        <span className="bg-[#2C221E] text-white px-1.5 py-0.5 rounded text-[0.6rem] font-bold uppercase">
+                          Admin
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[0.7rem] text-[#63534B] capitalize">
                       Tevékenység: <strong>{member.business_activity}</strong>
                     </div>
@@ -256,6 +269,43 @@ export const MemberManagement = () => {
                     <option value="Pártoló tag">Pártoló tag</option>
                     <option value="Elnökségi tag">Elnökségi tag</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Position & System Role Assignment (ADMIN CONTROL) */}
+              <div className="p-4 bg-[#F7EBEF] rounded-xl border border-[#D9AAB6] space-y-3">
+                <div className="font-bold text-xs text-[#6B1D2F] uppercase tracking-wider flex items-center gap-1">
+                  <ShieldCheck className="w-4 h-4 text-[#6B1D2F]" />
+                  Tisztség & Rendszer Jogosultságok (Elnökségi Adminisztráció)
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-[#2C221E] mb-1">Egyedi Tisztség / Poszt Titulus</label>
+                    <input 
+                      type="text" 
+                      placeholder="Pl. Alelnök — Rendezvények a határon, Elnök..."
+                      value={editingMember.custom_title || ""}
+                      onChange={(e) => setEditingMember({...editingMember, custom_title: e.target.value})}
+                      className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
+                    />
+                    <span className="text-[0.65rem] text-[#63534B]">
+                      * Bármilyen új alelnöki vagy felelősi poszt megadható.
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#2C221E] mb-1">Rendszer Szerepkör</label>
+                    <select 
+                      value={editingMember.role || 'member'}
+                      onChange={(e) => setEditingMember({...editingMember, role: e.target.value})}
+                      className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E] font-bold"
+                    >
+                      <option value="member">Rendes / Tagi Hozzáférés (Member)</option>
+                      <option value="patron">Pártolói Hozzáférés (Patron)</option>
+                      <option value="admin">Teljes Adminisztrátori Jog (Admin)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 

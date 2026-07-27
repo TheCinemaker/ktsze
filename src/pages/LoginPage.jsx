@@ -4,7 +4,7 @@ import { HeaderLogo } from '../components/layout/HeaderLogo';
 import { Lock, Mail, Key, ShieldCheck, ArrowRight, UserCheck, Building2, Crown, UserPlus, Phone, MapPin, Building, HeartHandshake } from 'lucide-react';
 
 export const LoginPage = ({ setActiveTab }) => {
-  const { loginAs, registerMember } = useAuth();
+  const { loginWithEmail, registerMember } = useAuth();
   
   const [activeTabMode, setActiveTabMode] = useState('login'); // 'login' | 'register'
 
@@ -28,15 +28,15 @@ export const LoginPage = ({ setActiveTab }) => {
 
   const handleCustomLogin = (e) => {
     e.preventDefault();
-    if (email.includes('admin')) {
-      loginAs('admin');
-      setActiveTab('admin-dashboard');
-    } else if (email.includes('partolo')) {
-      loginAs('patron');
-      setActiveTab('member-dashboard');
+    const result = loginWithEmail(email);
+    if (result.success) {
+      if (result.user.role === 'admin') {
+        setActiveTab('admin-dashboard');
+      } else {
+        setActiveTab('member-dashboard');
+      }
     } else {
-      loginAs('member');
-      setActiveTab('member-dashboard');
+      alert(result.message || 'Hiba a bejelentkezés során.');
     }
   };
 
@@ -80,33 +80,6 @@ export const LoginPage = ({ setActiveTab }) => {
           <p className="text-xs text-[#63534B]">
             Bejelentkezés & Online Regisztráció a Supabase mentéssel rendelkező zárt KTSZE rendszerbe
           </p>
-        </div>
-
-        {/* Demo Quick Logins Box */}
-        <div className="bg-[#F3ECE0] p-4 rounded-xl border border-[#C5A880] space-y-2">
-          <div className="text-[0.7rem] text-[#6B1D2F] uppercase font-bold tracking-wider flex items-center gap-1">
-            <UserCheck className="w-3.5 h-3.5" /> Gyors Demo Szerepkörök (Elnökségi Teszthez)
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => { loginAs('member'); setActiveTab('member-dashboard'); }}
-              className="btn-wine text-xs justify-center py-2 px-1"
-            >
-              <Building2 className="w-3.5 h-3.5" /> Rendes Tag
-            </button>
-            <button
-              onClick={() => { loginAs('patron'); setActiveTab('member-dashboard'); }}
-              className="btn-wine-outline text-xs justify-center py-2 px-1 bg-white"
-            >
-              <HeartHandshake className="w-3.5 h-3.5" /> Pártoló Tag
-            </button>
-            <button
-              onClick={() => { loginAs('admin'); setActiveTab('admin-dashboard'); }}
-              className="btn-outline-brown text-xs justify-center py-2 px-1 bg-white"
-            >
-              <Crown className="w-3.5 h-3.5 text-[#6B1D2F]" /> Admin
-            </button>
-          </div>
         </div>
 
         {/* Main Card with Toggle Tabs */}

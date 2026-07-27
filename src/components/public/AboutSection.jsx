@@ -1,51 +1,16 @@
 import React from 'react';
-import { Target, Compass, Landmark, ShieldCheck, HeartHandshake, Award, Flower2, Sparkles, Building2, Laptop, Hotel, UtensilsCrossed } from 'lucide-react';
+import { Target, Compass, Landmark, ShieldCheck, HeartHandshake, Award, Flower2, Sparkles, Building2, Laptop, Hotel, UtensilsCrossed, Crown, UserCheck } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const AboutSection = ({ setActiveTab }) => {
-  const boardMembers = [
-    {
-      name: "Drescher Gábor",
-      role: "Az Egyesület Elnöke",
-      organization: "Kőszegi Turisztikai Szövetség Egyesület",
-      icon: Award,
-      bio: "A kőszegi turisztikai szereplők szakmai összefogásáért és az önkormányzati stratégiai együttműködésekért felel."
-    },
-    {
-      name: "Szalók Adrienn",
-      role: "Alelnök Asszony",
-      organization: "KTSZE Elnökség",
-      icon: Flower2,
-      bio: "A városszépítő és „Kőszeg virágzik” munkacsoportok, valamint a virágosítási kezdeményezések felelőse."
-    },
-    {
-      name: "Farkas Péter",
-      role: "Alelnök",
-      organization: "Ibrahim Boutique Hotel",
-      icon: Hotel,
-      bio: "A minőségi szálláshelyi tagozat, vendégélmény-csomagok és boutique turizmus képviselője."
-    },
-    {
-      name: "Vörös Róbert",
-      role: "Alelnök",
-      organization: "Portré Étterem és Panzió",
-      icon: UtensilsCrossed,
-      bio: "A kőszegi gasztronómia, belvárosi vendéglátás és az őszi forgalomnövelő Kőszegi Esték felelőse."
-    },
-    {
-      name: "Avar Szilveszter",
-      role: "Alelnök",
-      organization: "SA Software",
-      icon: Laptop,
-      bio: "A „Digitális Kőszegért” munkacsoport felelőse: egyesületi webes platform, tagi portál és digitális edukáció."
-    },
-    {
-      name: "Szekér Zoltán",
-      role: "Turisztikai Menedzser",
-      organization: "Jurisics-vár Művelődési Központ & Várszínház",
-      icon: Landmark,
-      bio: "Az őszi programkínálat, a színházi kommunikáció és a szeptemberi B2B Nyílt Nap turisztikai koordinátora."
-    }
-  ];
+  const { members, workgroups } = useAuth();
+
+  // Dinamikusan szűrjük azokat a tagokat, akik Elnökségi tagok vagy egyedi tisztségük van (Elnök, Alelnök, etc.)
+  const boardMembers = members.filter(m => 
+    m.member_category === 'Elnökségi tag' || 
+    m.role === 'admin' || 
+    (m.custom_title && m.custom_title.trim() !== '')
+  );
 
   const initiatives = [
     {
@@ -106,31 +71,40 @@ export const AboutSection = ({ setActiveTab }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {boardMembers.map((member, idx) => {
-              const Icon = member.icon || Award;
-              return (
+            {boardMembers.length > 0 ? (
+              boardMembers.map((member, idx) => (
                 <div key={idx} className="bg-white p-6 rounded-xl border border-[#E2D7C7] hover:border-[#C5A880] space-y-2 shadow-sm transition-all">
                   <div className="flex items-center justify-between">
                     <span className="font-serif text-xl font-bold text-[#6B1D2F]">
-                      {member.name}
+                      {member.full_name || member.name}
                     </span>
                     <div className="p-2 bg-[#F7EBEF] text-[#6B1D2F] rounded-lg border border-[#D9AAB6]">
-                      <Icon className="w-4 h-4" />
+                      <Crown className="w-4 h-4 text-[#6B1D2F]" />
                     </div>
                   </div>
                   
-                  <div className="text-xs font-bold text-[#2C221E]">
-                    {member.role}
+                  <div className="text-xs font-bold text-[#2C221E] uppercase">
+                    {member.custom_title || member.member_category || "Elnökségi Tag"}
                   </div>
                   <div className="text-xs text-[#6B1D2F] font-semibold">
-                    {member.organization}
+                    {member.service_location_name || member.business_activity || "KTSZE Elnökség"}
                   </div>
                   <p className="text-xs text-[#63534B] pt-2.5 border-t border-[#FAF6F0] leading-relaxed">
-                    {member.bio}
+                    Kapcsolat: <strong>{member.phone || member.account_email}</strong>
                   </p>
                 </div>
-              );
-            })}
+              ))
+            ) : (
+              <div className="col-span-full p-8 text-center bg-white rounded-xl border border-dashed border-[#C5A880]">
+                <UserCheck className="w-8 h-8 text-[#C5A880] mx-auto mb-2" />
+                <h4 className="font-serif text-lg font-bold text-[#2C221E]">
+                  Az Elnökségi és Tisztségviselői Lista Frissítés Alatt
+                </h4>
+                <p className="text-xs text-[#63534B] max-w-md mx-auto mt-1">
+                  A regisztrált tagokat az Elnökségi Admin felületen rendelheti hozzá az elnöki és alelnöki posztokhoz.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

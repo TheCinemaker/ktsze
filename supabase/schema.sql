@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS profiles (
   service_house_number TEXT,
   service_contacts TEXT, -- Telefon, weboldal, nyitvatartás
   
+  -- Egyedi tisztség/poszt megnevezés (Pl. "Alelnök — Rendezvények a határon", "Elnök")
+  custom_title TEXT,
+  
   -- Jogosultsági szerepkör: 'member', 'patron', 'admin'
   role TEXT DEFAULT 'member',
   
@@ -96,10 +99,3 @@ CREATE POLICY "Public read workgroups" ON workgroups FOR SELECT USING (true);
 CREATE POLICY "Public read public documents" ON documents FOR SELECT USING (access_level = 'public');
 CREATE POLICY "Members read internal documents" ON documents FOR SELECT USING (true);
 CREATE POLICY "Profiles read own or public profile" ON profiles FOR SELECT USING (true);
-
--- Kezdő Adatok (Seed Data)
-INSERT INTO workgroups (name, slug, description, leader_name, latest_updates, image_url) VALUES
-('Kőszeg virágzik', 'koszeg-viragzik', 'Főtéri kaspók, virágládák és virágos sarkok örökbefogadása, gondozása a városi kertésszel együttműködésben.', 'Szalók Adrienn Alelnök', 'Főtéri piros bódé lebontva! Megkezdődött a kaspók összeírása.', 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1200&q=80'),
-('Digitális Kőszegért', 'digitalis-koszegert', 'Egyesületi webes felület, tagi portál, kétirányú Google Drive csatlakozó és digitális edukációs akciónapok.', 'Avar Szilveszter Alelnök', 'Elkészült az új KTSZE portál v1.0 és a zárt tagi rendszer.', 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80'),
-('Őszi Forgalomnövelés & B2B Nyílt Nap', 'oszi-forgalomnoveles', 'Aktív & gasztronómiai programok, Kőszegi Esték zenés sorozat és szeptemberi B2B Nyílt Nap & Média Study Tour.', 'Szekér Zoltán, Farkas Péter & Vörös Róbert', 'Szeptemberi B2B nyílt nap időpontjának egyeztetése a Jurisics Várban.', 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80')
-ON CONFLICT (slug) DO NOTHING;
