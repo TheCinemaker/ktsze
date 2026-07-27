@@ -53,7 +53,7 @@ export const AboutPage = () => {
                     </div>
                   </div>
                   <div className="text-xs font-bold uppercase tracking-wider text-ink-900">
-                    {member.custom_title}
+                    {member.custom_title || 'Elnökségi Tag'}
                   </div>
                   {(member.service_location_name || member.business_activity) && (
                     <div className="text-xs text-ink-600">

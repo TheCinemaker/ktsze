@@ -148,20 +148,31 @@ export const deleteMemberProfile = async (profileId) => {
 
 /**
  * Nyilvános elnökségi tagok (Elnök és Alelnökök).
- * Csak azokat a profilokat adja vissza, ahol van kitöltve custom_title (tisztségnév)
- * és az tartalmazza az 'Elnök' szót.
+ * Visszaadja mindazokat a profilokat, ahol van kitöltve custom_title (tisztségnév)
+ * VAGY van admin / vicepresident szerepköre.
  */
 export const listPublicBoardMembers = async () => {
-  const { data, error } = await supabase
+  const embedded = await supabase
     .from('profiles')
-    .select('id, full_name, custom_title, service_location_name, business_activity')
-    .not('custom_title', 'is', null)
-    .neq('custom_title', '');
+    .select('id, full_name, custom_title, service_location_name, business_activity, user_roles!user_roles_user_id_fkey(role)');
 
-  if (error) return [];
-  return (data || []).filter(p => 
-    p.custom_title && p.custom_title.trim() !== '' && p.custom_title.toLowerCase().includes('elnök')
-  );
+  let profiles = [];
+  if (!embedded.error && embedded.data) {
+    profiles = embedded.data;
+  } else {
+    const rawProfiles = unwrap(await supabase.from('profiles').select('id, full_name, custom_title, service_location_name, business_activity')) || [];
+    const allRoles = unwrap(await supabase.from('user_roles').select('user_id, role')) || [];
+    profiles = rawProfiles.map(p => ({
+      ...p,
+      user_roles: allRoles.filter(r => r.user_id === p.id)
+    }));
+  }
+
+  return profiles.filter(p => {
+    const hasTitle = Boolean(p.custom_title && p.custom_title.trim() !== '');
+    const hasBoardRole = Array.isArray(p.user_roles) && p.user_roles.some(r => ['admin', 'vicepresident'].includes(r.role));
+    return hasTitle || hasBoardRole;
+  });
 };
 
 /**
