@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS profiles (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Biztosítjuk, hogy a meglévő profiles táblában is meglegyen a custom_title oszlop:
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS custom_title TEXT;
+
 -- 2. Workgroups Table (Munkacsoportok - Admin által dinamikusan kezelhető)
 CREATE TABLE IF NOT EXISTS workgroups (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -202,7 +202,7 @@ export const AuthProvider = ({ children }) => {
   // Helper function to sync a member profile to Supabase DB
   const syncProfileToSupabase = (profile) => {
     if (isSupabaseConfigured() && profile.account_email) {
-      supabase.from('profiles').upsert({
+      const payload = {
         account_email: profile.account_email,
         full_name: profile.full_name || '',
         home_address: profile.home_address || '',
@@ -217,11 +217,17 @@ export const AuthProvider = ({ children }) => {
         custom_title: profile.custom_title || '',
         role: profile.role || 'member',
         joined_date: profile.joined_date || new Date().toISOString().split('T')[0]
-      }, { onConflict: 'account_email' }).then(({ data, error }) => {
+      };
+
+      supabase.from('profiles').upsert(payload, { onConflict: 'account_email' }).then(({ data, error }) => {
         if (error) {
-          console.error('Supabase profile sync error:', error);
-        } else {
-          console.log('Supabase profile synced successfully:', data);
+          if (error.code === 'PGRST204' || error.message?.includes('custom_title')) {
+            const fallbackPayload = { ...payload };
+            delete fallbackPayload.custom_title;
+            supabase.from('profiles').upsert(fallbackPayload, { onConflict: 'account_email' });
+          } else {
+            console.error('Supabase profile sync error:', error);
+          }
         }
       }).catch(err => console.error('Supabase sync exception:', err));
     }
