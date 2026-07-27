@@ -6,6 +6,7 @@ import { Footer } from './components/layout/Footer';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { AuthCallback } from './components/auth/AuthCallback';
 import { LoadingBlock } from './components/ui';
+import { ScrollToTopButton } from './components/ui/ScrollToTopButton';
 
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
@@ -90,6 +91,7 @@ export default function App() {
       </main>
 
       <Footer />
+      <ScrollToTopButton />
     </div>
   );
 }
