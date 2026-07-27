@@ -95,6 +95,15 @@ export const Footer = () => {
           <p>
             © {year} {ORGANIZATION.legalName}
           </p>
+          <p>
+            Designed by{' '}
+            <a
+              href="mailto:avar.szilveszter@gmail.com"
+              className="font-medium text-wine-600 underline decoration-wine-300 underline-offset-2 hover:decoration-wine-600"
+            >
+              SA Software &amp; Network Solutions
+            </a>
+          </p>
           {ORGANIZATION.taxNumber && <p>Adószám: {ORGANIZATION.taxNumber}</p>}
         </div>
       </div>
