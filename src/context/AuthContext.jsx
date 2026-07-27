@@ -6,6 +6,7 @@ import {
   INITIAL_DRIVE_FOLDERS,
   INITIAL_WORKGROUPS 
 } from '../mock/initialData';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 const AuthContext = createContext();
 
@@ -82,6 +83,33 @@ export const AuthProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : INITIAL_DRIVE_FOLDERS;
   });
 
+  // Sync profiles from Supabase DB if live
+  useEffect(() => {
+    if (isSupabaseConfigured()) {
+      supabase.from('profiles').select('*').then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setMembers(prev => {
+            // Merge Supabase profiles with local ones, preferring Supabase
+            const combinedMap = new Map();
+            data.forEach(p => {
+              combinedMap.set(p.account_email?.toLowerCase().trim(), {
+                ...p,
+                dues_2026: { status: 'pending', amount: 24000, paid_at: null }
+              });
+            });
+            prev.forEach(m => {
+              const key = m.account_email?.toLowerCase().trim();
+              if (key && !combinedMap.has(key)) {
+                combinedMap.set(key, m);
+              }
+            });
+            return Array.from(combinedMap.values());
+          });
+        }
+      }).catch(err => console.warn('Supabase fetch error:', err));
+    }
+  }, []);
+
   // Sync state to localStorage
   useEffect(() => {
     localStorage.setItem('ktsze_members', JSON.stringify(members));
@@ -155,6 +183,34 @@ export const AuthProvider = ({ children }) => {
     setRole('guest');
   };
 
+  // Helper function to sync a member profile to Supabase DB
+  const syncProfileToSupabase = (profile) => {
+    if (isSupabaseConfigured() && profile.account_email) {
+      supabase.from('profiles').upsert({
+        account_email: profile.account_email,
+        full_name: profile.full_name || '',
+        home_address: profile.home_address || '',
+        phone: profile.phone || '',
+        private_email: profile.private_email || '',
+        member_category: profile.member_category || 'Rendes tag',
+        business_activity: profile.business_activity || 'szolgáltató',
+        service_location_name: profile.service_location_name || profile.full_name || 'Szolgáltatás',
+        service_street: profile.service_street || '',
+        service_house_number: profile.service_house_number || '',
+        service_contacts: profile.service_contacts || profile.phone || '',
+        custom_title: profile.custom_title || '',
+        role: profile.role || 'member',
+        joined_date: profile.joined_date || new Date().toISOString().split('T')[0]
+      }, { onConflict: 'account_email' }).then(({ data, error }) => {
+        if (error) {
+          console.error('Supabase profile sync error:', error);
+        } else {
+          console.log('Supabase profile synced successfully:', data);
+        }
+      }).catch(err => console.error('Supabase sync exception:', err));
+    }
+  };
+
   // Member Registration (Supabase Auth / Local State)
   const registerMember = (registrationData) => {
     const isPatron = registrationData.member_category === 'Pártoló tag';
@@ -194,6 +250,10 @@ export const AuthProvider = ({ children }) => {
 
     setCurrentUser(newProfile);
     setRole(newProfile.role);
+
+    // Sync directly to Supabase DB!
+    syncProfileToSupabase(newProfile);
+
     return newProfile;
   };
 
@@ -211,6 +271,7 @@ export const AuthProvider = ({ children }) => {
           setCurrentUser(updated);
           setRole(updated.role);
         }
+        syncProfileToSupabase(updated);
         return updated;
       }
       return member;
@@ -219,7 +280,14 @@ export const AuthProvider = ({ children }) => {
 
   // Member Profile Update (Admin or Member editing)
   const updateMemberProfile = (profileId, updatedData) => {
-    setMembers(prev => prev.map(m => m.id === profileId ? { ...m, ...updatedData } : m));
+    setMembers(prev => prev.map(m => {
+      if (m.id === profileId) {
+        const updated = { ...m, ...updatedData };
+        syncProfileToSupabase(updated);
+        return updated;
+      }
+      return m;
+    }));
     if (currentUser?.id === profileId) {
       setCurrentUser(prev => ({ ...prev, ...updatedData }));
     }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Users, Search, CheckCircle2, Clock, Mail, Phone, MapPin, Edit3, Save, X, Plus, Building2, UserCheck, ShieldCheck } from 'lucide-react';
+import { Users, Search, CheckCircle2, Clock, Mail, Phone, MapPin, Edit3, Save, X, Plus, Building2, UserCheck, ShieldCheck, Crown } from 'lucide-react';
 
 export const MemberManagement = () => {
   const { members, updateMemberDuesStatus, updateMemberProfile, workgroups } = useAuth();
