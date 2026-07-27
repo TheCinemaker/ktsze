@@ -96,7 +96,7 @@ export const AboutPage = () => {
                           {member.service_location_name || member.business_activity}
                         </p>
                       )}
-                      <p className="text-sm leading-relaxed text-ink-600 pt-2 border-t border-sand-200">
+                      <p className="text-xs leading-relaxed text-ink-600 pt-2 border-t border-sand-200">
                         {getMemberBio(member)}
                       </p>
                     </div>
