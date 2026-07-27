@@ -1,452 +1,491 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { Search, Users, Pencil, Wallet, Trash2, FileCheck2 } from 'lucide-react';
+
+import {
+  listMembers,
+  listDues,
+  updateMemberProfile,
+  setMemberRoles,
+  upsertDues,
+  deleteMemberProfile,
+  getDuesProofUrl
+} from '../../lib/db';
+import { useAsyncData } from '../../lib/useAsyncData';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Users, Search, CheckCircle2, Clock, Mail, Phone, MapPin, Edit3, Save, X, Plus, Building2, UserCheck, ShieldCheck, Crown } from 'lucide-react';
+import { ROLE_LABELS, assignableRoles } from '../../lib/permissions';
+import {
+  EmptyState,
+  LoadingBlock,
+  ErrorBlock,
+  Modal,
+  ConfirmDialog,
+  TextInput,
+  Select,
+  Checkbox,
+  Spinner
+} from '../ui';
 
-export const MemberManagement = () => {
-  const { members, updateMemberDuesStatus, updateMemberProfile, workgroups } = useAuth();
+const CATEGORY_OPTIONS = [
+  { value: 'Rendes tag', label: 'Rendes tag' },
+  { value: 'Pártoló tag', label: 'Pártoló tag' },
+  { value: 'Elnökségi tag', label: 'Elnökségi tag' }
+];
+
+const DUES_STATUS_OPTIONS = [
+  { value: 'pending', label: 'Függőben' },
+  { value: 'paid', label: 'Rendezve' },
+  { value: 'overdue', label: 'Késedelmes' },
+  { value: 'waived', label: 'Elengedve' }
+];
+
+const rolesOf = (member) => (Array.isArray(member.user_roles) ? member.user_roles.map((r) => r.role) : []);
+
+/* -------------------------------------------------------------------------- */
+/*  Adatlap és szerepkör szerkesztése                                          */
+/* -------------------------------------------------------------------------- */
+
+const EditMemberModal = ({ member, open, onClose, onSaved }) => {
+  const { roles: actorRoles, profile: actor } = useAuth();
   const toast = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('Minden');
-  const [filterStatus, setFilterStatus] = useState('Minden');
 
-  // Edit Modal State
-  const [editingMember, setEditingMember] = useState(null);
-
-  const filteredMembers = members.filter(m => {
-    const matchesSearch = m.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (m.service_location_name && m.service_location_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                          m.account_email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'Minden' || m.member_category === filterCategory;
-    const matchesStatus = filterStatus === 'Minden' || 
-                          (filterStatus === 'Rendezett' && m.dues_2026?.status === 'paid') ||
-                          (filterStatus === 'Függőben' && m.dues_2026?.status === 'pending');
-    return matchesSearch && matchesCategory && matchesStatus;
+  const [form, setForm] = useState({
+    full_name: member.full_name || '',
+    phone: member.phone || '',
+    member_category: member.member_category || '',
+    custom_title: member.custom_title || '',
+    service_location_name: member.service_location_name || ''
   });
+  const [selectedRoles, setSelectedRoles] = useState(rolesOf(member));
+  const [pending, setPending] = useState(false);
 
-  const [saving, setSaving] = useState(false);
+  const canManageRoles = actorRoles.some((r) => ['admin', 'president'].includes(r));
+  const options = assignableRoles(actorRoles);
 
-  const handleSaveEdit = async (e) => {
-    e.preventDefault();
-    if (!editingMember) return;
-    setSaving(true);
-    const result = await updateMemberProfile(editingMember.id, editingMember);
-    setSaving(false);
+  const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
 
-    if (!result.ok) {
-      toast.error(result.error, { title: 'A tag adatai nem mentődtek el' });
-      return;
+  const toggleRole = (role) =>
+    setSelectedRoles((prev) => (prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]));
+
+  const handleSave = async () => {
+    setPending(true);
+    try {
+      await updateMemberProfile(member.id, form);
+      if (canManageRoles) {
+        await setMemberRoles(member.id, selectedRoles, actor?.id || null);
+      }
+      toast.success('A tag adatait elmentettük.');
+      await onSaved();
+      onClose();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setPending(false);
     }
-    setEditingMember(null);
-    toast.success(`${result.member.full_name} adatai frissültek a Supabase adatbázisban.`);
-  };
-
-  const handleDuesChange = async (memberId, status) => {
-    const result = await updateMemberDuesStatus(memberId, status);
-    if (!result.ok) {
-      toast.error(result.error, { title: 'A tagdíj státusz nem mentődött el' });
-      return;
-    }
-    toast.success(
-      status === 'paid'
-        ? `${result.member.full_name} tagdíja rendezettként rögzítve.`
-        : `${result.member.full_name} tagdíja függőben állapotra állítva.`
-    );
   };
 
   return (
-    <div className="space-y-6">
-      
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#E2D7C7] shadow-sm">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#6B1D2F] uppercase tracking-wider mb-1">
-            <Users className="w-4 h-4 text-[#6B1D2F]" />
-            Elnökségi Adminisztráció
-          </div>
-          <h2 className="font-serif text-2xl font-bold text-[#2C221E]">
-            Tagok & Pártoló Tagok Kezelője
-          </h2>
-          <p className="text-xs text-[#63534B] mt-0.5">
-            Minden tagi adat, elérhetőség, szolgáltatás cím és tagdíjbe fizetés teljes körűen szerkeszthető.
-          </p>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Tag adatai"
+      description={member.account_email}
+      footer={
+        <>
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={pending}>
+            Mégsem
+          </button>
+          <button type="button" className="btn-primary" onClick={handleSave} disabled={pending}>
+            {pending ? <Spinner label="Mentés…" className="text-white" /> : 'Mentés'}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextInput label="Teljes név" value={form.full_name} onChange={set('full_name')} />
+          <TextInput label="Telefonszám" value={form.phone} onChange={set('phone')} />
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <div className="text-[0.7rem] text-[#63534B] uppercase tracking-wider font-semibold">Összes Regisztrált Tag</div>
-            <div className="font-serif text-2xl font-bold text-[#6B1D2F]">{members.length} fő</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="bg-[#F3ECE0] p-4 rounded-xl border border-[#E2D7C7] flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-[#63534B] absolute left-3 top-3" />
-          <input 
-            type="text" 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Keresés név, szolgáltatás vagy e-mail szerint..." 
-            className="w-full pl-9 pr-4 py-2 rounded-lg border border-[#E2D7C7] bg-white text-xs text-[#2C221E] focus:outline-none focus:border-[#6B1D2F]"
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Select
+            label="Tagsági kategória"
+            value={form.member_category}
+            onChange={set('member_category')}
+            options={CATEGORY_OPTIONS}
+            placeholder="Nincs beállítva"
+          />
+          <TextInput
+            label="Szolgáltatás neve"
+            value={form.service_location_name}
+            onChange={set('service_location_name')}
           />
         </div>
 
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          {/* Member Category Filter */}
-          <select 
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="p-2 rounded-lg border border-[#E2D7C7] bg-white text-xs text-[#2C221E] focus:outline-none focus:border-[#6B1D2F]"
-          >
-            <option value="Minden">Minden Tagsági Típus</option>
-            <option value="Rendes tag">Rendes Tagok</option>
-            <option value="Pártoló tag">Pártoló Tagok</option>
-            <option value="Elnökségi tag">Elnökségi Tagok</option>
-          </select>
+        <TextInput
+          label="Tisztség megnevezése"
+          value={form.custom_title}
+          onChange={set('custom_title')}
+          hint="Például: Digitális Kőszeg alelnök. Ez csak kiírt megnevezés — jogosultságot a szerepkör ad."
+        />
 
-          {/* Dues Status Filter */}
-          <select 
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="p-2 rounded-lg border border-[#E2D7C7] bg-white text-xs text-[#2C221E] focus:outline-none focus:border-[#6B1D2F]"
-          >
-            <option value="Minden">Minden Tagdíj Státusz</option>
-            <option value="Rendezett">Rendezett (Befizetve)</option>
-            <option value="Függőben">Függőben</option>
-          </select>
+        {canManageRoles ? (
+          <fieldset className="rounded-xl border border-sand-400 p-4">
+            <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-wine-600">
+              Jogosultságok
+            </legend>
+            <div className="mt-1 space-y-2.5">
+              {options.map((role) => (
+                <Checkbox
+                  key={role}
+                  label={ROLE_LABELS[role]}
+                  checked={selectedRoles.includes(role)}
+                  onChange={() => toggleRole(role)}
+                />
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-ink-500">
+              A szerepkör dönti el, mit érhet el a felhasználó. Az adatbázis ugyanezt érvényesíti, tehát a kliens
+              megkerülésével sem lát többet.
+            </p>
+          </fieldset>
+        ) : (
+          <p className="text-xs text-ink-500">
+            A szerepkörök módosítása rendszergazdai vagy elnöki jogosultságot igényel.
+          </p>
+        )}
+      </div>
+    </Modal>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Tagdíj rögzítése                                                           */
+/* -------------------------------------------------------------------------- */
+
+const DuesModal = ({ member, dues, open, onClose, onSaved }) => {
+  const toast = useToast();
+  const currentYear = new Date().getFullYear();
+  const existing = dues.find((d) => d.profile_id === member.id && d.year === currentYear);
+
+  const [form, setForm] = useState({
+    year: existing?.year || currentYear,
+    amount_huf: existing?.amount_huf ?? '',
+    status: existing?.status || 'pending',
+    due_date: existing?.due_date || '',
+    payment_method: existing?.payment_method || '',
+    notes: existing?.notes || ''
+  });
+  const [pending, setPending] = useState(false);
+  const [openingProof, setOpeningProof] = useState(false);
+
+  const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
+
+  const handleSave = async () => {
+    setPending(true);
+    try {
+      await upsertDues(member.id, form.year, form);
+      toast.success('A tagdíjat elmentettük.');
+      await onSaved();
+      onClose();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const openProof = async () => {
+    setOpeningProof(true);
+    try {
+      const url = await getDuesProofUrl(existing.proof_path);
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setOpeningProof(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Tagdíj rögzítése"
+      description={member.full_name || member.account_email}
+      footer={
+        <>
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={pending}>
+            Mégsem
+          </button>
+          <button type="button" className="btn-primary" onClick={handleSave} disabled={pending}>
+            {pending ? <Spinner label="Mentés…" className="text-white" /> : 'Mentés'}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        {existing?.proof_path && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-positive-300 bg-positive-50 p-3">
+            <p className="text-sm text-ink-800">A tag feltöltött egy átutalási igazolást.</p>
+            <button type="button" onClick={openProof} disabled={openingProof} className="btn-secondary btn-sm">
+              <FileCheck2 className="h-4 w-4 text-positive-600" aria-hidden="true" />
+              Megnyitom
+            </button>
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <TextInput label="Év" type="number" value={form.year} onChange={set('year')} required />
+          <TextInput
+            label="Összeg (Ft)"
+            type="number"
+            min="0"
+            value={form.amount_huf}
+            onChange={set('amount_huf')}
+            hint="Üresen hagyható."
+          />
+          <Select label="Állapot" value={form.status} onChange={set('status')} options={DUES_STATUS_OPTIONS} />
         </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextInput label="Fizetési határidő" type="date" value={form.due_date || ''} onChange={set('due_date')} />
+          <TextInput label="Fizetés módja" value={form.payment_method} onChange={set('payment_method')} />
+        </div>
+
+        <TextInput label="Megjegyzés" value={form.notes} onChange={set('notes')} />
+      </div>
+    </Modal>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Lista                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export const MemberManagement = () => {
+  const { can } = useAuth();
+  const toast = useToast();
+  const [query, setQuery] = useState('');
+  const [editing, setEditing] = useState(null);
+  const [duesFor, setDuesFor] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [deletePending, setDeletePending] = useState(false);
+
+  const members = useAsyncData(listMembers);
+  const dues = useAsyncData(() => listDues(), [], { enabled: can('dues.view'), initialData: [] });
+
+  const list = useMemo(() => members.data || [], [members.data]);
+  const duesList = dues.data || [];
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((m) =>
+      [m.full_name, m.account_email, m.service_location_name, m.custom_title]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(q))
+    );
+  }, [list, query]);
+
+  const currentYear = new Date().getFullYear();
+  const duesOf = (memberId) => duesList.find((d) => d.profile_id === memberId && d.year === currentYear);
+
+  const handleDelete = async () => {
+    setDeletePending(true);
+    try {
+      await deleteMemberProfile(deleting.id);
+      toast.success('A tag adatlapját töröltük.');
+      await members.reload();
+      setDeleting(null);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setDeletePending(false);
+    }
+  };
+
+  if (members.loading) return <LoadingBlock />;
+  if (members.error) return <ErrorBlock message={members.error} onRetry={members.reload} />;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative w-full max-w-sm">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Keresés név, e-mail vagy szolgáltatás szerint"
+            aria-label="Keresés a tagok között"
+            className="input pl-9"
+          />
+        </div>
+        <p className="text-sm text-ink-500">
+          {filtered.length} / {list.length} tag
+        </p>
       </div>
 
-      {/* Members Table */}
-      <div className="bg-white rounded-2xl border border-[#E2D7C7] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-[#F3ECE0] text-[#63534B] uppercase tracking-wider font-bold border-b border-[#E2D7C7]">
-                <th className="p-4">Tag Neve / Szolgáltatás</th>
-                <th className="p-4">Tagsági Típus & Tevékenység</th>
-                <th className="p-4">Szolgáltatás Címe & Elérhetőség</th>
-                <th className="p-4">Munkacsoportok</th>
-                <th className="p-4">2026. Évi Tagdíj</th>
-                <th className="p-4 text-right">Műveletek</th>
+      {list.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="Még nincs egyetlen regisztrált tag sem"
+          description="A tagok a nyilvános oldalon regisztrálnak. A regisztráció után itt tudod beállítani a kategóriájukat és a jogosultságukat."
+        />
+      ) : filtered.length === 0 ? (
+        <EmptyState icon={Search} title="Nincs találat" description="Próbálj más keresőszót." />
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-sand-400 bg-white">
+          <table className="w-full min-w-[52rem] border-collapse text-sm">
+            <caption className="sr-only">Tagnyilvántartás</caption>
+            <thead className="bg-sand-50">
+              <tr className="border-b border-sand-400 text-left">
+                <th scope="col" className="px-4 py-3 font-medium text-ink-600">
+                  Tag
+                </th>
+                <th scope="col" className="px-4 py-3 font-medium text-ink-600">
+                  Kategória
+                </th>
+                <th scope="col" className="px-4 py-3 font-medium text-ink-600">
+                  Jogosultság
+                </th>
+                {can('dues.view') && (
+                  <th scope="col" className="px-4 py-3 font-medium text-ink-600">
+                    {currentYear}. tagdíj
+                  </th>
+                )}
+                <th scope="col" className="px-4 py-3 text-right font-medium text-ink-600">
+                  Műveletek
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E2D7C7]">
-              {filteredMembers.map((member) => (
-                <tr key={member.id} className="hover:bg-[#FAF6F0] transition-colors">
-                  
-                  {/* Name & Service Name */}
-                  <td className="p-4">
-                    <div className="font-bold text-[#2C221E] text-sm">{member.full_name}</div>
-                    <div className="text-xs text-[#6B1D2F] font-semibold flex items-center gap-1 mt-0.5">
-                      <Building2 className="w-3.5 h-3.5" />
-                      {member.service_location_name || "Nincs megadva"}
-                    </div>
-                  </td>
+            <tbody>
+              {filtered.map((member) => {
+                const memberRoles = rolesOf(member);
+                const memberDues = duesOf(member.id);
 
-                  {/* Category & Activity & Custom Title */}
-                  <td className="p-4 space-y-1">
-                    {member.custom_title && (
-                      <div className="bg-[#6B1D2F] text-white px-2 py-0.5 rounded text-[0.7rem] font-bold tracking-wide flex items-center gap-1 w-max">
-                        <Crown className="w-3 h-3 text-[#C5A880]" />
-                        {member.custom_title}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1 flex-wrap">
-                      <span className={`inline-block px-2 py-0.5 rounded text-[0.68rem] font-bold uppercase ${
-                        member.member_category === 'Pártoló tag' ? 'bg-[#FAF3E8] text-[#7A5B2E] border border-[#E5D2B8]' :
-                        member.member_category === 'Elnökségi tag' ? 'bg-[#F3ECE0] text-[#6B1D2F] border border-[#C5A880]' : 'bg-[#F7EBEF] text-[#6B1D2F] border border-[#D9AAB6]'
-                      }`}>
-                        {member.member_category}
-                      </span>
-                      {member.role === 'admin' && (
-                        <span className="bg-[#2C221E] text-white px-1.5 py-0.5 rounded text-[0.6rem] font-bold uppercase">
-                          Admin
+                return (
+                  <tr key={member.id} className="border-b border-sand-300 last:border-0">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-ink-900">{member.full_name || '— nincs név —'}</div>
+                      <div className="text-xs text-ink-500">{member.account_email}</div>
+                      {member.custom_title && (
+                        <div className="mt-0.5 text-xs text-wine-600">{member.custom_title}</div>
+                      )}
+                    </td>
+
+                    <td className="px-4 py-3 text-ink-600">{member.member_category || '—'}</td>
+
+                    <td className="px-4 py-3">
+                      {memberRoles.length === 0 ? (
+                        <span className="badge-caution">Nincs szerepkör</span>
+                      ) : (
+                        <span className="flex flex-wrap gap-1">
+                          {memberRoles.map((role) => (
+                            <span key={role} className="badge-neutral">
+                              {ROLE_LABELS[role] || role}
+                            </span>
+                          ))}
                         </span>
                       )}
-                    </div>
-                    <div className="text-[0.7rem] text-[#63534B] capitalize">
-                      Tevékenység: <strong>{member.business_activity}</strong>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Address & Contacts */}
-                  <td className="p-4 text-[#63534B] space-y-1">
-                    <div className="flex items-center gap-1 text-[#2C221E] font-medium">
-                      <MapPin className="w-3.5 h-3.5 text-[#C5A880] shrink-0" />
-                      <span>9730 Kőszeg, {member.service_street || ""} {member.service_house_number || ""}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[0.68rem]">
-                      <Mail className="w-3 h-3 text-[#C5A880]" />
-                      <span>{member.account_email}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[0.68rem]">
-                      <Phone className="w-3 h-3 text-[#C5A880]" />
-                      <span>{member.phone}</span>
-                    </div>
-                  </td>
-
-                  {/* Workgroups */}
-                  <td className="p-4">
-                    <div className="flex flex-wrap gap-1">
-                      {member.workgroups && member.workgroups.length > 0 ? (
-                        member.workgroups.map((wg, idx) => (
-                          <span key={idx} className="bg-[#FAF6F0] text-[#6B1D2F] border border-[#E2D7C7] px-2 py-0.5 rounded text-[0.65rem] font-semibold">
-                            {wg}
+                    {can('dues.view') && (
+                      <td className="px-4 py-3">
+                        {!memberDues ? (
+                          <span className="text-xs text-ink-500">Nincs kiírva</span>
+                        ) : memberDues.status === 'paid' ? (
+                          <span className="badge-positive">Rendezve</span>
+                        ) : (
+                          <span className="badge-caution">
+                            {DUES_STATUS_OPTIONS.find((o) => o.value === memberDues.status)?.label ||
+                              memberDues.status}
                           </span>
-                        ))
-                      ) : (
-                        <span className="text-[0.65rem] text-[#A39288]">Nincs csatlakozva</span>
-                      )}
-                    </div>
-                  </td>
-
-                  {/* Dues Status */}
-                  <td className="p-4">
-                    {member.dues_2026?.status === 'paid' ? (
-                      <span className="badge-success inline-flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Rendezve ({member.dues_2026.amount.toLocaleString()} Ft)
-                      </span>
-                    ) : (
-                      <span className="badge-warning inline-flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> Függőben ({member.dues_2026.amount.toLocaleString()} Ft)
-                      </span>
+                        )}
+                      </td>
                     )}
-                  </td>
 
-                  {/* Actions */}
-                  <td className="p-4 text-right space-y-1">
-                    <button 
-                      onClick={() => setEditingMember({...member})}
-                      className="btn-wine-outline text-[0.7rem] py-1 px-2.5 w-full justify-center"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" /> Szerkesztés
-                    </button>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        {can('members.edit') && (
+                          <button
+                            type="button"
+                            onClick={() => setEditing(member)}
+                            className="btn-secondary btn-sm"
+                            aria-label={`${member.full_name || member.account_email} szerkesztése`}
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                            Adatlap
+                          </button>
+                        )}
 
-                    {member.dues_2026?.status === 'pending' ? (
-                      <button 
-                        onClick={() => handleDuesChange(member.id, 'paid')}
-                        className="btn-wine text-[0.7rem] py-1 px-2.5 w-full justify-center"
-                      >
-                        Befizetve
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={() => handleDuesChange(member.id, 'pending')}
-                        className="btn-outline-brown text-[0.7rem] py-1 px-2.5 w-full justify-center"
-                      >
-                        Függőben
-                      </button>
-                    )}
-                  </td>
+                        {can('dues.manage') && (
+                          <button
+                            type="button"
+                            onClick={() => setDuesFor(member)}
+                            className="btn-secondary btn-sm"
+                            aria-label={`${member.full_name || member.account_email} tagdíja`}
+                          >
+                            <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
+                            Tagdíj
+                          </button>
+                        )}
 
-                </tr>
-              ))}
+                        {can('members.delete') && (
+                          <button
+                            type="button"
+                            onClick={() => setDeleting(member)}
+                            className="btn-danger btn-sm"
+                            aria-label={`${member.full_name || member.account_email} törlése`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* Complete Member Edit Modal */}
-      {editingMember && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#FAF6F0] rounded-2xl max-w-2xl w-full p-6 sm:p-8 border-2 border-[#C5A880] shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            
-            <button 
-              onClick={() => setEditingMember(null)}
-              className="absolute top-4 right-4 p-2 text-[#63534B] hover:text-[#6B1D2F] rounded-full hover:bg-[#F3ECE0] border-0 bg-transparent cursor-pointer"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <h3 className="font-serif text-2xl font-bold text-[#2C221E] mb-2">
-              Tag Adatainak Módosítása
-            </h3>
-            <p className="text-xs text-[#63534B] mb-6">
-              Minden személyes, szolgáltatási és munkacsoporti adat közvetlenül szerkeszthető.
-            </p>
-
-            <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Teljes Név *</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={editingMember.full_name}
-                    onChange={(e) => setEditingMember({...editingMember, full_name: e.target.value})}
-                    className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Tagsági Kategória</label>
-                  <select 
-                    value={editingMember.member_category}
-                    onChange={(e) => setEditingMember({...editingMember, member_category: e.target.value})}
-                    className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                  >
-                    <option value="Rendes tag">Rendes tag</option>
-                    <option value="Pártoló tag">Pártoló tag</option>
-                    <option value="Elnökségi tag">Elnökségi tag</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Position & System Role Assignment (ADMIN CONTROL) */}
-              <div className="p-4 bg-[#F7EBEF] rounded-xl border border-[#D9AAB6] space-y-3">
-                <div className="font-bold text-xs text-[#6B1D2F] uppercase tracking-wider flex items-center gap-1">
-                  <ShieldCheck className="w-4 h-4 text-[#6B1D2F]" />
-                  Tisztség & Rendszer Jogosultságok (Elnökségi Adminisztráció)
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-[#2C221E] mb-1">Egyedi Tisztség / Poszt Titulus</label>
-                    <input 
-                      type="text" 
-                      placeholder="Pl. Alelnök — Rendezvények a határon, Elnök..."
-                      value={editingMember.custom_title || ""}
-                      onChange={(e) => setEditingMember({...editingMember, custom_title: e.target.value})}
-                      className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                    />
-                    <span className="text-[0.65rem] text-[#63534B]">
-                      * Bármilyen új alelnöki vagy felelősi poszt megadható.
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold text-[#2C221E] mb-1">Rendszer Szerepkör</label>
-                    <select 
-                      value={editingMember.role || 'member'}
-                      onChange={(e) => setEditingMember({...editingMember, role: e.target.value})}
-                      className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E] font-bold"
-                    >
-                      <option value="member">Rendes / Tagi Hozzáférés (Member)</option>
-                      <option value="patron">Pártolói Hozzáférés (Patron)</option>
-                      <option value="admin">Teljes Adminisztrátori Jog (Admin)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Fiók E-mail (Bejelentkezéshez) *</label>
-                  <input 
-                    type="email" 
-                    required
-                    value={editingMember.account_email}
-                    onChange={(e) => setEditingMember({...editingMember, account_email: e.target.value})}
-                    className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Privát E-mail (Nem kötelező)</label>
-                  <input 
-                    type="email" 
-                    value={editingMember.private_email || ""}
-                    onChange={(e) => setEditingMember({...editingMember, private_email: e.target.value})}
-                    className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Telefonszám *</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={editingMember.phone}
-                    onChange={(e) => setEditingMember({...editingMember, phone: e.target.value})}
-                    className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Tevékenységi Kör</label>
-                  <select 
-                    value={editingMember.business_activity}
-                    onChange={(e) => setEditingMember({...editingMember, business_activity: e.target.value})}
-                    className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                  >
-                    <option value="szállásadó">Szállásadó</option>
-                    <option value="vendéglős">Vendéglős / Étterem</option>
-                    <option value="borász">Borászat</option>
-                    <option value="szolgáltató">Szolgáltató</option>
-                    <option value="kulturális">Kulturális</option>
-                    <option value="egyéb">Egyéb magánszemély / civil</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Service Location Details */}
-              <div className="p-4 bg-[#F3ECE0] rounded-xl border border-[#E2D7C7] space-y-3">
-                <div className="font-bold text-xs text-[#6B1D2F] uppercase tracking-wider">
-                  Szolgáltatás / Üzlet Adatai
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Szolgáltatás Neve</label>
-                  <input 
-                    type="text" 
-                    value={editingMember.service_location_name || ""}
-                    onChange={(e) => setEditingMember({...editingMember, service_location_name: e.target.value})}
-                    className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-[#2C221E] mb-1">Utca</label>
-                    <input 
-                      type="text" 
-                      value={editingMember.service_street || ""}
-                      onChange={(e) => setEditingMember({...editingMember, service_street: e.target.value})}
-                      className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-[#2C221E] mb-1">Házszám</label>
-                    <input 
-                      type="text" 
-                      value={editingMember.service_house_number || ""}
-                      onChange={(e) => setEditingMember({...editingMember, service_house_number: e.target.value})}
-                      className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Szolgáltatás Elérhetőségei</label>
-                  <input 
-                    type="text" 
-                    value={editingMember.service_contacts || ""}
-                    onChange={(e) => setEditingMember({...editingMember, service_contacts: e.target.value})}
-                    className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <button type="button" onClick={() => setEditingMember(null)} className="btn-outline-brown text-xs">
-                  Mégse
-                </button>
-                <button type="submit" disabled={saving} className="btn-wine text-xs disabled:opacity-60">
-                  <Save className="w-4 h-4" /> {saving ? 'Mentés az adatbázisba…' : 'Módosítások Mentése'}
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
       )}
 
+      {editing && (
+        <EditMemberModal
+          key={editing.id}
+          member={editing}
+          open
+          onClose={() => setEditing(null)}
+          onSaved={members.reload}
+        />
+      )}
+
+      {duesFor && (
+        <DuesModal
+          key={duesFor.id}
+          member={duesFor}
+          dues={duesList}
+          open
+          onClose={() => setDuesFor(null)}
+          onSaved={dues.reload}
+        />
+      )}
+
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        onConfirm={handleDelete}
+        pending={deletePending}
+        title="Adatlap törlése"
+        message={`Biztosan törlöd ${
+          deleting?.full_name || deleting?.account_email
+        } adatlapját? A tagdíjai és a feltöltött igazolásai is törlődnek. A művelet nem vonható vissza.`}
+      />
     </div>
   );
 };

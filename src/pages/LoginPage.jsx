@@ -1,336 +1,360 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { LogIn, UserPlus, MailCheck } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { HeaderLogo } from '../components/layout/HeaderLogo';
-import { Lock, Mail, Key, ShieldCheck, ArrowRight, UserCheck, Building2, Crown, UserPlus, Phone, MapPin, Building, HeartHandshake } from 'lucide-react';
+import { TextInput, Select, Spinner, LoadingBlock } from '../components/ui';
 
-export const LoginPage = ({ setActiveTab }) => {
-  const { loginWithCredentials, registerMember } = useAuth();
+/*
+  A korábbi verzió három súlyos hibája, amit ez a fájl megszüntet:
+
+    1. A jelszó be volt égetve a kliens kódba, tehát a böngésző forrásában
+       bárki elolvashatta.
+    2. A hibaüzenet KIÍRTA a helyes belépési adatokat.
+    3. A tagoknál a jelszót egyáltalán nem ellenőrizte a rendszer — elég volt
+       egy létező e-mail cím, bármilyen jelszóval bejutott.
+
+  Most a jelszót a Supabase Auth ellenőrzi, hashelve tárolva. A kliens kódban
+  nincs semmilyen titok, és a hibaüzenet nem ad támpontot a helyes adatokhoz.
+*/
+
+const CATEGORY_OPTIONS = [
+  { value: 'Rendes tag', label: 'Rendes tag (vállalkozás, szolgáltató)' },
+  { value: 'Pártoló tag', label: 'Pártoló tag (magánszemély)' }
+];
+
+const ACTIVITY_OPTIONS = [
+  { value: 'szállásadó', label: 'Szállásadó' },
+  { value: 'vendéglős', label: 'Vendéglátás' },
+  { value: 'borász', label: 'Borászat' },
+  { value: 'szolgáltató', label: 'Egyéb szolgáltatás' },
+  { value: 'kulturális', label: 'Kulturális' },
+  { value: 'egyéb', label: 'Egyéb' }
+];
+
+const LoginForm = ({ onSwitch }) => {
+  const { login, requestPasswordReset } = useAuth();
   const toast = useToast();
-  
-  const [activeTabMode, setActiveTabMode] = useState('login'); // 'login' | 'register'
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Login form state
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [pending, setPending] = useState(false);
+  const [resetPending, setResetPending] = useState(false);
 
-  // Registration form state
-  const [regAccountEmail, setRegAccountEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regFullName, setRegFullName] = useState('');
-  const [regHomeAddress, setRegHomeAddress] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regPrivateEmail, setRegPrivateEmail] = useState('');
-  const [regCategory, setRegCategory] = useState('Rendes tag'); // 'Rendes tag' | 'Pártoló tag'
-  const [regActivity, setRegActivity] = useState('szolgáltató');
-  const [regServiceName, setRegServiceName] = useState('');
-  const [regStreet, setRegStreet] = useState('');
-  const [regHouseNum, setRegHouseNum] = useState('');
-  const [regContacts, setRegContacts] = useState('');
-
-  const handleCustomLogin = (e) => {
-    e.preventDefault();
-    const result = loginWithCredentials(email, password);
-    if (result.success) {
-      if (result.user.role === 'admin') {
-        setActiveTab('admin-dashboard');
-      } else {
-        setActiveTab('member-dashboard');
-      }
-    } else {
-      toast.error(result.message || 'Hiba a bejelentkezés során.', { title: 'Sikertelen belépés' });
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setPending(true);
+    try {
+      await login(identifier, password);
+      toast.success('Sikeres belépés.');
+      navigate(location.state?.from || '/tagi', { replace: true });
+    } catch (err) {
+      // A hibaüzenet szándékosan semmilyen támpontot nem ad.
+      toast.error(err.message);
+    } finally {
+      setPending(false);
     }
   };
 
-  const [registering, setRegistering] = useState(false);
-
-  const handleCustomRegister = async (e) => {
-    e.preventDefault();
-    if (!regAccountEmail || !regFullName || !regPhone) {
-      toast.error('Kérjük töltse ki a kötelező mezőket (név, fiók e-mail, telefonszám).', {
-        title: 'Hiányzó adatok'
-      });
+  const handleReset = async () => {
+    if (!identifier.trim()) {
+      toast.info('Írd be az e-mail címedet, és utána kérj jelszó-visszaállítást.');
       return;
     }
-
-    setRegistering(true);
-    const result = await registerMember({
-      account_email: regAccountEmail,
-      private_email: regPrivateEmail,
-      full_name: regFullName,
-      home_address: regHomeAddress,
-      phone: regPhone,
-      member_category: regCategory,
-      business_activity: regActivity,
-      service_location_name: regServiceName || regFullName,
-      service_street: regStreet,
-      service_house_number: regHouseNum,
-      service_contacts: regContacts || regPhone
-    });
-    setRegistering(false);
-
-    if (!result.ok) {
-      toast.error(result.error, { title: 'A regisztráció nem került be az adatbázisba' });
-      return;
+    setResetPending(true);
+    try {
+      await requestPasswordReset(identifier);
+      toast.success('Elküldtük a jelszó-visszaállító levelet. Nézd meg a postafiókodat.');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setResetPending(false);
     }
-
-    toast.success(`Üdvözöljük a KTSZE ${regCategory} soraiban! Profilja elmentve az adatbázisba.`, {
-      title: 'Sikeres regisztráció'
-    });
-    setActiveTab('member-dashboard');
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 bg-[#FAF6F0]">
-      <div className="max-w-xl w-full space-y-6">
-        
-        {/* Logo and Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-block p-3 bg-[#F3ECE0] rounded-2xl border border-[#C5A880] mb-2">
-            <HeaderLogo />
+    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+      <TextInput
+        label="E-mail cím vagy felhasználónév"
+        type="text"
+        required
+        autoComplete="username"
+        value={identifier}
+        onChange={(e) => setIdentifier(e.target.value)}
+        placeholder="pelda@szallas.hu"
+      />
+
+      <TextInput
+        label="Jelszó"
+        type="password"
+        required
+        autoComplete="current-password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="••••••••"
+      />
+
+      <button type="submit" disabled={pending} className="btn-primary w-full">
+        {pending ? <Spinner label="Belépés…" className="text-white" /> : (
+          <>
+            <LogIn className="h-4 w-4" aria-hidden="true" />
+            Belépés
+          </>
+        )}
+      </button>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-sand-300 pt-4">
+        <button type="button" onClick={handleReset} disabled={resetPending} className="btn-ghost btn-sm -ml-3">
+          {resetPending ? 'Küldés…' : 'Elfelejtett jelszó'}
+        </button>
+        <button type="button" onClick={onSwitch} className="btn-ghost btn-sm -mr-3">
+          Nincs még fiókom
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const RegisterForm = ({ onSwitch, onNeedsConfirmation }) => {
+  const { register } = useAuth();
+  const toast = useToast();
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+    passwordConfirm: '',
+    full_name: '',
+    phone: '',
+    private_email: '',
+    home_address: '',
+    member_category: 'Rendes tag',
+    business_activity: 'szolgáltató',
+    service_location_name: '',
+    service_street: '',
+    service_house_number: ''
+  });
+  const [pending, setPending] = useState(false);
+
+  const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
+  const isPatron = form.member_category === 'Pártoló tag';
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (form.password !== form.passwordConfirm) {
+      toast.error('A két jelszó nem egyezik.');
+      return;
+    }
+
+    setPending(true);
+    try {
+      const { passwordConfirm: _unused, email, password, ...profileData } = form;
+      const result = await register({ email, password, ...profileData });
+
+      if (result.needsEmailConfirmation) {
+        onNeedsConfirmation(email);
+        return;
+      }
+
+      toast.success('A fiókod elkészült. A tagságot az elnökség hagyja jóvá.');
+      navigate('/tagi', { replace: true });
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+      <Select
+        label="Tagsági forma"
+        required
+        value={form.member_category}
+        onChange={set('member_category')}
+        options={CATEGORY_OPTIONS}
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <TextInput label="Teljes név" required value={form.full_name} onChange={set('full_name')} autoComplete="name" />
+        <TextInput label="Telefonszám" required value={form.phone} onChange={set('phone')} autoComplete="tel" />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <TextInput
+          label="E-mail cím (belépéshez)"
+          type="email"
+          required
+          value={form.email}
+          onChange={set('email')}
+          autoComplete="email"
+        />
+        <TextInput
+          label="Privát e-mail"
+          type="email"
+          value={form.private_email}
+          onChange={set('private_email')}
+          hint="Nem kötelező."
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <TextInput
+          label="Jelszó"
+          type="password"
+          required
+          minLength={8}
+          value={form.password}
+          onChange={set('password')}
+          autoComplete="new-password"
+          hint="Legalább 8 karakter."
+        />
+        <TextInput
+          label="Jelszó megerősítése"
+          type="password"
+          required
+          value={form.passwordConfirm}
+          onChange={set('passwordConfirm')}
+          autoComplete="new-password"
+        />
+      </div>
+
+      <TextInput label="Lakcím" value={form.home_address} onChange={set('home_address')} autoComplete="street-address" />
+
+      {/* Szolgáltatás adatai csak vállalkozói tagságnál értelmesek */}
+      {!isPatron && (
+        <fieldset className="surface space-y-4 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-wine-600">
+            A szolgáltatás adatai
+          </legend>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Select
+              label="Tevékenység"
+              value={form.business_activity}
+              onChange={set('business_activity')}
+              options={ACTIVITY_OPTIONS}
+            />
+            <TextInput
+              label="Szolgáltatás neve"
+              value={form.service_location_name}
+              onChange={set('service_location_name')}
+            />
           </div>
-          <h2 className="font-serif text-2xl font-bold text-[#2C221E]">
-            Egyesületi Tagi & Pártolói Portál
-          </h2>
-          <p className="text-xs text-[#63534B]">
-            Bejelentkezés & Online Regisztráció a Supabase mentéssel rendelkező zárt KTSZE rendszerbe
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <TextInput label="Utca" value={form.service_street} onChange={set('service_street')} />
+            </div>
+            <TextInput label="Házszám" value={form.service_house_number} onChange={set('service_house_number')} />
+          </div>
+        </fieldset>
+      )}
+
+      <p className="text-xs text-ink-500">
+        A regisztráció fiókot hoz létre, de önmagában nem jelent egyesületi tagságot — azt az elnökség hagyja jóvá.
+      </p>
+
+      <button type="submit" disabled={pending} className="btn-primary w-full">
+        {pending ? <Spinner label="Fiók létrehozása…" className="text-white" /> : (
+          <>
+            <UserPlus className="h-4 w-4" aria-hidden="true" />
+            Fiók létrehozása
+          </>
+        )}
+      </button>
+
+      <div className="border-t border-sand-300 pt-4 text-center">
+        <button type="button" onClick={onSwitch} className="btn-ghost btn-sm">
+          Van már fiókom — belépés
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const ConfirmationNotice = ({ email }) => (
+  <div className="text-center">
+    <MailCheck className="mx-auto mb-4 h-9 w-9 text-positive-600" aria-hidden="true" />
+    <h2 className="font-display text-xl text-ink-900">Nézd meg a postafiókodat</h2>
+    <p className="mx-auto mt-2 max-w-sm text-sm text-ink-600">
+      Küldtünk egy megerősítő levelet a <strong className="text-ink-900">{email}</strong> címre. A belépés a
+      megerősítés után lehetséges.
+    </p>
+    <p className="mx-auto mt-4 max-w-sm text-xs text-ink-500">
+      Ha nem szeretnél e-mail megerősítést kérni a tagoktól, azt a Supabase Dashboard → Authentication → Sign In /
+      Providers → „Confirm email” beállításnál lehet kikapcsolni.
+    </p>
+  </div>
+);
+
+export const LoginPage = () => {
+  const { isAuthenticated, initializing } = useAuth();
+  const [mode, setMode] = useState('login');
+  const [confirmationEmail, setConfirmationEmail] = useState(null);
+  const location = useLocation();
+
+  if (initializing) return <LoadingBlock label="Munkamenet ellenőrzése…" />;
+
+  // Belépve nincs mit keresni a belépőoldalon.
+  if (isAuthenticated) return <Navigate to={location.state?.from || '/tagi'} replace />;
+
+  return (
+    <div className="container-page flex justify-center py-12 sm:py-16">
+      <div className="w-full max-w-xl">
+        <div className="mb-8 text-center">
+          <div className="mb-4 inline-flex justify-center">
+            <HeaderLogo variant="mark" />
+          </div>
+          <h1 className="font-display text-2xl text-ink-900">Tagi és elnökségi belépés</h1>
+          <p className="mt-1.5 text-sm text-ink-600">
+            A zárt felületek eléréséhez lépj be, vagy hozz létre új fiókot.
           </p>
         </div>
 
-        {/* Main Card with Toggle Tabs */}
-        <div className="bg-white rounded-2xl border border-[#E2D7C7] shadow-sm overflow-hidden">
-          
-          {/* Tab Controls */}
-          <div className="flex border-b border-[#E2D7C7]">
-            <button
-              onClick={() => setActiveTabMode('login')}
-              className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 ${
-                activeTabMode === 'login'
-                  ? 'bg-white text-[#6B1D2F] border-b-2 border-[#6B1D2F]'
-                  : 'bg-[#F3ECE0] text-[#63534B] hover:text-[#2C221E]'
-              }`}
-            >
-              <Lock className="w-4 h-4" /> Bejelentkezés
-            </button>
-            <button
-              onClick={() => setActiveTabMode('register')}
-              className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 ${
-                activeTabMode === 'register'
-                  ? 'bg-white text-[#6B1D2F] border-b-2 border-[#6B1D2F]'
-                  : 'bg-[#F3ECE0] text-[#63534B] hover:text-[#2C221E]'
-              }`}
-            >
-              <UserPlus className="w-4 h-4" /> Új Tag Regisztráció
-            </button>
-          </div>
-
-          {/* Form Content */}
-          <div className="p-6 sm:p-8">
-            {activeTabMode === 'login' ? (
-              
-              /* Login Form */
-              <form onSubmit={handleCustomLogin} className="space-y-4 text-xs">
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">E-mail Cím vagy Felhasználónév *</label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-[#63534B] absolute left-3 top-3" />
-                    <input 
-                      type="text" 
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin vagy e-mail cím..."
-                      className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-[#E2D7C7] bg-[#FAF6F0] text-[#2C221E] focus:outline-none focus:border-[#6B1D2F]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Jelszó *</label>
-                  <div className="relative">
-                    <Key className="w-4 h-4 text-[#63534B] absolute left-3 top-3" />
-                    <input 
-                      type="password" 
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-[#E2D7C7] bg-[#FAF6F0] text-[#2C221E] focus:outline-none focus:border-[#6B1D2F]"
-                    />
-                  </div>
-                </div>
-
-                <button type="submit" className="btn-wine w-full justify-center py-3 text-xs uppercase font-bold tracking-wider">
-                  Bejelentkezés
+        <div className="card overflow-hidden">
+          {confirmationEmail ? (
+            <div className="p-6 sm:p-8">
+              <ConfirmationNotice email={confirmationEmail} />
+            </div>
+          ) : (
+            <>
+              <div className="tabbar bg-sand-50">
+                <button
+                  type="button"
+                  onClick={() => setMode('login')}
+                  aria-current={mode === 'login'}
+                  className={`tab flex-1 justify-center ${mode === 'login' ? 'tab-active bg-white' : ''}`}
+                >
+                  <LogIn className="h-4 w-4" aria-hidden="true" />
+                  Belépés
                 </button>
-              </form>
-
-            ) : (
-
-              /* Registration Form */
-              <form onSubmit={handleCustomRegister} className="space-y-4 text-xs">
-                
-                {/* Category Selection */}
-                <div className="p-3 bg-[#FAF3E8] rounded-xl border border-[#E5D2B8] space-y-1.5">
-                  <label className="block font-bold text-[#6B1D2F] uppercase text-[0.68rem]">Tagság Típusa *</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setRegCategory('Rendes tag')}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
-                        regCategory === 'Rendes tag'
-                          ? 'bg-[#6B1D2F] text-white border-[#6B1D2F]'
-                          : 'bg-white text-[#2C221E] border-[#E2D7C7]'
-                      }`}
-                    >
-                      <Building2 className="w-3.5 h-3.5" /> Rendes Tag (Vállalkozás)
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setRegCategory('Pártoló tag')}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
-                        regCategory === 'Pártoló tag'
-                          ? 'bg-[#6B1D2F] text-white border-[#6B1D2F]'
-                          : 'bg-white text-[#2C221E] border-[#E2D7C7]'
-                      }`}
-                    >
-                      <HeartHandshake className="w-3.5 h-3.5" /> Pártoló Tag (Magánszemély)
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-[#2C221E] mb-1">Teljes Név *</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={regFullName}
-                      onChange={(e) => setRegFullName(e.target.value)}
-                      placeholder="Pl. Kovács István"
-                      className="w-full p-2.5 rounded-lg border border-[#E2D7C7] bg-[#FAF6F0] text-[#2C221E]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold text-[#2C221E] mb-1">Telefonszám *</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={regPhone}
-                      onChange={(e) => setRegPhone(e.target.value)}
-                      placeholder="+36 30 123 4567"
-                      className="w-full p-2.5 rounded-lg border border-[#E2D7C7] bg-[#FAF6F0] text-[#2C221E]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-[#2C221E] mb-1">Fiók E-mail Cím (Belépéshez) *</label>
-                    <input 
-                      type="email" 
-                      required
-                      value={regAccountEmail}
-                      onChange={(e) => setRegAccountEmail(e.target.value)}
-                      placeholder="kovacs@partner.hu"
-                      className="w-full p-2.5 rounded-lg border border-[#E2D7C7] bg-[#FAF6F0] text-[#2C221E]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold text-[#2C221E] mb-1">Privát E-mail (Nem kötelező)</label>
-                    <input 
-                      type="email" 
-                      value={regPrivateEmail}
-                      onChange={(e) => setRegPrivateEmail(e.target.value)}
-                      placeholder="kovacs.magan@gmail.com"
-                      className="w-full p-2.5 rounded-lg border border-[#E2D7C7] bg-[#FAF6F0] text-[#2C221E]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Személyes / Otthoni Cím</label>
-                  <input 
-                    type="text" 
-                    value={regHomeAddress}
-                    onChange={(e) => setRegHomeAddress(e.target.value)}
-                    placeholder="9730 Kőszeg, Várkör 12."
-                    className="w-full p-2.5 rounded-lg border border-[#E2D7C7] bg-[#FAF6F0] text-[#2C221E]"
-                  />
-                </div>
-
-                {/* Service Details for Business / Service Providers */}
-                <div className="p-3 bg-[#F3ECE0] rounded-xl border border-[#E2D7C7] space-y-3">
-                  <div className="font-bold text-[0.68rem] text-[#6B1D2F] uppercase tracking-wider">
-                    Szolgáltatás / Üzlet Helyszínének Adatai
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-semibold text-[#2C221E] mb-1">Tevékenység Típusa</label>
-                      <select 
-                        value={regActivity}
-                        onChange={(e) => setRegActivity(e.target.value)}
-                        className="w-full p-2.5 rounded-lg border border-[#E2D7C7] bg-white text-[#2C221E]"
-                      >
-                        <option value="szállásadó">Szállásadó</option>
-                        <option value="vendéglős">Vendéglős / Étterem</option>
-                        <option value="borász">Borászat</option>
-                        <option value="szolgáltató">Szolgáltató</option>
-                        <option value="kulturális">Kulturális</option>
-                        <option value="egyéb">Egyéb magánszemély / civil</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-[#2C221E] mb-1">Szolgáltatás Neve</label>
-                      <input 
-                        type="text" 
-                        value={regServiceName}
-                        onChange={(e) => setRegServiceName(e.target.value)}
-                        placeholder="Pl. Kovács Panzió"
-                        className="w-full p-2.5 rounded-lg border border-[#E2D7C7] bg-white text-[#2C221E]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block font-semibold text-[#2C221E] mb-1">Utca</label>
-                      <input 
-                        type="text" 
-                        value={regStreet}
-                        onChange={(e) => setRegStreet(e.target.value)}
-                        placeholder="Rajnis utca"
-                        className="w-full p-2 rounded-lg border border-[#E2D7C7] bg-white text-[#2C221E]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-[#2C221E] mb-1">Házszám</label>
-                      <input 
-                        type="text" 
-                        value={regHouseNum}
-                        onChange={(e) => setRegHouseNum(e.target.value)}
-                        placeholder="14."
-                        className="w-full p-2 rounded-lg border border-[#E2D7C7] bg-white text-[#2C221E]"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button type="submit" disabled={registering} className="btn-wine w-full justify-center py-3 text-xs uppercase font-bold tracking-wider disabled:opacity-60">
-                  {registering ? 'Mentés a Supabase adatbázisba…' : 'Regisztráció Mentése (Supabase)'}
+                <button
+                  type="button"
+                  onClick={() => setMode('register')}
+                  aria-current={mode === 'register'}
+                  className={`tab flex-1 justify-center ${mode === 'register' ? 'tab-active bg-white' : ''}`}
+                >
+                  <UserPlus className="h-4 w-4" aria-hidden="true" />
+                  Regisztráció
                 </button>
-              </form>
+              </div>
 
-            )}
-          </div>
-
+              <div className="p-6 sm:p-8">
+                {mode === 'login' ? (
+                  <LoginForm onSwitch={() => setMode('register')} />
+                ) : (
+                  <RegisterForm onSwitch={() => setMode('login')} onNeedsConfirmation={setConfirmationEmail} />
+                )}
+              </div>
+            </>
+          )}
         </div>
-
       </div>
     </div>
   );

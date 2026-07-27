@@ -1,60 +1,109 @@
-# KTSZE — Projekt Információk, Hozzáférések & Rendszerleírás
+# KTSZE — hozzáférések és rendszerleírás
 
-**Projekt Neve**: Kőszegi Turisztikai Szövetség Egyesület Hivatalos Portálja & Tagi Rendszere  
-**Felelős**: Avar Szilveszter Alelnök (SA Software)  
-**Utolsó Frissítés**: 2026. július 27.  
-
----
-
-## 🔐 1. Backend & Adatbázis Hozzáférések (Supabase)
-
-- **Supabase Dashboard URL**: [https://supabase.com/dashboard/project/kcuqebzmloattlgzuhpg](https://supabase.com/dashboard/project/kcuqebzmloattlgzuhpg)
-- **Belépési E-mail Cím**: `koszegfotok@gmail.com`
-- **Belépési Jelszó**: `Nyanyuska_0169`
-- **Projekt Referencia ID**: `kcuqebzmloattlgzuhpg`
-- **SQL Adatbázis Schema Helye**: [`supabase/schema.sql`](file:///C:/Users/Szilveszter/.gemini/antigravity-ide/scratch/koszeg-turizmus-egyesulet/supabase/schema.sql)  
-  *(A Supabase Dashboard -> SQL Editor felületére bemásolva és lefuttatva 1 kattintással felépíti az összes PostgreSQL táblát és RLS biztonsági szabályt.)*
+**Projekt**: Kőszegi Turisztikai Szövetség Egyesület portálja és tagi rendszere
+**Felelős**: Avar Szilveszter — Digitális Kőszeg alelnök
 
 ---
 
-## 🌐 2. Verziókezelés & Élesítési (Deploy) Hozzáférések
+## ⚠️ Biztonsági figyelmeztetés — olvasd el
 
-- **GitHub Repository**: [https://github.com/TheCinemaker/ktsze.git](https://github.com/TheCinemaker/ktsze.git)
-- **Fő Branch**: `main`
-- **Netlify Deployment Konfiguráció**:
-  - Konfigurációs fájl: [`netlify.toml`](file:///C:/Users/Szilveszter/.gemini/antigravity-ide/scratch/koszeg-turizmus-egyesulet/netlify.toml)
-  - Publish könyvtár: `dist`
-  - Átirányítási szabály: `/* -> /index.html (200 OK)` SPA támogatással.
+Ez a fájl korábban **nyílt szövegben tartalmazta a Supabase-fiók jelszavát**, és
+git-ben követve volt (`github.com/TheCinemaker/ktsze.git`). A jelszót
+eltávolítottam, de ez önmagában nem elég:
 
----
+1. **Változtasd meg a Supabase-fiók jelszavát**, és kapcsold be rá a
+   kétfaktoros hitelesítést. A régi jelszó bekerült a git előzményébe, tehát a
+   repó minden korábbi állapotából visszaolvasható — akkor is, ha a mostani
+   verzióban már nincs benne.
+2. Ugyanez igaz a korábbi admin jelszóra, ami a kliens kódban volt: az a
+   böngészőbe letöltött csomagba is bekerült, tehát nyilvánosnak tekintendő.
+   Ne használd újra máshol.
+3. **Jelszót ne írj be ebbe a fájlba.** Használj jelszókezelőt.
 
-## 👥 3. Előre Beállított Teszt Fiókok (Demo Nézetváltó)
+A `.gitignore` mostantól kizárja ezt a fájlt. Hogy a git a már követett
+példányt is elfelejtse:
 
-A weboldal jobb felső sarkában lévő szerepkör-váltóval azonnal tesztelhető az összes nézet:
-
-| Szerepkör | Teszt E-mail / Fiók | Jogosultságok & Funkciók |
-|---|---|---|
-| **Elnökségi Admin** | `elnok@koszegiturizmus.hu` | Teljes hozzáférés, tagok adatainak szerkesztése, új munkacsoportok indítása, elnökségi hírek CMS, dokumentum feltöltés. |
-| **Rendes Tag (Vállalkozó)** | `info@irottko.hu` | Tagi portál, 2026. évi tagdíj befizetés igazolás, belső irattár elérése (feltöltés nélkül), Google Drive mappa elérés. |
-| **Pártoló Tag (Magánszemély)** | `kovacs.janos@partolotag.hu` | Pártolói tagsági portál (15k Ft/év tagdíj), városszépítő munkacsoport tagság, egyesületi irattár megtekintése. |
-| **Publikus Látogató** | *(Belépés nélkül)* | Egyesület küldetése, Polgármesteri megállapodás, hírek, munkacsoporti felhívások, nyílt dokumentumok. |
-
----
-
-## 🏛️ 4. Hivatalos Elnökségi Struktúra (2026)
-
-1. **Drescher Gábor** — Elnök (*Kőszegi Turisztikai Szövetség Egyesület*)
-2. **Szalók Adrienn** — Alelnök asszony (*„Kőszeg virágzik” városszépítő munkacsoport*)
-3. **Farkas Péter** — Alelnök (*Ibrahim Boutique Hotel tulajdonosa*)
-4. **Vörös Róbert** — Alelnök (*Portré Étterem és Panzió tulajdonosa*)
-5. **Avar Szilveszter** — Alelnök (*SA Software — „Digitális Kőszegért” munkacsoport felelőse*)
-6. **Szekér Zoltán** — Turisztikai Menedzser (*Jurisics-vár Művelődési Központ & Várszínház*)
+```bash
+git rm --cached HOZZAFERESEK.md
+git commit -m "Hozzaferesi jegyzet kivetele a verziokezelesbol"
+```
 
 ---
 
-## 📊 5. Elszámolási & Projektdokumentumok
+## 1. Adatbázis (Supabase)
 
-- 📁 **[SZAMLAZASI_NAPLO.md](file:///C:/Users/Szilveszter/.gemini/antigravity-ide/scratch/koszeg-turizmus-egyesulet/SZAMLAZASI_NAPLO.md)**  
-  Hivatalos elszámolás az SA Software részéről: **52 óra @ 13 000 Ft/óra = 676 000 Ft + ÁFA** összegről kiállítandó számla.
-- 📁 **[PROJEKTNAPLO.md](file:///C:/Users/Szilveszter/.gemini/antigravity-ide/scratch/koszeg-turizmus-egyesulet/PROJEKTNAPLO.md)**  
-  Piaci összehasonlító értékelés az elnökségi bemutatóhoz: 104 fejlesztői óra = 1 352 000 Ft + ÁFA megtakarítás.
+- **Dashboard**: https://supabase.com/dashboard/project/kcuqebzmloattlgzuhpg
+- **Projekt referencia**: `kcuqebzmloattlgzuhpg`
+- **Belépési e-mail**: `koszegfotok@gmail.com`
+- **Jelszó**: jelszókezelőben — *ebbe a fájlba nem írjuk be*
+
+### SQL szkriptek — ebben a sorrendben futtatva
+
+| Fájl | Mit tesz |
+|---|---|
+| `supabase/01_schema.sql` | Táblák, jogosultsági függvények, RLS szabályok |
+| `supabase/02_storage.sql` | Storage bucketek (`public-media`, `documents`, `dues-proofs`) |
+| `supabase/03_admin.sql` | Rendszergazda és tisztségviselők szerepköre |
+
+A korábbi `supabase/schema.sql` megszűnt — a fenti három fájl váltotta fel.
+
+---
+
+## 2. Verziókezelés és élesítés
+
+- **Repository**: https://github.com/TheCinemaker/ktsze.git (branch: `main`)
+- **Netlify**: `netlify.toml`, publish könyvtár `dist`, SPA átirányítással
+- **Környezeti változók**: `.env.example` alapján, Netlify → Site settings →
+  Environment variables
+
+---
+
+## 3. Belépés
+
+**Nincsenek teszt fiókok és nincs demó nézetváltó.** A korábbi verzióban a
+weboldalon lehetett szerepkört váltani jelszó nélkül — ez megszűnt.
+
+Fiókokat a Supabase Dashboard → Authentication → Users felületén hozunk létre
+(vagy a felhasználó regisztrál a nyilvános oldalon), a szerepkört pedig az
+elnökségi felületen osztjuk ki.
+
+Belépésnél a rendszergazda az `admin` rövid nevet is használhatja a teljes
+e-mail cím helyett.
+
+---
+
+## 4. Jogosultsági szintek
+
+| Szerepkör | Hozzáférés |
+|---|---|
+| `admin` | Minden, beleértve a szerepkör-kiosztást és a rendszerbeállításokat |
+| `president` | Tagnyilvántartás, tagdíj, tartalom, szerepkörök (admin nélkül) |
+| `vicepresident` | Hírek, munkacsoportok, dokumentumok — tagdíj nélkül |
+| `board` | Elnökségi betekintés írás nélkül |
+| `member` / `patron` | Saját adatlap, saját tagdíj, tagi dokumentumok |
+
+A tisztségnév (`custom_title`, pl. „Digitális Kőszeg alelnök”) csak kiírt
+megnevezés — **jogosultságot nem ad**, azt kizárólag a szerepkör.
+
+---
+
+## 5. Tartalomfeltöltés
+
+Az oldal szándékosan üresen indul. A tartalom az elnökségi felületen kerül be:
+
+- **Hírek és programok** → Hírek fül. Amíg nincs bepipálva a „Közzétéve”, csak
+  belül látszik.
+- **Munkacsoportok** → Munkacsoportok fül.
+- **Dokumentumok** → Dokumentumok fül, hozzáférési szinttel (nyilvános / tagi /
+  elnökségi).
+- **Tagdíjtételek** → Tagdíjtételek fül. Amíg nincs bevitt tétel, a nyilvános
+  Tagság oldalon nem jelenik meg összeg.
+- **Egyesületi alapadatok** (székhely, e-mail, telefon, adószám, bankszámla) →
+  `src/config/organization.js`. Ami üres, az nem jelenik meg a weboldalon.
+
+---
+
+## 6. Projektdokumentumok
+
+- `PROJEKTNAPLO.md`
+- `SZAMLAZASI_NAPLO.md`

@@ -1,159 +1,165 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, LogIn, LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react';
 import { HeaderLogo } from './HeaderLogo';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  User, 
-  Lock, 
-  LogOut, 
-  ChevronDown, 
-  Menu, 
-  X, 
-  Building,
-  Building2,
-  Eye,
-  Crown,
-  ShieldCheck,
-  FileText
-} from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
-export const Navbar = ({ activeTab, setActiveTab }) => {
-  const { currentUser, role, loginAs, logout } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [demoDropdownOpen, setDemoDropdownOpen] = useState(false);
+const PUBLIC_LINKS = [
+  { to: '/', label: 'Főoldal' },
+  { to: '/egyesulet', label: 'Egyesületünk' },
+  { to: '/hirek', label: 'Hírek' },
+  { to: '/dokumentumok', label: 'Dokumentumok' },
+  { to: '/tagsag', label: 'Tagság' },
+  { to: '/kapcsolat', label: 'Kapcsolat' }
+];
 
-  const navItems = [
-    { id: 'home', label: 'Főoldal' },
-    { id: 'about', label: 'Egyesületről' },
-    { id: 'news', label: 'Programok & Hírek' },
-    { id: 'docs-public', label: 'Alapszabály & Irattár' },
-    { id: 'membership', label: 'Tagsági Információk' },
-    { id: 'contact', label: 'Kapcsolat' },
-  ];
+export const Navbar = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { isAuthenticated, profile, roleLabel, can, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const toast = useToast();
 
-  const handleNavClick = (id) => {
-    setActiveTab(id);
-    setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Oldalváltásnál csukjuk be a mobil menüt.
+  useEffect(() => setMobileOpen(false), [location.pathname]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+      toast.info('Kiléptél a rendszerből.');
+    } catch (err) {
+      toast.error(err.message);
+    }
   };
 
+  const linkClass = ({ isActive }) =>
+    `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+      isActive ? 'bg-wine-50 text-wine-600' : 'text-ink-600 hover:bg-sand-200 hover:text-ink-900'
+    }`;
+
+  const displayName = profile?.full_name || profile?.service_location_name || profile?.account_email;
+
   return (
-    <header className="sticky top-0 z-50 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E2D7C7] shadow-sm transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-16">
-          
-          {/* Logo */}
-          <button 
-            onClick={() => handleNavClick('home')} 
-            className="text-left focus:outline-none bg-transparent border-0 cursor-pointer p-0"
-          >
+    <header className="sticky top-0 z-40 border-b border-sand-400 bg-sand-100/95 backdrop-blur">
+      {/* Billentyűzetes navigációhoz: átugrás a tartalomra */}
+      <a
+        href="#main"
+        className="sr-only-focusable absolute left-4 top-3 z-50 rounded-lg bg-wine-600 px-3 py-2 text-sm text-white"
+      >
+        Ugrás a tartalomra
+      </a>
+
+      <nav className="container-page" aria-label="Fő navigáció">
+        <div className="flex h-16 items-center justify-between gap-4">
+          <Link to="/" className="shrink-0 rounded-lg" aria-label="Főoldal">
             <HeaderLogo />
-          </button>
+          </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-1">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border-0 bg-transparent cursor-pointer ${
-                  activeTab === item.id 
-                    ? 'text-[#6B1D2F] font-bold bg-[#F7EBEF]' 
-                    : 'text-[#2C221E] hover:text-[#6B1D2F] hover:bg-[#F3ECE0]'
-                }`}
-              >
-                {item.label}
-              </button>
+          {/* Asztali menü */}
+          <div className="hidden items-center gap-0.5 lg:flex">
+            {PUBLIC_LINKS.map((link) => (
+              <NavLink key={link.to} to={link.to} end={link.to === '/'} className={linkClass}>
+                {link.label}
+              </NavLink>
             ))}
-          </nav>
+          </div>
 
-          {/* Right Action / Auth Buttons */}
-          <div className="hidden lg:flex items-center gap-2.5">
-            {role === 'guest' ? (
-              <button
-                onClick={() => handleNavClick('login')}
-                className="btn-wine text-xs uppercase tracking-wider font-bold py-2 px-3.5"
-              >
-                <Lock className="w-3.5 h-3.5" />
+          <div className="hidden shrink-0 items-center gap-2 lg:flex">
+            {isAuthenticated ? (
+              <>
+                {can('admin.access') && (
+                  <NavLink to="/elnokseg" className="btn-secondary btn-sm">
+                    <ShieldCheck className="h-4 w-4 text-wine-600" aria-hidden="true" />
+                    Elnökség
+                  </NavLink>
+                )}
+                <NavLink to="/tagi" className="btn-secondary btn-sm">
+                  <LayoutDashboard className="h-4 w-4 text-wine-600" aria-hidden="true" />
+                  Tagi portál
+                </NavLink>
+                <button type="button" onClick={handleLogout} className="btn-ghost btn-sm">
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  Kilépés
+                </button>
+              </>
+            ) : (
+              <NavLink to="/belepes" className="btn-primary btn-sm">
+                <LogIn className="h-4 w-4" aria-hidden="true" />
                 Belépés
-              </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleNavClick(role === 'admin' ? 'admin-dashboard' : 'member-dashboard')}
-                  className={`btn-wine text-xs uppercase tracking-wider font-bold py-2 px-3.5 ${
-                    activeTab.includes('dashboard') ? 'ring-2 ring-[#C5A880]' : ''
-                  }`}
-                >
-                  {role === 'admin' ? <Crown className="w-3.5 h-3.5" /> : <Building className="w-3.5 h-3.5" />}
-                  {role === 'admin' ? 'Admin Portál' : 'Tagi Portál'}
-                </button>
-
-                <button
-                  onClick={logout}
-                  className="p-1.5 text-[#63534B] hover:text-[#6B1D2F] hover:bg-[#F3ECE0] rounded-lg transition-colors border-0 bg-transparent cursor-pointer"
-                  title="Kijelentkezés"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
+              </NavLink>
             )}
-
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center gap-2">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-[#2C221E] hover:bg-[#F3ECE0] rounded-md border-0 bg-transparent cursor-pointer"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-
+          {/* Mobil kapcsoló */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileOpen ? 'Menü bezárása' : 'Menü megnyitása'}
+            className="btn-secondary btn-sm lg:hidden"
+          >
+            {mobileOpen ? (
+              <X className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
         </div>
-      </div>
+      </nav>
 
-      {/* Mobile Navigation Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#FAF6F0] border-b border-[#E2D7C7] px-4 pt-2 pb-6 space-y-3 shadow-lg">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleNavClick(item.id)}
-              className={`block w-full text-left px-3 py-2 rounded-md text-sm font-semibold border-0 bg-transparent cursor-pointer ${
-                activeTab === item.id 
-                  ? 'text-[#6B1D2F] font-bold bg-[#F7EBEF]' 
-                  : 'text-[#2C221E] hover:bg-[#F3ECE0]'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-          <div className="pt-3 border-t border-[#E2D7C7]">
-            {role === 'guest' ? (
-              <button
-                onClick={() => handleNavClick('login')}
-                className="btn-wine w-full justify-center py-2.5 text-xs uppercase tracking-wider font-bold"
+      {/* Mobil menü */}
+      {mobileOpen && (
+        <div id="mobile-menu" className="border-t border-sand-400 bg-sand-100 lg:hidden">
+          <div className="container-page space-y-1 py-3">
+            {PUBLIC_LINKS.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.to === '/'}
+                className={({ isActive }) =>
+                  `block rounded-lg px-3 py-2.5 text-base font-medium transition-colors ${
+                    isActive ? 'bg-wine-50 text-wine-600' : 'text-ink-800 hover:bg-sand-200'
+                  }`
+                }
               >
-                <Lock className="w-4 h-4" /> Belépés
-              </button>
-            ) : (
-              <div className="space-y-2">
-                <button
-                  onClick={() => handleNavClick(role === 'admin' ? 'admin-dashboard' : 'member-dashboard')}
-                  className="btn-wine w-full justify-center text-xs font-bold uppercase tracking-wider py-2.5"
-                >
-                  {role === 'admin' ? <Crown className="w-4 h-4" /> : <Building className="w-4 h-4" />}
-                  {role === 'admin' ? 'Admin Portál' : 'Tagi Portál'}
-                </button>
-                <button
-                  onClick={() => { logout(); setMobileMenuOpen(false); }}
-                  className="btn-outline-brown w-full justify-center text-xs font-bold uppercase tracking-wider py-2"
-                >
-                  <LogOut className="w-4 h-4 text-[#6B1D2F]" /> Kijelentkezés
-                </button>
-              </div>
-            )}
+                {link.label}
+              </NavLink>
+            ))}
+
+            <div className="mt-3 space-y-2 border-t border-sand-400 pt-3">
+              {isAuthenticated ? (
+                <>
+                  {displayName && (
+                    <p className="px-3 text-xs text-ink-500">
+                      {displayName}
+                      {roleLabel ? ` — ${roleLabel}` : ''}
+                    </p>
+                  )}
+                  {can('admin.access') && (
+                    <NavLink to="/elnokseg" className="btn-secondary w-full">
+                      <ShieldCheck className="h-4 w-4 text-wine-600" aria-hidden="true" />
+                      Elnökségi felület
+                    </NavLink>
+                  )}
+                  <NavLink to="/tagi" className="btn-secondary w-full">
+                    <LayoutDashboard className="h-4 w-4 text-wine-600" aria-hidden="true" />
+                    Tagi portál
+                  </NavLink>
+                  <button type="button" onClick={handleLogout} className="btn-ghost w-full">
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    Kilépés
+                  </button>
+                </>
+              ) : (
+                <NavLink to="/belepes" className="btn-primary w-full">
+                  <LogIn className="h-4 w-4" aria-hidden="true" />
+                  Belépés
+                </NavLink>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -1,0 +1,428 @@
+// =============================================================================
+//  Adatréteg — a Supabase az EGYETLEN igazságforrás.
+//
+//  Szabályok, amiket ez a fájl betart:
+//    1. Minden hívás `await`-elt, és az `error` mezőt megvizsgáljuk (unwrap).
+//    2. Hiba esetén beszédes Error-t dobunk — a hívó oldal toastban mutatja.
+//       Nincs néma elnyelés, és nincs "sikeres mentés" üzenet sikertelen mentésre.
+//    3. localStorage-ot NEM használunk. A böngésző csak megjelenít.
+// =============================================================================
+
+import { supabase, unwrap } from './supabaseClient';
+
+/** Ékezetes cím -> URL-barát slug. */
+export const slugify = (text) =>
+  (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'elem';
+
+/** Ütközésmentes slug: ha foglalt, rövid utótagot kap. */
+const uniqueSlug = async (table, base, ignoreId = null) => {
+  let candidate = slugify(base);
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    let query = supabase.from(table).select('id').eq('slug', candidate).limit(1);
+    if (ignoreId) query = query.neq('id', ignoreId);
+    const rows = unwrap(await query);
+    if (!rows || rows.length === 0) return candidate;
+    candidate = `${slugify(base)}-${Math.random().toString(36).slice(2, 6)}`;
+  }
+  return `${slugify(base)}-${Date.now().toString(36)}`;
+};
+
+// -----------------------------------------------------------------------------
+//  Profilok és szerepkörök
+// -----------------------------------------------------------------------------
+
+const PROFILE_FIELDS = [
+  'full_name',
+  'private_email',
+  'phone',
+  'home_address',
+  'member_category',
+  'business_activity',
+  'service_location_name',
+  'service_street',
+  'service_house_number',
+  'service_contacts',
+  'custom_title'
+];
+
+/** Csak a valóban létező oszlopokat engedjük át, üres stringből NULL lesz. */
+const sanitizeProfile = (input, allowed = PROFILE_FIELDS) => {
+  const out = {};
+  allowed.forEach((key) => {
+    if (!(key in input)) return;
+    const value = input[key];
+    out[key] = typeof value === 'string' ? value.trim() || null : (value ?? null);
+  });
+  return out;
+};
+
+export const getProfile = async (userId) =>
+  unwrap(
+    await supabase
+      .from('profiles')
+      .select('*, user_roles(role)')
+      .eq('id', userId)
+      .maybeSingle()
+  );
+
+export const listMembers = async () =>
+  unwrap(
+    await supabase
+      .from('profiles')
+      .select('*, user_roles(role)')
+      .order('full_name', { ascending: true, nullsFirst: false })
+  ) || [];
+
+/** A tag a saját profilját szerkeszti. custom_title-t itt NEM engedünk. */
+export const updateOwnProfile = async (userId, patch) => {
+  const allowed = PROFILE_FIELDS.filter((f) => f !== 'custom_title');
+  return unwrap(
+    await supabase
+      .from('profiles')
+      .update(sanitizeProfile(patch, allowed))
+      .eq('id', userId)
+      .select('*, user_roles(role)')
+      .single()
+  );
+};
+
+/** Elnökség szerkeszti bármelyik profilt, a tisztségnévvel együtt. */
+export const updateMemberProfile = async (profileId, patch) =>
+  unwrap(
+    await supabase
+      .from('profiles')
+      .update(sanitizeProfile(patch))
+      .eq('id', profileId)
+      .select('*, user_roles(role)')
+      .single()
+  );
+
+export const deleteMemberProfile = async (profileId) => {
+  unwrap(await supabase.from('profiles').delete().eq('id', profileId));
+  return true;
+};
+
+/**
+ * A tag szerepköreinek beállítása. Először töröljük a régieket, majd
+ * beszúrjuk az újakat — így a UI-ban látott állapot lesz az érvényes.
+ */
+export const setMemberRoles = async (userId, roles, grantedBy = null) => {
+  const wanted = [...new Set(roles)].filter(Boolean);
+  unwrap(await supabase.from('user_roles').delete().eq('user_id', userId));
+  if (wanted.length > 0) {
+    unwrap(
+      await supabase
+        .from('user_roles')
+        .insert(wanted.map((role) => ({ user_id: userId, role, granted_by: grantedBy })))
+    );
+  }
+  return wanted;
+};
+
+// -----------------------------------------------------------------------------
+//  Munkacsoportok
+// -----------------------------------------------------------------------------
+
+export const listWorkgroups = async () =>
+  unwrap(
+    await supabase
+      .from('workgroups')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true })
+  ) || [];
+
+export const createWorkgroup = async (input) => {
+  const slug = await uniqueSlug('workgroups', input.name);
+  return unwrap(
+    await supabase
+      .from('workgroups')
+      .insert({
+        name: input.name.trim(),
+        slug,
+        description: input.description?.trim() || null,
+        leader_name: input.leader_name?.trim() || null,
+        leader_user_id: input.leader_user_id || null,
+        latest_updates: input.latest_updates?.trim() || null,
+        is_active: input.is_active ?? true,
+        sort_order: input.sort_order ?? 0
+      })
+      .select()
+      .single()
+  );
+};
+
+export const updateWorkgroup = async (id, patch) => {
+  const payload = {
+    description: patch.description?.trim() || null,
+    leader_name: patch.leader_name?.trim() || null,
+    leader_user_id: patch.leader_user_id || null,
+    latest_updates: patch.latest_updates?.trim() || null
+  };
+  if (patch.name) {
+    payload.name = patch.name.trim();
+    payload.slug = await uniqueSlug('workgroups', patch.name, id);
+  }
+  if ('is_active' in patch) payload.is_active = patch.is_active;
+  if ('sort_order' in patch) payload.sort_order = patch.sort_order;
+
+  // Az azonosító alapján frissítünk, NEM a slug alapján: átnevezéskor a slug is
+  // változik, így a slug-alapú frissítés némán nulla sort érintene.
+  return unwrap(await supabase.from('workgroups').update(payload).eq('id', id).select().single());
+};
+
+export const deleteWorkgroup = async (id) => {
+  unwrap(await supabase.from('workgroups').delete().eq('id', id));
+  return true;
+};
+
+// -----------------------------------------------------------------------------
+//  Hírek és projektek
+// -----------------------------------------------------------------------------
+
+export const listPublishedNews = async () =>
+  unwrap(
+    await supabase
+      .from('news')
+      .select('*')
+      .eq('is_published', true)
+      .order('published_at', { ascending: false, nullsFirst: false })
+  ) || [];
+
+export const listAllNews = async () =>
+  unwrap(
+    await supabase
+      .from('news')
+      .select('*')
+      .order('created_at', { ascending: false })
+  ) || [];
+
+export const createNews = async (input, authorId = null) => {
+  const slug = await uniqueSlug('news', input.title);
+  const published = input.is_published ?? false;
+  return unwrap(
+    await supabase
+      .from('news')
+      .insert({
+        title: input.title.trim(),
+        slug,
+        category: input.category?.trim() || null,
+        excerpt: input.excerpt?.trim() || null,
+        body: input.body?.trim() || null,
+        cover_path: input.cover_path || null,
+        is_published: published,
+        published_at: published ? new Date().toISOString() : null,
+        author_id: authorId
+      })
+      .select()
+      .single()
+  );
+};
+
+export const updateNews = async (id, patch) => {
+  const payload = {
+    category: patch.category?.trim() || null,
+    excerpt: patch.excerpt?.trim() || null,
+    body: patch.body?.trim() || null
+  };
+  if (patch.title) {
+    payload.title = patch.title.trim();
+    payload.slug = await uniqueSlug('news', patch.title, id);
+  }
+  if ('cover_path' in patch) payload.cover_path = patch.cover_path || null;
+  if ('is_published' in patch) {
+    payload.is_published = patch.is_published;
+    payload.published_at = patch.is_published ? patch.published_at || new Date().toISOString() : null;
+  }
+  return unwrap(await supabase.from('news').update(payload).eq('id', id).select().single());
+};
+
+export const deleteNews = async (id) => {
+  unwrap(await supabase.from('news').delete().eq('id', id));
+  return true;
+};
+
+// -----------------------------------------------------------------------------
+//  Dokumentumok
+//
+//  A fájl a Storage 'documents' bucketjében van. A publikus letöltés is aláírt
+//  URL-lel megy, hogy a bucket zárt maradhasson.
+// -----------------------------------------------------------------------------
+
+export const listDocuments = async (accessLevels = null) => {
+  let query = supabase.from('documents').select('*').order('created_at', { ascending: false });
+  if (accessLevels) query = query.in('access_level', accessLevels);
+  return unwrap(await query) || [];
+};
+
+/** Fájl feltöltése + a dokumentum rekord létrehozása egy lépésben. */
+export const createDocument = async (input, file, uploadedBy = null) => {
+  const slug = await uniqueSlug('documents', input.title);
+  let storagePath = null;
+
+  if (file) {
+    const extension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'dat';
+    storagePath = `${new Date().getFullYear()}/${slug}.${extension}`;
+    const { error } = await supabase.storage
+      .from('documents')
+      .upload(storagePath, file, { upsert: true, contentType: file.type || undefined });
+    if (error) throw new Error(`A fájl feltöltése nem sikerült: ${error.message}`);
+  }
+
+  try {
+    return unwrap(
+      await supabase
+        .from('documents')
+        .insert({
+          title: input.title.trim(),
+          slug,
+          category: input.category?.trim() || null,
+          description: input.description?.trim() || null,
+          access_level: input.access_level || 'members',
+          storage_path: storagePath,
+          file_size: file?.size ?? null,
+          file_type: file?.type || null,
+          uploaded_by: uploadedBy
+        })
+        .select()
+        .single()
+    );
+  } catch (err) {
+    // Ne maradjon árva fájl a Storage-ban, ha a rekord mentése elhasalt.
+    if (storagePath) await supabase.storage.from('documents').remove([storagePath]);
+    throw err;
+  }
+};
+
+export const deleteDocument = async (doc) => {
+  if (doc.storage_path) {
+    await supabase.storage.from('documents').remove([doc.storage_path]);
+  }
+  unwrap(await supabase.from('documents').delete().eq('id', doc.id));
+  return true;
+};
+
+/** Időlimitált letöltési link. `null`, ha nincs feltöltött fájl. */
+export const getDocumentUrl = async (doc) => {
+  if (doc.drive_url) return doc.drive_url;
+  if (!doc.storage_path) return null;
+  const { data, error } = await supabase.storage
+    .from('documents')
+    .createSignedUrl(doc.storage_path, 300);
+  if (error) throw new Error(`A letöltési link készítése nem sikerült: ${error.message}`);
+  return data.signedUrl;
+};
+
+// -----------------------------------------------------------------------------
+//  Tagdíjak
+// -----------------------------------------------------------------------------
+
+export const listDuesRates = async (year = null) => {
+  let query = supabase
+    .from('dues_rates')
+    .select('*')
+    .order('year', { ascending: false })
+    .order('sort_order', { ascending: true });
+  if (year) query = query.eq('year', year);
+  return unwrap(await query) || [];
+};
+
+export const createDuesRate = async (input) =>
+  unwrap(
+    await supabase
+      .from('dues_rates')
+      .insert({
+        year: Number(input.year),
+        label: input.label.trim(),
+        amount_huf: Number(input.amount_huf),
+        note: input.note?.trim() || null,
+        sort_order: input.sort_order ?? 0
+      })
+      .select()
+      .single()
+  );
+
+export const deleteDuesRate = async (id) => {
+  unwrap(await supabase.from('dues_rates').delete().eq('id', id));
+  return true;
+};
+
+export const listDues = async (year = null) => {
+  let query = supabase
+    .from('membership_dues')
+    .select('*')
+    .order('year', { ascending: false });
+  if (year) query = query.eq('year', year);
+  return unwrap(await query) || [];
+};
+
+export const listOwnDues = async (profileId) =>
+  unwrap(
+    await supabase
+      .from('membership_dues')
+      .select('*')
+      .eq('profile_id', profileId)
+      .order('year', { ascending: false })
+  ) || [];
+
+/** Elnökségi rögzítés: évenként egy sor tagonként (unique profile_id+year). */
+export const upsertDues = async (profileId, year, patch) =>
+  unwrap(
+    await supabase
+      .from('membership_dues')
+      .upsert(
+        {
+          profile_id: profileId,
+          year: Number(year),
+          amount_huf: patch.amount_huf === '' || patch.amount_huf == null ? null : Number(patch.amount_huf),
+          status: patch.status || 'pending',
+          due_date: patch.due_date || null,
+          paid_at: patch.status === 'paid' ? patch.paid_at || new Date().toISOString().slice(0, 10) : null,
+          payment_method: patch.payment_method?.trim() || null,
+          notes: patch.notes?.trim() || null
+        },
+        { onConflict: 'profile_id,year' }
+      )
+      .select()
+      .single()
+  );
+
+/**
+ * A tag feltölti a saját átutalási igazolását.
+ * Az útvonal ELSŐ szegmense kötelezően a saját user id — erre épül a Storage
+ * szabály, így más tag igazolásához nem lehet hozzáférni.
+ */
+export const uploadDuesProof = async (profileId, year, file) => {
+  const extension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'dat';
+  const path = `${profileId}/${year}-igazolas.${extension}`;
+
+  const { error } = await supabase.storage
+    .from('dues-proofs')
+    .upload(path, file, { upsert: true, contentType: file.type || undefined });
+  if (error) throw new Error(`Az igazolás feltöltése nem sikerült: ${error.message}`);
+
+  // A státuszt nem a tag állítja 'paid'-re — azt az elnökség hagyja jóvá.
+  return unwrap(
+    await supabase
+      .from('membership_dues')
+      .upsert(
+        { profile_id: profileId, year: Number(year), proof_path: path },
+        { onConflict: 'profile_id,year' }
+      )
+      .select()
+      .single()
+  );
+};
+
+export const getDuesProofUrl = async (proofPath) => {
+  if (!proofPath) return null;
+  const { data, error } = await supabase.storage.from('dues-proofs').createSignedUrl(proofPath, 300);
+  if (error) throw new Error(`Az igazolás megnyitása nem sikerült: ${error.message}`);
+  return data.signedUrl;
+};

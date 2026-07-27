@@ -1,181 +1,321 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { Plus, Pencil, Trash2, Newspaper, Eye, EyeOff, ImagePlus, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+import { listAllNews, createNews, updateNews, deleteNews } from '../../lib/db';
+import { supabase } from '../../lib/supabaseClient';
+import { useAsyncData } from '../../lib/useAsyncData';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { FileEdit, Plus, Sparkles, Image, Check, Trash2 } from 'lucide-react';
+import {
+  EmptyState, LoadingBlock, ErrorBlock, Modal, ConfirmDialog,
+  TextInput, TextArea, Checkbox, Spinner
+} from '../ui';
+import { coverUrl, formatDate } from '../../lib/format';
 
-export const NewsEditor = () => {
-  const { newsProjects, addNewsProject } = useAuth();
+const EMPTY = { title: '', category: '', excerpt: '', body: '', cover_path: '', is_published: false };
+const MAX_COVER_BYTES = 4 * 1024 * 1024;
+
+const NewsModal = ({ item, open, onClose, onSaved }) => {
+  const { profile } = useAuth();
   const toast = useToast();
-  const [showModal, setShowModal] = useState(false);
+  const isNew = !item?.id;
+  const fileRef = useRef(null);
 
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState('hír');
-  const [category, setCategory] = useState('Turisztikai Fejlesztés');
-  const [summary, setSummary] = useState('');
-  const [content, setContent] = useState('');
+  const [form, setForm] = useState(item ? { ...EMPTY, ...item } : EMPTY);
+  const [pending, setPending] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const [saving, setSaving] = useState(false);
+  const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!title || !summary) return;
-    setSaving(true);
-    const result = await addNewsProject({
-      title,
-      type,
-      category,
-      summary,
-      content: content || summary,
-      image: "https://images.unsplash.com/photo-1548625361-185b376d8b37?auto=format&fit=crop&w=1000&q=80"
-    });
-    setSaving(false);
+  const handleCover = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
 
-    if (!result.ok) {
-      toast.error(result.error, { title: 'A tartalom nem került be az adatbázisba' });
+    if (file.size > MAX_COVER_BYTES) {
+      toast.error('A kép túl nagy — legfeljebb 4 MB tölthető fel.');
       return;
     }
-    setShowModal(false);
-    setTitle('');
-    setSummary('');
-    setContent('');
-    toast.success(`A(z) „${result.news.title}” ${result.news.type} publikálva és elmentve.`);
+
+    setUploading(true);
+    try {
+      const extension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'jpg';
+      const path = `hirek/${Date.now()}.${extension}`;
+      const { error } = await supabase.storage
+        .from('public-media')
+        .upload(path, file, { upsert: true, contentType: file.type || undefined });
+      if (error) throw new Error(error.message);
+
+      setForm((prev) => ({ ...prev, cover_path: path }));
+      toast.success('A borítóképet feltöltöttük. Ne felejtsd elmenteni a hírt.');
+    } catch (err) {
+      toast.error(`A kép feltöltése nem sikerült: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
   };
+
+  const handleSave = async () => {
+    if (!form.title.trim()) {
+      toast.error('A hír címét meg kell adni.');
+      return;
+    }
+    setPending(true);
+    try {
+      if (isNew) await createNews(form, profile?.id || null);
+      else await updateNews(item.id, form);
+      toast.success(isNew ? 'A hír létrejött.' : 'A hírt elmentettük.');
+      await onSaved();
+      onClose();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const preview = coverUrl(form.cover_path);
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={isNew ? 'Új hír' : 'Hír szerkesztése'}
+      size="lg"
+      footer={
+        <>
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={pending}>
+            Mégsem
+          </button>
+          <button type="button" className="btn-primary" onClick={handleSave} disabled={pending}>
+            {pending ? <Spinner label="Mentés…" className="text-white" /> : 'Mentés'}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        <TextInput label="Cím" required value={form.title} onChange={set('title')} />
+
+        <TextInput
+          label="Kategória"
+          value={form.category || ''}
+          onChange={set('category')}
+          hint="Szabadon írható, pl. Felhívás, Program, Közgyűlés. A szűrő ezekből épül fel."
+        />
+
+        <TextArea
+          label="Rövid összefoglaló"
+          value={form.excerpt || ''}
+          onChange={set('excerpt')}
+          rows={2}
+          hint="Ez látszik a listában és a főoldalon."
+        />
+
+        <TextArea
+          label="Szöveg"
+          value={form.body || ''}
+          onChange={set('body')}
+          rows={9}
+          hint="Az üres sorral elválasztott részek külön bekezdésként jelennek meg."
+        />
+
+        {/* Borítókép */}
+        <div>
+          <p className="label">Borítókép</p>
+          {preview && (
+            <img
+              src={preview}
+              alt=""
+              className="mb-3 h-40 w-full rounded-lg border border-sand-400 object-cover"
+            />
+          )}
+          <div className="flex flex-wrap gap-2">
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleCover} className="hidden" tabIndex={-1} />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="btn-secondary btn-sm"
+            >
+              {uploading ? (
+                <Spinner label="Feltöltés…" />
+              ) : (
+                <>
+                  <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                  {form.cover_path ? 'Kép cseréje' : 'Kép feltöltése'}
+                </>
+              )}
+            </button>
+            {form.cover_path && (
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, cover_path: '' }))}
+                className="btn-danger btn-sm"
+              >
+                Kép eltávolítása
+              </button>
+            )}
+          </div>
+        </div>
+
+        <Checkbox
+          label="Közzétéve"
+          hint="Amíg nincs bepipálva, a hír csak itt látszik, a nyilvános oldalon nem."
+          checked={Boolean(form.is_published)}
+          onChange={(e) => setForm((prev) => ({ ...prev, is_published: e.target.checked }))}
+        />
+      </div>
+    </Modal>
+  );
+};
+
+export const NewsEditor = () => {
+  const toast = useToast();
+  const { data, loading, error, reload } = useAsyncData(listAllNews);
+  const [editing, setEditing] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [deletePending, setDeletePending] = useState(false);
+  const [togglingId, setTogglingId] = useState(null);
+
+  const items = data || [];
+
+  const togglePublish = async (item) => {
+    setTogglingId(item.id);
+    try {
+      await updateNews(item.id, { is_published: !item.is_published });
+      toast.success(item.is_published ? 'A hírt elrejtettük.' : 'A hírt közzétettük.');
+      await reload();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeletePending(true);
+    try {
+      await deleteNews(deleting.id);
+      toast.success('A hírt töröltük.');
+      await reload();
+      setDeleting(null);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setDeletePending(false);
+    }
+  };
+
+  if (loading) return <LoadingBlock />;
+  if (error) return <ErrorBlock message={error} onRetry={reload} />;
 
   return (
     <div className="space-y-6">
-      
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#E2D7C7] shadow-sm">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#63534B] uppercase tracking-wider mb-1">
-            <FileEdit className="w-4 h-4 text-[#6B1D2F]" />
-            Tartalomkezelő (CMS)
-          </div>
-          <h2 className="font-serif text-2xl font-bold text-[#2C221E]">
-            Hírek & Készülő Projektek Kezelése
-          </h2>
-        </div>
-
-        <button 
-          onClick={() => setShowModal(true)}
-          className="btn-wine text-xs uppercase tracking-wider font-semibold self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Új Közlemény Közzététele
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-ink-500">
+          {items.length} bejegyzés — ebből {items.filter((i) => i.is_published).length} közzétéve
+        </p>
+        <button type="button" onClick={() => setEditing(EMPTY)} className="btn-primary btn-sm">
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Új hír
         </button>
       </div>
 
-      {/* Existing items list */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {newsProjects.map((item) => (
-          <div key={item.id} className="bg-white p-5 rounded-xl border border-[#E2D7C7] space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="badge-wine text-[0.65rem] uppercase font-bold">
-                {item.type} • {item.category}
-              </span>
-              <span className="text-[0.68rem] text-[#63534B]">{item.date}</span>
-            </div>
-
-            <h4 className="font-serif text-lg font-bold text-[#2C221E]">
-              {item.title}
-            </h4>
-
-            <p className="text-xs text-[#63534B] line-clamp-2">
-              {item.summary}
-            </p>
-
-            <div className="pt-2 border-t border-[#FAF6F0] flex justify-between text-xs text-[#6B1D2F] font-semibold">
-              <span>Státusz: Publikálva</span>
-              <span>KTSzE Hivatalos</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#FAF6F0] rounded-2xl max-w-lg w-full p-6 border-2 border-[#C5A880] shadow-2xl relative">
-            <h3 className="font-serif text-xl font-bold text-[#2C221E] mb-4">
-              Új Egyesületi Közlemény v. Projekt Publikálása
-            </h3>
-
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-[#2C221E] mb-1">Közlemény Címe *</label>
-                <input 
-                  type="text" 
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Pl. Új kőszegi turisztikai térképek nyomtatása"
-                  className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Típus</label>
-                  <select 
-                    value={type} 
-                    onChange={(e) => setType(e.target.value)}
-                    className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                  >
-                    <option value="hír">Hír</option>
-                    <option value="projekt">Fejlesztési Projekt</option>
-                    <option value="pályázat">Pályázat</option>
-                  </select>
+      {items.length === 0 ? (
+        <EmptyState
+          icon={Newspaper}
+          title="Még nincs egyetlen hír sem"
+          description="Itt tudod közzétenni az egyesület közleményeit, felhívásait és programjait. Amíg nincs bejegyzés, a nyilvános oldalon üres állapot látszik."
+          action={
+            <button type="button" onClick={() => setEditing(EMPTY)} className="btn-primary">
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Első hír létrehozása
+            </button>
+          }
+        />
+      ) : (
+        <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-white">
+          {items.map((item) => (
+            <li key={item.id} className="flex flex-wrap items-start justify-between gap-4 p-4 sm:p-5">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-display text-base text-ink-900">{item.title}</h3>
+                  {item.is_published ? (
+                    <span className="badge-positive">Közzétéve</span>
+                  ) : (
+                    <span className="badge-caution">Vázlat</span>
+                  )}
+                  {item.category && <span className="badge-neutral">{item.category}</span>}
                 </div>
-                <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Kategória</label>
-                  <select 
-                    value={category} 
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                  >
-                    <option value="Turisztikai Fejlesztés">Turisztikai Fejlesztés</option>
-                    <option value="Közgyűlés">Közgyűlés</option>
-                    <option value="Pályázat">Pályázat</option>
-                    <option value="Egyesület">Egyesület</option>
-                  </select>
-                </div>
+
+                <p className="mt-1 text-xs text-ink-500">
+                  {item.is_published && item.published_at
+                    ? `Közzétéve: ${formatDate(item.published_at)}`
+                    : `Létrehozva: ${formatDate(item.created_at)}`}
+                </p>
+
+                {item.excerpt && <p className="mt-2 text-sm text-ink-600">{item.excerpt}</p>}
               </div>
 
-              <div>
-                <label className="block font-semibold text-[#2C221E] mb-1">Rövid Összefoglaló *</label>
-                <textarea 
-                  rows={2}
-                  required
-                  value={summary}
-                  onChange={(e) => setSummary(e.target.value)}
-                  placeholder="Kártyán megjelenő rövid összefoglalás..."
-                  className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                ></textarea>
-              </div>
+              <div className="flex shrink-0 flex-wrap gap-1.5">
+                <Link
+                  to={`/hirek/${item.slug}`}
+                  className="btn-secondary btn-sm"
+                  aria-label={`${item.title} megnyitása`}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
 
-              <div>
-                <label className="block font-semibold text-[#2C221E] mb-1">Részletes Tartalom</label>
-                <textarea 
-                  rows={4}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="A teljes közlemény szövege..."
-                  className="w-full p-2.5 rounded border border-[#E2D7C7] bg-white text-[#2C221E]"
-                ></textarea>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-outline-brown text-xs">
-                  Mégse
+                <button
+                  type="button"
+                  onClick={() => togglePublish(item)}
+                  disabled={togglingId === item.id}
+                  className="btn-secondary btn-sm"
+                  aria-label={item.is_published ? `${item.title} elrejtése` : `${item.title} közzététele`}
+                >
+                  {item.is_published ? (
+                    <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
                 </button>
-                <button type="submit" disabled={saving} className="btn-wine text-xs disabled:opacity-60">
-                  {saving ? 'Mentés az adatbázisba…' : 'Publikálás'}
+
+                <button
+                  type="button"
+                  onClick={() => setEditing(item)}
+                  className="btn-secondary btn-sm"
+                  aria-label={`${item.title} szerkesztése`}
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDeleting(item)}
+                  className="btn-danger btn-sm"
+                  aria-label={`${item.title} törlése`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
+            </li>
+          ))}
+        </ul>
       )}
 
+      {editing && (
+        <NewsModal key={editing.id || 'new'} item={editing} open onClose={() => setEditing(null)} onSaved={reload} />
+      )}
+
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        onConfirm={handleDelete}
+        pending={deletePending}
+        title="Hír törlése"
+        message={`Biztosan törlöd a(z) „${deleting?.title}” bejegyzést? A művelet nem vonható vissza.`}
+      />
     </div>
   );
 };

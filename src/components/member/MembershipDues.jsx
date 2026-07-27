@@ -1,160 +1,227 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { Wallet, Upload, FileCheck2, Copy, Check } from 'lucide-react';
+
+import { ORGANIZATION } from '../../config/organization';
+import { listOwnDues, uploadDuesProof, getDuesProofUrl } from '../../lib/db';
+import { useAsyncData } from '../../lib/useAsyncData';
 import { useAuth } from '../../context/AuthContext';
-import { CreditCard, CheckCircle2, Clock, Upload, AlertCircle, FileCheck, Copy, Check } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
+import { EmptyState, LoadingBlock, ErrorBlock, Spinner } from '../ui';
+import { formatHuf, formatDateShort } from '../../lib/format';
 
-export const MembershipDues = () => {
-  const { currentUser } = useAuth();
+const STATUS = {
+  paid: { label: 'Rendezve', cls: 'badge-positive' },
+  pending: { label: 'Függőben', cls: 'badge-caution' },
+  overdue: { label: 'Késedelmes', cls: 'badge-wine' },
+  waived: { label: 'Elengedve', cls: 'badge-neutral' }
+};
+
+const MAX_PROOF_BYTES = 5 * 1024 * 1024;
+
+/** Banki adatok — csak ha tényleg be van állítva a config-ban. */
+const BankDetails = () => {
   const [copied, setCopied] = useState(false);
-  const [proofUploaded, setProofUploaded] = useState(false);
+  const toast = useToast();
 
-  const duesInfo = currentUser?.dues_2026 || { status: 'pending', amount: 24000, paid_at: null };
+  if (!ORGANIZATION.bankAccount) return null;
 
-  const handleCopyAccount = () => {
-    navigator.clipboard.writeText("11747051-20019948");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
-  };
-
-  const handleUploadProof = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setProofUploaded(true);
-      setTimeout(() => setProofUploaded(false), 5000);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(ORGANIZATION.bankAccount);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.info('A vágólapra másolás nem sikerült. Jelöld ki és másold kézzel.');
     }
   };
 
   return (
-    <div className="space-y-8">
-      
-      {/* Header Banner */}
-      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#E2D7C7] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+    <div className="surface p-5">
+      <h3 className="font-display text-base text-ink-900">Utalási adatok</h3>
+      <dl className="mt-3 space-y-2 text-sm">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#63534B] uppercase tracking-wider mb-1">
-            <CreditCard className="w-4 h-4 text-[#6B1D2F]" />
-            Tagdíj Állapot • 2026. Év
+          <dt className="text-xs uppercase tracking-wide text-ink-500">Kedvezményezett</dt>
+          <dd className="text-ink-900">{ORGANIZATION.legalName}</dd>
+        </div>
+        {ORGANIZATION.bankName && (
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-ink-500">Bank</dt>
+            <dd className="text-ink-900">{ORGANIZATION.bankName}</dd>
           </div>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#2C221E]">
-            {currentUser?.organization_name || "Egyesületi Tag"}
-          </h2>
-          <p className="text-xs text-[#63534B] mt-1">
-            Tagsági kategória: <span className="font-semibold text-[#2C221E]">{currentUser?.member_type || "Szolgáltató"}</span>
-          </p>
+        )}
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-ink-500">Számlaszám</dt>
+          <dd className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-wine-600">{ORGANIZATION.bankAccount}</span>
+            <button type="button" onClick={copy} className="btn-secondary btn-sm">
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-positive-600" aria-hidden="true" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {copied ? 'Másolva' : 'Másolás'}
+            </button>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  );
+};
+
+const DuesRow = ({ dues, onUploaded }) => {
+  const { profile } = useAuth();
+  const toast = useToast();
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [openingProof, setOpeningProof] = useState(false);
+
+  const status = STATUS[dues.status] || STATUS.pending;
+  const amount = formatHuf(dues.amount_huf);
+
+  const handleFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = ''; // ugyanaz a fájl újra kiválasztható legyen
+    if (!file) return;
+
+    if (file.size > MAX_PROOF_BYTES) {
+      toast.error('A fájl túl nagy — legfeljebb 5 MB tölthető fel.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      await uploadDuesProof(profile.id, dues.year, file);
+      toast.success('Az igazolást feltöltöttük. Az elnökség ellenőrzés után jelöli rendezettnek.');
+      await onUploaded();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const openProof = async () => {
+    setOpeningProof(true);
+    try {
+      const url = await getDuesProofUrl(dues.proof_path);
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setOpeningProof(false);
+    }
+  };
+
+  return (
+    <li className="flex flex-wrap items-start justify-between gap-4 p-4 sm:p-5">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-display text-lg text-ink-900">{dues.year}. évi tagdíj</h3>
+          <span className={status.cls}>{status.label}</span>
         </div>
 
-        {/* Status Badge */}
-        <div>
-          {duesInfo.status === 'paid' ? (
-            <div className="bg-[#E8F5E9] border border-[#C8E6C9] px-4 py-2 rounded-xl flex items-center gap-2 text-[#2E7D32]">
-              <CheckCircle2 className="w-5 h-5" />
-              <div>
-                <div className="font-bold text-xs uppercase">2026. Évi Tagdíj Rendezve</div>
-                <div className="text-[0.68rem]">Befizetve: {duesInfo.paid_at || "2026.01.15"}</div>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-[#FFF8E1] border border-[#FFE082] px-4 py-2 rounded-xl flex items-center gap-2 text-[#F57F17]">
-              <Clock className="w-5 h-5" />
-              <div>
-                <div className="font-bold text-xs uppercase">Befizetésre Vár</div>
-                <div className="text-[0.68rem]">Esedékesség: 2026. március 31.</div>
-              </div>
+        <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-ink-600">
+          {amount && (
+            <div className="flex gap-1.5">
+              <dt className="text-ink-500">Összeg:</dt>
+              <dd className="font-medium text-ink-900">{amount}</dd>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Dues Details & Bank Transfer Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        {/* Transfer Details Card */}
-        <div className="bg-[#F3ECE0] rounded-2xl p-6 border border-[#E2D7C7] space-y-4">
-          <h3 className="font-serif text-xl font-bold text-[#2C221E] pb-2 border-b border-[#E2D7C7]">
-            Átutalási Adatok Tagdíjbe fizetéshez
-          </h3>
-
-          <div className="space-y-3 text-xs">
-            <div className="flex justify-between py-1 border-b border-[#FAF6F0]">
-              <span className="text-[#63534B]">Kedvezményezett Név:</span>
-              <strong className="text-[#2C221E]">Kőszegi Turisztikai Szövetség Egyesület</strong>
-            </div>
-
-            <div className="flex justify-between items-center py-1 border-b border-[#FAF6F0]">
-              <span className="text-[#63534B]">Számlavezető Bank:</span>
-              <strong className="text-[#2C221E]">OTP Bank Nyrt.</strong>
-            </div>
-
-            <div className="flex justify-between items-center py-1 border-b border-[#FAF6F0]">
-              <span className="text-[#63534B]">Bankszámlaszám:</span>
-              <div className="flex items-center gap-2">
-                <strong className="text-[#6B1D2F] font-mono text-sm">11747051-20019948</strong>
-                <button 
-                  onClick={handleCopyAccount}
-                  className="p-1 text-[#63534B] hover:text-[#6B1D2F] rounded border-0 bg-transparent cursor-pointer"
-                  title="Másolás"
-                >
-                  {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-between py-1 border-b border-[#FAF6F0]">
-              <span className="text-[#63534B]">Éves Éves Tagdíj Összege:</span>
-              <strong className="text-[#6B1D2F] text-base font-serif">{duesInfo.amount.toLocaleString()} Ft</strong>
-            </div>
-
-            <div className="flex justify-between py-1">
-              <span className="text-[#63534B]">Közleménybe írandó:</span>
-              <strong className="text-[#2C221E] font-mono">Tagdíj 2026 - {currentUser?.organization_name || "Tag neve"}</strong>
-            </div>
-          </div>
-
-          <div className="p-3 bg-[#FAF6F0] rounded-lg border border-[#C5A880] text-[0.7rem] text-[#63534B] flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-[#6B1D2F] shrink-0 mt-0.5" />
-            <span>Kérjük, hogy az utalás közleményében pontosan tüntesse fel a vállalkozása nevét a gyors beazonosítás érdekében!</span>
-          </div>
-
-        </div>
-
-        {/* Upload Proof Card */}
-        <div className="bg-white rounded-2xl p-6 border border-[#E2D7C7] space-y-4 shadow-sm">
-          <h3 className="font-serif text-xl font-bold text-[#2C221E] pb-2 border-b border-[#E2D7C7]">
-            Befizetési Igazolás Feltöltése
-          </h3>
-
-          <p className="text-xs text-[#63534B]">
-            Amennyiben banki átutalással egyenlítette ki a tagdíjat, itt feltöltheti az utalási bizonylatot (PDF/Kép formatum), hogy az egyesület könyvelése azonnal rögzíthesse.
-          </p>
-
-          {proofUploaded ? (
-            <div className="p-4 bg-[#E8F5E9] border border-[#C8E6C9] rounded-xl flex items-center gap-3 text-[#2E7D32] text-xs">
-              <FileCheck className="w-6 h-6 shrink-0" />
-              <div>
-                <strong className="block">Bizonylat sikeresen feltöltve!</strong>
-                <span>Munkatársunk ellenőrzi a befizetést. Köszönjük!</span>
-              </div>
-            </div>
-          ) : (
-            <div className="border-2 border-dashed border-[#E2D7C7] hover:border-[#6B1D2F] rounded-xl p-6 text-center bg-[#FAF6F0] transition-colors cursor-pointer relative">
-              <input 
-                type="file" 
-                onChange={handleUploadProof}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
-                accept=".pdf,.png,.jpg,.jpeg"
-              />
-              <Upload className="w-8 h-8 text-[#6B1D2F] mx-auto mb-2" />
-              <div className="font-semibold text-xs text-[#2C221E]">Kattintson ide a fájl feltöltéséhez</div>
-              <div className="text-[0.68rem] text-[#63534B] mt-1">PDF, JPG vagy PNG (Max. 5 MB)</div>
+          {dues.due_date && (
+            <div className="flex gap-1.5">
+              <dt className="text-ink-500">Határidő:</dt>
+              <dd>{formatDateShort(dues.due_date)}</dd>
             </div>
           )}
+          {dues.paid_at && (
+            <div className="flex gap-1.5">
+              <dt className="text-ink-500">Rendezve:</dt>
+              <dd>{formatDateShort(dues.paid_at)}</dd>
+            </div>
+          )}
+        </dl>
 
-          <div className="pt-2 text-xs text-[#63534B]">
-            <strong>Számlázással kapcsolatos kérdés?</strong><br />
-            Lépjen kapcsolatba az egyesület könyvelésével: <a href="mailto:penzugy@koszegiturizmus.hu" className="text-[#6B1D2F] font-semibold hover:underline">penzugy@koszegiturizmus.hu</a>
-          </div>
-
-        </div>
-
+        {dues.notes && <p className="mt-2 text-sm text-ink-500">{dues.notes}</p>}
       </div>
 
+      <div className="flex shrink-0 flex-wrap gap-2">
+        {dues.proof_path && (
+          <button type="button" onClick={openProof} disabled={openingProof} className="btn-secondary btn-sm">
+            <FileCheck2 className="h-4 w-4 text-positive-600" aria-hidden="true" />
+            Igazolás
+          </button>
+        )}
+
+        {dues.status !== 'paid' && (
+          <>
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={handleFile}
+              className="hidden"
+              tabIndex={-1}
+            />
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              className="btn-primary btn-sm"
+            >
+              {uploading ? (
+                <Spinner label="Feltöltés…" className="text-white" />
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" aria-hidden="true" />
+                  {dues.proof_path ? 'Új igazolás' : 'Igazolás feltöltése'}
+                </>
+              )}
+            </button>
+          </>
+        )}
+      </div>
+    </li>
+  );
+};
+
+export const MembershipDues = () => {
+  const { profile } = useAuth();
+  const { data, loading, error, reload } = useAsyncData(() => listOwnDues(profile.id), [profile?.id], {
+    enabled: Boolean(profile?.id)
+  });
+
+  const dues = data || [];
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        {loading && <LoadingBlock />}
+        {error && <ErrorBlock message={error} onRetry={reload} />}
+
+        {!loading &&
+          !error &&
+          (dues.length === 0 ? (
+            <EmptyState
+              icon={Wallet}
+              title="Még nincs kiírt tagdíj"
+              description="A tagdíjat az elnökség írja ki a belső felületen. Amint megtörtént, itt fog megjelenni, és ide tudod feltölteni az átutalási igazolást."
+            />
+          ) : (
+            <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-white">
+              {dues.map((item) => (
+                <DuesRow key={item.id} dues={item} onUploaded={reload} />
+              ))}
+            </ul>
+          ))}
+      </div>
+
+      <aside className="space-y-5">
+        <BankDetails />
+        <p className="text-xs text-ink-500">
+          A feltöltött igazolást csak te és az elnökség láthatja. A „rendezve” állapotot az elnökség állítja be
+          ellenőrzés után — ezt a tag maga nem tudja módosítani.
+        </p>
+      </aside>
     </div>
   );
 };

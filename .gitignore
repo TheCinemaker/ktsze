@@ -26,6 +26,10 @@ lerna-debug.log*
 *.sln
 *.sw?
 
+# Belső jegyzetek — hozzáférési adatokat tartalmazhatnak, ne kerüljenek git-be.
+# A már követett példányt egyszer ki kell venni:  git rm --cached HOZZAFERESEK.md
+HOZZAFERESEK.md
+
 # Environment files
 .env
 .env.local

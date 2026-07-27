@@ -1,33 +1,47 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+// =============================================================================
+//  Értesítések — az alert() helyett.
+//
+//  A korábbi verzióban 14 helyen volt böngésző-alert, és több helyen "sikeres
+//  mentés" üzenet jelent meg olyankor is, amikor az adatbázis visszadobta a
+//  kérést. Itt a hibaüzenet hosszabban látszik, mint a siker, és a szövege a
+//  Supabase valódi hibájából származik.
+// =============================================================================
+
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { CheckCircle2, AlertTriangle, Info, X } from 'lucide-react';
 
-const ToastContext = createContext();
+const ToastContext = createContext(null);
 
 const VARIANTS = {
   success: {
     Icon: CheckCircle2,
-    bar: 'bg-[#2E7D32]',
-    iconColor: 'text-[#2E7D32]',
-    iconBg: 'bg-[#E8F5E9]',
-    border: 'border-[#C8E6C9]'
+    accent: 'bg-positive-600',
+    iconColor: 'text-positive-600',
+    iconBg: 'bg-positive-50',
+    border: 'border-positive-300',
+    defaultTitle: 'Sikeres mentés'
   },
   error: {
     Icon: AlertTriangle,
-    bar: 'bg-[#6B1D2F]',
-    iconColor: 'text-[#6B1D2F]',
-    iconBg: 'bg-[#F7EBEF]',
-    border: 'border-[#D9AAB6]'
+    accent: 'bg-wine-600',
+    iconColor: 'text-wine-600',
+    iconBg: 'bg-wine-100',
+    border: 'border-wine-300',
+    defaultTitle: 'Hiba történt'
   },
   info: {
     Icon: Info,
-    bar: 'bg-[#C5A880]',
-    iconColor: 'text-[#7A5B2E]',
-    iconBg: 'bg-[#FAF3E8]',
-    border: 'border-[#E5D2B8]'
+    accent: 'bg-sand-500',
+    iconColor: 'text-caution-600',
+    iconBg: 'bg-caution-50',
+    border: 'border-caution-300',
+    defaultTitle: 'Tájékoztatás'
   }
 };
 
-const DEFAULT_DURATION = { success: 4000, info: 4000, error: 9000 };
+// A hibát hosszabban hagyjuk kint — azt el kell tudni olvasni.
+const DURATIONS = { success: 4000, info: 5000, error: 11000 };
+const MAX_VISIBLE = 3;
 
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
@@ -44,30 +58,37 @@ export const ToastProvider = ({ children }) => {
 
   const notify = useCallback(
     (message, { variant = 'info', title, duration } = {}) => {
+      if (!message) return null;
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      const ms = duration ?? DEFAULT_DURATION[variant] ?? 4000;
-      setToasts((prev) => [...prev.slice(-3), { id, message, variant, title }]);
-      timers.current.set(
-        id,
-        setTimeout(() => dismiss(id), ms)
-      );
+      const ms = duration ?? DURATIONS[variant] ?? 5000;
+
+      setToasts((prev) => [...prev, { id, message: String(message), variant, title }].slice(-MAX_VISIBLE));
+      timers.current.set(id, setTimeout(() => dismiss(id), ms));
       return id;
     },
     [dismiss]
   );
 
-  const toast = {
-    success: (message, options) => notify(message, { ...options, variant: 'success' }),
-    error: (message, options) => notify(message, { ...options, variant: 'error' }),
-    info: (message, options) => notify(message, { ...options, variant: 'info' })
-  };
+  // Lecsatoláskor ne maradjanak árva időzítők.
+  useEffect(() => {
+    const map = timers.current;
+    return () => {
+      map.forEach(clearTimeout);
+      map.clear();
+    };
+  }, []);
 
-  // Kilépéskor ne maradjanak árva időzítők
-  const timersRef = timers;
-  useEffect(() => () => timersRef.current.forEach(clearTimeout), [timersRef]);
+  const value = useMemo(() => {
+    const toast = {
+      success: (message, options) => notify(message, { ...options, variant: 'success' }),
+      error: (message, options) => notify(message, { ...options, variant: 'error' }),
+      info: (message, options) => notify(message, { ...options, variant: 'info' })
+    };
+    return { toast, notify, dismiss };
+  }, [notify, dismiss]);
 
   return (
-    <ToastContext.Provider value={{ toast, notify, dismiss }}>
+    <ToastContext.Provider value={value}>
       {children}
       <ToastViewport toasts={toasts} dismiss={dismiss} />
     </ToastContext.Provider>
@@ -78,7 +99,7 @@ const ToastViewport = ({ toasts, dismiss }) => (
   <div
     aria-live="polite"
     aria-atomic="false"
-    className="fixed z-[100] bottom-4 right-4 left-4 sm:left-auto sm:w-[26rem] flex flex-col gap-3 pointer-events-none"
+    className="pointer-events-none fixed bottom-4 left-4 right-4 z-[100] flex flex-col gap-2.5 sm:left-auto sm:w-[25rem]"
   >
     {toasts.map((t) => {
       const variant = VARIANTS[t.variant] || VARIANTS.info;
@@ -87,29 +108,29 @@ const ToastViewport = ({ toasts, dismiss }) => (
         <div
           key={t.id}
           role={t.variant === 'error' ? 'alert' : 'status'}
-          className={`pointer-events-auto flex items-stretch overflow-hidden rounded-xl border ${variant.border} bg-white shadow-xl shadow-black/10 animate-toast-in`}
+          className={`pointer-events-auto flex items-stretch overflow-hidden rounded-xl border bg-white shadow-overlay animate-slide-up ${variant.border}`}
         >
-          <div className={`w-1.5 shrink-0 ${variant.bar}`} />
+          <div className={`w-1 shrink-0 ${variant.accent}`} aria-hidden="true" />
 
-          <div className="flex items-start gap-3 p-4 flex-1 min-w-0">
-            <div className={`shrink-0 p-1.5 rounded-lg ${variant.iconBg}`}>
-              <Icon className={`w-4 h-4 ${variant.iconColor}`} />
+          <div className="flex min-w-0 flex-1 items-start gap-3 p-4">
+            <div className={`shrink-0 rounded-lg p-1.5 ${variant.iconBg}`}>
+              <Icon className={`h-4 w-4 ${variant.iconColor}`} aria-hidden="true" />
             </div>
 
-            <div className="flex-1 min-w-0 space-y-0.5">
-              <div className="font-serif text-sm font-bold text-[#2C221E] leading-snug">
-                {t.title ||
-                  (t.variant === 'success' ? 'Sikeres mentés' : t.variant === 'error' ? 'Hiba történt' : 'Tájékoztatás')}
+            <div className="min-w-0 flex-1">
+              <div className="font-display text-base leading-snug text-ink-900">
+                {t.title || variant.defaultTitle}
               </div>
-              <div className="text-xs text-[#63534B] leading-relaxed break-words whitespace-pre-line">{t.message}</div>
+              <div className="mt-0.5 whitespace-pre-line break-words text-sm text-ink-600">{t.message}</div>
             </div>
 
             <button
+              type="button"
               onClick={() => dismiss(t.id)}
               aria-label="Értesítés bezárása"
-              className="shrink-0 p-1 -m-1 text-[#A39288] hover:text-[#6B1D2F] rounded border-0 bg-transparent cursor-pointer transition-colors"
+              className="-m-1 shrink-0 cursor-pointer rounded border-0 bg-transparent p-1 text-ink-400 transition-colors hover:text-wine-600"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         </div>

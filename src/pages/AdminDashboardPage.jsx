@@ -1,104 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { Users, Flower2, Newspaper, FileText, Wallet, Settings } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
+import { PageHeader } from '../components/ui';
+
 import { MemberManagement } from '../components/admin/MemberManagement';
 import { WorkgroupAdmin } from '../components/admin/WorkgroupAdmin';
 import { NewsEditor } from '../components/admin/NewsEditor';
+import { DocumentAdmin } from '../components/admin/DocumentAdmin';
+import { DuesRatesAdmin } from '../components/admin/DuesRatesAdmin';
 import { AdminSettings } from '../components/admin/AdminSettings';
-import { Users, FileEdit, Database, ShieldAlert, LogOut, Crown, Flower2 } from 'lucide-react';
 
-export const AdminDashboardPage = ({ setActiveTab }) => {
-  const { currentUser, logout } = useAuth();
-  const [activeSubTab, setActiveSubTab] = useState('members');
+/**
+ * Elnökségi felület.
+ *
+ * A fülek a szerepkör szerint jelennek meg: az alelnök tartalmat és
+ * dokumentumokat kezel, de tagdíjat nem; az elnökségi tag betekint, de nem ír.
+ * Ugyanezt a szabályrendszert az adatbázis RLS-e is érvényesíti, tehát egy
+ * elrejtett fül nem jelent megkerülhető korlátot.
+ */
+const ALL_TABS = [
+  { id: 'members', label: 'Tagnyilvántartás', icon: Users, permission: 'members.view', Component: MemberManagement },
+  { id: 'news', label: 'Hírek', icon: Newspaper, permission: 'news.manage', Component: NewsEditor },
+  { id: 'workgroups', label: 'Munkacsoportok', icon: Flower2, permission: 'workgroups.manage', Component: WorkgroupAdmin },
+  { id: 'documents', label: 'Dokumentumok', icon: FileText, permission: 'documents.manage', Component: DocumentAdmin },
+  { id: 'dues', label: 'Tagdíjtételek', icon: Wallet, permission: 'duesRates.manage', Component: DuesRatesAdmin },
+  { id: 'settings', label: 'Beállítások', icon: Settings, permission: 'settings.view', Component: AdminSettings }
+];
+
+export const AdminDashboardPage = () => {
+  const { can, roleLabel, profile } = useAuth();
+
+  const tabs = useMemo(() => ALL_TABS.filter((tab) => can(tab.permission)), [can]);
+  const [activeId, setActiveId] = useState(null);
+
+  const active = tabs.find((t) => t.id === activeId) || tabs[0];
+
+  if (!active) {
+    return (
+      <div className="container-page py-16">
+        <PageHeader
+          eyebrow="Elnökségi felület"
+          title="Nincs elérhető szakasz"
+          description="A szerepköröd egyetlen elnökségi funkcióhoz sem ad hozzáférést. Jelezd a rendszergazdának."
+        />
+      </div>
+    );
+  }
+
+  const ActiveComponent = active.Component;
 
   return (
-    <div className="py-10 bg-[#FAF6F0] min-h-[80vh]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        
-        {/* Welcome Header */}
-        <div className="bg-[#2C221E] text-white rounded-2xl p-6 sm:p-8 border-2 border-[#6B1D2F] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-[#6B1D2F] text-white rounded-2xl flex items-center justify-center font-serif text-2xl font-bold border border-[#C5A880]">
-              <Crown className="w-7 h-7 text-[#C5A880]" />
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-[#C5A880] uppercase tracking-wider">
-                Elnökségi Adminisztrátori Portál
-              </div>
-              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#FAF6F0]">
-                Kőszegi Turisztikai Szövetség Titkárság
-              </h1>
-              <p className="text-xs text-[#A39288]">
-                Bejelentkezve: <strong className="text-white">{currentUser?.full_name || "Elnökség Admin"}</strong> (Jogosultság: Teljes Rendszergazda)
-              </p>
-            </div>
-          </div>
+    <div className="container-page space-y-8 py-12">
+      <PageHeader
+        eyebrow={roleLabel ? `Elnökségi felület — ${roleLabel}` : 'Elnökségi felület'}
+        title="Egyesületi adminisztráció"
+        description={profile?.custom_title || undefined}
+      />
 
-          <button 
-            onClick={() => { logout(); setActiveTab('home'); }}
-            className="btn-outline-brown text-xs bg-[#5D4037] text-white border-[#C5A880] hover:bg-[#3E2723]"
-          >
-            <LogOut className="w-4 h-4" />
-            Kijelentkezés
-          </button>
-        </div>
-
-        {/* Sub Navigation */}
-        <div className="flex flex-wrap border-b border-[#E2D7C7] gap-1">
+      <div className="tabbar" role="tablist" aria-label="Elnökségi szakaszok">
+        {tabs.map(({ id, label, icon: Icon }) => (
           <button
-            onClick={() => setActiveSubTab('members')}
-            className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-              activeSubTab === 'members'
-                ? 'border-[#6B1D2F] text-[#6B1D2F]'
-                : 'border-transparent text-[#63534B] hover:text-[#2C221E]'
-            }`}
+            key={id}
+            type="button"
+            role="tab"
+            id={`admin-tab-${id}`}
+            aria-selected={active.id === id}
+            aria-controls={`admin-panel-${id}`}
+            onClick={() => setActiveId(id)}
+            className={`tab ${active.id === id ? 'tab-active' : ''}`}
           >
-            <Users className="w-4 h-4" />
-            Tagnyilvántartó & Tagdíjak
+            <Icon className="h-4 w-4" aria-hidden="true" />
+            {label}
           </button>
+        ))}
+      </div>
 
-          <button
-            onClick={() => setActiveSubTab('workgroups')}
-            className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-              activeSubTab === 'workgroups'
-                ? 'border-[#6B1D2F] text-[#6B1D2F]'
-                : 'border-transparent text-[#63534B] hover:text-[#2C221E]'
-            }`}
-          >
-            <Flower2 className="w-4 h-4" />
-            Munkacsoportok Kezelése
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('cms')}
-            className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-              activeSubTab === 'cms'
-                ? 'border-[#6B1D2F] text-[#6B1D2F]'
-                : 'border-transparent text-[#63534B] hover:text-[#2C221E]'
-            }`}
-          >
-            <FileEdit className="w-4 h-4" />
-            Hírek & Projektek CMS
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('settings')}
-            className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-              activeSubTab === 'settings'
-                ? 'border-[#6B1D2F] text-[#6B1D2F]'
-                : 'border-transparent text-[#63534B] hover:text-[#2C221E]'
-            }`}
-          >
-            <Database className="w-4 h-4" />
-            Rendszerbeállítások
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        {activeSubTab === 'members' && <MemberManagement />}
-        {activeSubTab === 'workgroups' && <WorkgroupAdmin />}
-        {activeSubTab === 'cms' && <NewsEditor />}
-        {activeSubTab === 'settings' && <AdminSettings />}
-
+      <div id={`admin-panel-${active.id}`} role="tabpanel" aria-labelledby={`admin-tab-${active.id}`}>
+        <ActiveComponent />
       </div>
     </div>
   );
