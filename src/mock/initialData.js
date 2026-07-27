@@ -1,70 +1,72 @@
-// Kőszegi Turisztikai Szövetség Egyesület - Initial Demo & Mock Dataset
+// Kőszegi Turisztikai Szövetség Egyesület - Authentic Data 2026
+// Based on President Drescher Gábor's announcement & 2026 July Program Book
 
 export const INITIAL_NEWS_PROJECTS = [
   {
     id: "np-1",
-    title: "Előkészületben a 2026–2030-as Kőszegi Turisztikai Stratégia",
-    slug: "turisztikai-strategia-2026-2030",
-    type: "projekt",
-    category: "Turisztikai Fejlesztés",
-    summary: "Egyesületünk megkezdte a következő 5 éves stratégiai munkaterv kidolgozását a helyi szolgáltatók bevonásával.",
-    content: `A Kőszegi Turisztikai Szövetség Egyesület elnöksége kibővített ülést tartott, ahol kijelöltük a 2026-2030 közötti időszak fő fejlesztési irányait. 
+    title: "Sikeres Egyeztetés Kőszeg Polgármesterével: Elindul a Városszépítő & Turisztikai Cselekvési Terv",
+    slug: "polgarmesteri-egyeztetes-es-cselekvési-terv",
+    type: "hír",
+    category: "Egyesület",
+    summary: "Drescher Gábor elnök és Szalók Adrienn tárgyalt Básthy Béla polgármesterrel és Szekér Zoltán turisztikai menedzserrel. Teljes körű együttműködésről biztosította a város a KTSZE-t.",
+    content: `Kedves Tagtársak!
 
-A stratégia fókuszában a következők állnak:
-• A történelmi belváros és a Jurisics Vár környékének fenntartható turisztikai pozícionálása.
-• Az aktív és természetjáró turizmus (Írott-kő Natúrpark túraútvonalai, kerékpáros útvonalak) egyesületi szintű minőségbiztosítása.
-• A kőszegi borvidék és gasztronómia szereplőinek egységes minőségi hálózattá szervezése.
-• Közös digitális jelenlét és tagsági szolgáltatások bővítése.
+Örömmel tájékoztatjuk egyesületünk tagságát, hogy sikeres és rendkívül előremutató egyeztetést folytattunk Kőszeg polgármesterével, Básthy Béla úrral.
 
-A munkaterv véglegesítésében számítunk valamennyi egyesületi tagunk aktív javaslataira!`,
-    date: "2026-07-20",
-    published_at: "2026-07-20T10:00:00Z",
+A tárgyaláson a KTSZE képviseletében Szalók Adrienn és Drescher Gábor elnök vett részt. Jelen volt továbbá Szekér Zoltán turisztikai menedzser, a Jurisics-vár Művelődési Központ és Várszínház igazgatója.
+
+A megbeszélés során minden általunk bemutatott kezdeményezés támogatásra talált, és Polgármester Úr teljes körű együttműködéséről biztosította a Kőszegi Turisztikai Szövetség Egyesületet. Hosszas, konstruktív ötletelés után megkezdztük egy közös cselekvési terv kialakítását is.
+
+Mindannyian egyetértettünk abban, hogy Kőszeg turisztikai fejlődéséhez közös kommunikációra, összehangolt fellépésre és a helyi vállalkozók aktív részvételére van szükség. Kőszeg marketingjét egy irányba kell vinnünk annak érdekében, hogy városunk ismét méltó helyére kerüljön a hazai és nemzetközi turisztikai térképen!`,
+    date: "2026-07-27",
+    published_at: "2026-07-27T08:00:00Z",
     image: "https://images.unsplash.com/photo-1548625361-185b376d8b37?auto=format&fit=crop&w=1200&q=80",
     is_published: true
   },
   {
     id: "np-2",
-    title: "Meghívó a Kőszegi Turisztikai Szövetség Rendes Közgyűlésére",
-    slug: "kozgyulesi-meghivo-2026",
-    type: "hír",
-    category: "Közgyűlés",
-    summary: "Értesítjük kedves Tagjainkat, hogy az egyesület tavaszi rendes közgyűlését a Jurisics Vár Lovagtermében tartjuk.",
-    content: `Tisztelt Egyesületi Tagok!
+    title: "Elindul a „Kőszeg virágzik” Munkacsoport – Csatlakozz az Örökbefogadási Programhoz!",
+    slug: "koszeg-viragzik-munkacsoport-indulasa",
+    type: "projekt",
+    category: "Turisztikai Fejlesztés",
+    summary: "Elsőként a leginkább kért városszépítő munkacsoport indul el. Várjuk a kaspókat örökbe fogadó, virágos sarkokat gondozó vállalkozókat és lakosokat!",
+    content: `Mottónk: „Kőszeg virágzik – a város tisztul, szépül, él és újra vendéget vár.”
 
-Ezúton meghívjuk Önöket a Kőszegi Turisztikai Szövetség Egyesület soron következő Rendes Közgyűlésére.
+Elsőként a „Kőszeg virágzik” munkacsoportot indítjuk el, mert ezt kértétek a legtöbben! Ebbe a csoportba várjuk mindazokat a vállalkozókat és lakosokat, akik kaspókat szeretnének örökbe fogadni, virágos sarkokat alakítanának ki, vagy más módon részt vennének Kőszeg szebbé tételében.
 
-Helyszín: Jurisics Vár Lovagterme (9730 Kőszeg, Rajnis utca 9.)
-Időpont: 2026. augusztus 18. (kedd) 14:00 óra
+A munkacsoport vezetőjével a városi kertésszel egyeztetünk, hogy a tervezett virágosítás szakmailag, egységes koncepció alapján és a várossal teljes egyetértésben valósulhasson meg.
 
-Napirendi pontok:
-1. Elnöki beszámoló a 2025-ös pénzügyi évről és elvégzett munkáról.
-2. A Pénzügyi Ellenőrző Bizottság jelentése.
-3. 2026. évi költségvetés és munkaterv elfogadása.
-4. Tagdíjstruktúra áttekintése és új tagsági jelentkezések elbírálása.
-5. Egyebek.
-
-Megjelenésükre és aktív részvételükre feltétlenül számítunk!`,
-    date: "2026-07-15",
-    published_at: "2026-07-15T14:30:00Z",
-    image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80",
+Már elérhető eredményeink:
+• Főtéri piros árusító bódé sikeres eltávolítása (a Fő tér egységét csúfító felület lefedése).
+• Országos Kéktúra kőszegi útvonalának tisztítása a természetjárók támogatására.
+• Olmódi út aszfaltozásának előkészítése.`,
+    date: "2026-07-26",
+    published_at: "2026-07-26T10:00:00Z",
+    image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1200&q=80",
     is_published: true
   },
   {
     id: "np-3",
-    title: "Sikeres Pályázat: 4.5 M Ft Támogatás Helyi Értékeink Népszerűsítésére",
-    slug: "nyertes-palyazat-2026",
-    type: "pályázat",
+    title: "Őszi Forgalomnövelő Kampány, Kőszegi Esték & B2B Szakmai Nyílt Nap",
+    slug: "oszi-forgalomnovelo-kampanyok-es-b2b-nyilt-nap",
+    type: "projekt",
     category: "Pályázat",
-    summary: "Sikeresen szerepelt egyesületünk a megyei turizmusfejlesztési alap kiírásán.",
-    content: `Örömmel tájékoztatjuk egyesületünk tagságát, hogy a "Kőszegi Történelmi és Természeti Örökség Minőségi Bemutatása" című pályázatunk pozitív elbírálásban részesült!
+    summary: "Előkészítjük az őszi aktív & gasztronómiai programkínálatot, a Kőszegi Esték sorozatot és a szeptemberi szakmai B2B Study Tour-t.",
+    content: `Következő lépések Szekér Zoltán turisztikai menedzser összefoglalója alapján:
 
-A megítélt 4,5 millió forintos támogatásból az alábbi fejlesztéseket valósítjuk meg:
-• Nyomtatott egyesületi tájékoztató kiadványok és térképek megújítása.
-• Helyi szolgáltatói táblarendszer korszerűsítése.
-• Egyesületi tagjaink számára tartandó szakmai workshopok és továbbképzések szervezése.`,
-    date: "2026-07-02",
-    published_at: "2026-07-02T09:15:00Z",
-    image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80",
+1. Őszi forgalomnövelő kampányok és termékfejlesztések előkészítése:
+• Aktív & gasztronómiai őszi programkínálat
+• Kőszegi Esték sorozat (akusztikus koncertélmények, színházi együttműködések)
+• Eszközök: kuponfüzet, digitális élménycsomagok, éttermek közvetlen bemutatása
+
+2. Szakmai Nyílt Nap & Média Study Tour (Szeptember):
+• A Jurisics Vár mellett további kőszegi attrakciókat bevonva bemutatjuk a KTSZE közreműködésével minden B2B partner részére a kínálatot.
+
+3. Edukációs Akciónapok & Digitális beállítások:
+• A KTSZE szervezésében segítünk a helyi szolgáltatóknak az azonnali digitális beállításokban és felületek kezelésében.`,
+    date: "2026-07-25",
+    published_at: "2026-07-25T14:00:00Z",
+    image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80",
     is_published: true
   }
 ];
@@ -72,10 +74,10 @@ A megítélt 4,5 millió forintos támogatásból az alábbi fejlesztéseket val
 export const INITIAL_MEMBERS = [
   {
     id: "m-1",
-    email: "admin@koszegiturizmus.hu",
-    full_name: "Kőszegi Turisztikai Szövetség Elnökség",
-    organization_name: "Kőszegi Turisztikai Szövetség Egyesület",
-    member_type: "Vezetőség",
+    email: "elnok@koszegiturizmus.hu",
+    full_name: "Drescher Gábor",
+    organization_name: "Kőszegi Turisztikai Szövetség Egyesület (Elnökség)",
+    member_type: "Elnök",
     role: "admin",
     phone: "+36 94 563 001",
     address: "9730 Kőszeg, Rajnis utca 7.",
@@ -84,18 +86,30 @@ export const INITIAL_MEMBERS = [
   },
   {
     id: "m-2",
+    email: "szalok.adrienn@koszegiturizmus.hu",
+    full_name: "Szalók Adrienn",
+    organization_name: "KTSZE Elnökségi Munkacsoport",
+    member_type: "Vezetőségi tag",
+    role: "admin",
+    phone: "+36 30 123 4567",
+    address: "9730 Kőszeg, Várkör 12.",
+    joined_date: "2012-05-10",
+    dues_2026: { status: "paid", amount: 36000, paid_at: "2026-01-20" }
+  },
+  {
+    id: "m-3",
     email: "info@jurisicsvarhotel.hu",
     full_name: "Nagy István",
     organization_name: "Jurisics Vár Hotel & Étterem",
     member_type: "Szálláshely & Vendéglátás",
     role: "member",
     phone: "+36 94 360 123",
-    address: "9730 Kőszeg, Várkör 12.",
+    address: "9730 Kőszeg, Várkör 14.",
     joined_date: "2015-06-01",
     dues_2026: { status: "paid", amount: 36000, paid_at: "2026-02-10" }
   },
   {
-    id: "m-3",
+    id: "m-4",
     email: "bor@koszegibormuhely.hu",
     full_name: "Horváth Gábor",
     organization_name: "Kőszegi Borműhely Kft.",
@@ -105,60 +119,48 @@ export const INITIAL_MEMBERS = [
     address: "9730 Kőszeg, Rómer Flóris utca 4.",
     joined_date: "2018-09-15",
     dues_2026: { status: "pending", amount: 24000, paid_at: null }
-  },
-  {
-    id: "m-4",
-    email: "info@irottko.hu",
-    full_name: "Molnár Katalin",
-    organization_name: "Írottkő Panzió & Vendégház",
-    member_type: "Szálláshely",
-    role: "member",
-    phone: "+36 94 563 888",
-    address: "9730 Kőszeg, Temető utca 18.",
-    joined_date: "2020-02-20",
-    dues_2026: { status: "paid", amount: 24000, paid_at: "2026-01-28" }
   }
 ];
 
 export const INITIAL_DOCUMENTS = [
   {
     id: "doc-1",
-    title: "Alapszabály - Kőszegi Turisztikai Szövetség Egyesület",
-    category: "Alapszabály",
+    title: "KTSZE Bővített Programfüzet 2026 – Polgármesteri Együttműködési Program",
+    category: "Munkaterv",
     access_level: "public",
-    file_size: "1.2 MB",
-    uploaded_at: "2025-01-10",
-    description: "Az Egyesület hatályos Alapszabálya a 2025. évi módosításokkal.",
+    file_size: "2.4 MB",
+    uploaded_at: "2026-07-27",
+    description: "Kőszeg városszépítő, turisztikai és kommunikációs megújítási anyaga a Polgármesteri Hivatal részére (2026. július).",
     file_url: "#"
   },
   {
     id: "doc-2",
-    title: "2025. évi Közgyűlési Jegyzőkönyv és Elnöki Beszámoló",
-    category: "Közgyűlés",
-    access_level: "members",
-    file_size: "3.4 MB",
-    uploaded_at: "2025-12-18",
-    description: "A 2025. decemberi rendes közgyűlés hitelesített jegyzőkönyve és mellékletei.",
+    title: "Szekér Zoltán Turisztikai Menedzser Összefoglalója & Akcióterve",
+    category: "Munkaterv",
+    access_level: "public",
+    file_size: "1.1 MB",
+    uploaded_at: "2026-07-27",
+    description: "Őszi forgalomnövelő kampányok, B2B szakmai nyílt nap és digitális beállítások munkamenete.",
     file_url: "#"
   },
   {
     id: "doc-3",
-    title: "Pénzügyi Ellenőrző Bizottság Jelentése (2025)",
-    category: "Pénzügyek",
-    access_level: "members",
-    file_size: "890 KB",
-    uploaded_at: "2026-01-05",
-    description: "Hivatalos beszámoló a 2025-ös egyesületi gazdálkodásról és tagdíjbevételekről.",
+    title: "Hatályos Alapszabály - Kőszegi Turisztikai Szövetség Egyesület",
+    category: "Alapszabály",
+    access_level: "public",
+    file_size: "1.2 MB",
+    uploaded_at: "2025-01-10",
+    description: "Az Egyesület hivatalos hatályos Alapszabálya.",
     file_url: "#"
   },
   {
     id: "doc-4",
-    title: "2026. évi Tagdíj megállapítási szabályzat",
+    title: "2026. évi Tagdíj megállapítási szabályzat & Munkacsoporti rend",
     category: "Szabályzatok",
     access_level: "members",
-    file_size: "540 KB",
+    file_size: "680 KB",
     uploaded_at: "2026-01-02",
-    description: "Kategóriánkénti tagdíjtételek (Szálláshelyek, Borászatok, Pártoló tagok).",
+    description: "A munkacsoportok működési rendje és a kategóriánkénti tagdíjtételek.",
     file_url: "#"
   }
 ];
@@ -166,27 +168,27 @@ export const INITIAL_DOCUMENTS = [
 export const INITIAL_DRIVE_FOLDERS = [
   {
     id: "drive-1",
-    name: "2026_Kozgyules_Es_Elenoksegi_Anyagok",
-    drive_id: "1A2B3C4D_Kozgyules",
-    web_link: "https://drive.google.com/drive/folders/demo_kozgyules",
-    files_count: 8,
-    last_synced: "2026-07-26 18:40",
+    name: "2026_Koszeg_Viragzik_Es_Varosszepites",
+    drive_id: "1A2B3C4D_Viragzik",
+    web_link: "https://drive.google.com/drive/folders/demo_viragzik",
+    files_count: 12,
+    last_synced: "2026-07-27 09:10",
     files: [
-      { name: "2026_08_18_Kozgyulesi_Meghivo_Draft.docx", size: "245 KB", modified: "2026-07-25" },
-      { name: "Penzugyi_Beszamolo_2025_Végleges.pdf", size: "1.8 MB", modified: "2026-07-20" },
-      { name: "Tagdij_Befizetesek_2026_Q2.xlsx", size: "112 KB", modified: "2026-07-26" }
+      { name: "Koszeg_Viragzik_Munkacsoport_Jelentkezesi_Ív.xlsx", size: "145 KB", modified: "2026-07-27" },
+      { name: "Orokbefogadhato_Kaspok_Es_Viragladak_Listaja.pdf", size: "1.2 MB", modified: "2026-07-26" },
+      { name: "Foter_Bode_Eltavolitas_Elotte_Utana_Fotok.zip", size: "18.4 MB", modified: "2026-07-25" }
     ]
   },
   {
     id: "drive-2",
-    name: "Palyazatok_Es_Fejlesztesi_Dokumentacio",
-    drive_id: "5E6F7G8H_Palyazatok",
-    web_link: "https://drive.google.com/drive/folders/demo_palyazat",
-    files_count: 14,
-    last_synced: "2026-07-27 08:15",
+    name: "Polgarmesteri_Egyeztetes_Es_Bovitett_Programfuzet_2026",
+    drive_id: "5E6F7G8H_Polgarmesteri",
+    web_link: "https://drive.google.com/drive/folders/demo_polgarmesteri",
+    files_count: 6,
+    last_synced: "2026-07-27 08:30",
     files: [
-      { name: "Megyei_Turizmus_Palyazat_Alairt.pdf", size: "4.2 MB", modified: "2026-07-02" },
-      { name: "Koszeg_Strategia_2026_2030_Vázlat.docx", size: "890 KB", modified: "2026-07-22" }
+      { name: "KTSZE_Bovitett_Programfuzet_2026_Julius_Vegleges.pdf", size: "2.4 MB", modified: "2026-07-27" },
+      { name: "Szeker_Zoltan_Turisztikai_Menedzser_Osszefoglalos.docx", size: "450 KB", modified: "2026-07-27" }
     ]
   },
   {

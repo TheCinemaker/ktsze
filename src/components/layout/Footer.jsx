@@ -1,6 +1,6 @@
 import React from 'react';
 import { HeaderLogo } from './HeaderLogo';
-import { Mail, Phone, MapPin, FileText, ShieldCheck } from 'lucide-react';
+import { Mail, Phone, MapPin, FileText, ShieldCheck, User } from 'lucide-react';
 
 export const Footer = ({ setActiveTab }) => {
   return (
@@ -17,6 +17,9 @@ export const Footer = ({ setActiveTab }) => {
             <p className="text-xs text-[#A39288] leading-relaxed">
               A Kőszegi Turisztikai Szövetség Egyesület a helyi turisztikai szolgáltatók, borászok és kulturális szereplők hivatalos szakmai szövetsége Kőszegen.
             </p>
+            <p className="text-xs text-[#C5A880] font-serif italic">
+              „Kőszeg virágzik – a város tisztul, szépül, él és újra vendéget vár.”
+            </p>
           </div>
 
           {/* Col 2: Hivatalos Adatok */}
@@ -26,17 +29,17 @@ export const Footer = ({ setActiveTab }) => {
             </h4>
             <ul className="space-y-2 text-xs text-[#E2D7C7]">
               <li><strong className="text-white">Név:</strong> Kőszegi Turisztikai Szövetség Egyesület</li>
+              <li><strong className="text-white">Elnök:</strong> Drescher Gábor</li>
               <li><strong className="text-white">Adószám:</strong> 18889211-1-18</li>
               <li><strong className="text-white">Nyilvántartási szám:</strong> 18-02-0001234</li>
               <li><strong className="text-white">Bankszámla:</strong> OTP 11747051-20019948</li>
-              <li><strong className="text-white">Közhasznúsági fokozat:</strong> Közhasznú egyesület</li>
             </ul>
           </div>
 
           {/* Col 3: Kapcsolat & Székhely */}
           <div className="space-y-3">
             <h4 className="font-serif text-lg font-semibold text-[#C5A880] tracking-wide">
-              Kapcsolat & Székhely
+              Kapcsolat & Titkárság
             </h4>
             <div className="space-y-2 text-xs text-[#E2D7C7]">
               <div className="flex items-start gap-2">
@@ -45,8 +48,8 @@ export const Footer = ({ setActiveTab }) => {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#C5A880] shrink-0" />
-                <a href="mailto:info@koszegiturizmus.hu" className="hover:text-[#C5A880] transition-colors">
-                  info@koszegiturizmus.hu
+                <a href="mailto:elnok@koszegiturizmus.hu" className="hover:text-[#C5A880] transition-colors">
+                  elnok@koszegiturizmus.hu
                 </a>
               </div>
               <div className="flex items-center gap-2">
@@ -59,7 +62,7 @@ export const Footer = ({ setActiveTab }) => {
           {/* Col 4: Dokumentumok & Gyorslinkek */}
           <div className="space-y-3">
             <h4 className="font-serif text-lg font-semibold text-[#C5A880] tracking-wide">
-              Hivatalos Irattár
+              Hivatalos Dokumentumok
             </h4>
             <ul className="space-y-2 text-xs text-[#E2D7C7]">
               <li>
@@ -68,7 +71,7 @@ export const Footer = ({ setActiveTab }) => {
                   className="hover:text-[#C5A880] transition-colors flex items-center gap-1.5 bg-transparent border-0 text-[#E2D7C7] cursor-pointer p-0"
                 >
                   <FileText className="w-3.5 h-3.5 text-[#C5A880]" />
-                  Hatályos Alapszabály (2025)
+                  Polgármesteri Programfüzet (2026. Július)
                 </button>
               </li>
               <li>
@@ -77,7 +80,7 @@ export const Footer = ({ setActiveTab }) => {
                   className="hover:text-[#C5A880] transition-colors flex items-center gap-1.5 bg-transparent border-0 text-[#E2D7C7] cursor-pointer p-0"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-[#C5A880]" />
-                  Éves Pénzügyi Beszámolók
+                  Hatályos Alapszabály
                 </button>
               </li>
               <li>
@@ -86,7 +89,7 @@ export const Footer = ({ setActiveTab }) => {
                   className="hover:text-[#C5A880] transition-colors flex items-center gap-1.5 bg-transparent border-0 text-[#E2D7C7] cursor-pointer p-0"
                 >
                   <FileText className="w-3.5 h-3.5 text-[#C5A880]" />
-                  Taggá Válási Nyilatkozat
+                  Kőszeg Virágzik Munkacsoport
                 </button>
               </li>
             </ul>

@@ -1,25 +1,43 @@
 import React from 'react';
-import { Target, Compass, Landmark, ShieldCheck, HeartHandshake, Award } from 'lucide-react';
+import { Target, Compass, Landmark, ShieldCheck, HeartHandshake, Award, Flower2, Sparkles, Building2 } from 'lucide-react';
 
 export const AboutSection = ({ setActiveTab }) => {
   const boardMembers = [
     {
-      name: "Dr. Kőszegi László",
+      name: "Drescher Gábor",
       role: "Az Egyesület Elnöke",
-      organization: "Jurisics Vár Kulturális Központ",
-      bio: "Több mint 20 éve dolgozik a kőszegi turizmus és kulturális örökségvédelmi feladatok összehangolásán."
+      organization: "Kőszegi Turisztikai Szövetség Egyesület",
+      bio: "A kőszegi turisztikai szereplők szakmai összefogásáért és az önkormányzati stratégiai együttműködésekért felel."
     },
     {
-      name: "Horváth Ágnes",
-      role: "Alelnök (Szálláshelyi Tagozat)",
-      organization: "Írottkő Panzió",
-      bio: "A kőszegi magán- és hotelturizmus érdekképviseletét vezeti az egyesületben."
+      name: "Szalók Adrienn",
+      role: "Vezetőségi Tag / Képviselő",
+      organization: "KTSZE Elnökség",
+      bio: "A városszépítő munkacsoportok és a helyi vállalkozói közösségi kezdeményezések koordinátora."
     },
     {
-      name: "Bujdosó Péter",
-      role: "Elnökségi Tag (Gasztronómia & Borászat)",
-      organization: "Kőszegi Borműhely",
-      bio: "A kőszegi borvidék és a helyi gasztronómia turisztikai beágyazottságáért felel."
+      name: "Szekér Zoltán",
+      role: "Turisztikai Menedzser",
+      organization: "Jurisics-vár Művelődési Központ & Várszínház",
+      bio: "Az őszi forgalomnövelő kampányok, a Kőszegi Esték és a B2B szakmai nyílt napok turisztikai felelőse."
+    }
+  ];
+
+  const initiatives = [
+    {
+      title: "„Kőszeg Virágzik” Munkacsoport",
+      desc: "Főtéri kaspók és virágládák örökbefogadása, virágos sarkok gondozása a városi kertész szakmai irányításával.",
+      icon: Flower2
+    },
+    {
+      title: "Őszi Forgalomnövelő Kampányok",
+      desc: "Aktív & gasztronómiai programkínálat, Kőszegi Esték zenés sorozat, kuponfüzet és digitális csomagok.",
+      icon: Sparkles
+    },
+    {
+      title: "B2B Nyílt Nap & Média Study Tour",
+      desc: "Szeptemberi szakmai nyílt nap a Jurisics Vár és a kőszegi turisztikai attrakciók bemutatására a partnerhálózat felé.",
+      icon: Building2
     }
   ];
 
@@ -29,88 +47,47 @@ export const AboutSection = ({ setActiveTab }) => {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
-          <div className="inline-block px-3 py-1 bg-[#F7EBEF] text-[#6B1D2F] border border-[#D9AAB6] rounded-full text-xs font-semibold uppercase tracking-wider">
-            Egyesületünkről
+          <div className="inline-block px-3.5 py-1 bg-[#F7EBEF] text-[#6B1D2F] border border-[#D9AAB6] rounded-full text-xs font-semibold uppercase tracking-wider">
+            Egyesületünkről & Elnökségünkről
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#2C221E]">
-            A Kőszegi Turisztikai Szövetség Egyesület Küldetése
+            Kőszegi Turisztikai Szövetség Egyesület
           </h2>
           <div className="w-16 h-0.5 bg-[#C5A880] mx-auto my-3"></div>
-          <p className="text-[#63534B] text-base leading-relaxed">
-            Egyesületünk független, nem profit-orientált civil szervezet, amely összefogja Kőszeg város turisztikai szolgáltatóit, szakmai érdekeit képviseli és felvállalja a helyi turizmus hosszú távú, fenntartható fejlesztését.
+          <p className="text-[#63534B] text-base leading-relaxed font-serif italic text-lg">
+            „Kőszeg virágzik – a város tisztul, szépül, él és újra vendéget vár.”
           </p>
         </div>
 
-        {/* 3 Core Mission Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          
-          <div className="card-editorial space-y-4">
-            <div className="w-12 h-12 bg-[#F7EBEF] text-[#6B1D2F] rounded-lg flex items-center justify-center border border-[#D9AAB6]">
-              <Target className="w-6 h-6" />
-            </div>
-            <h3 className="font-serif text-xl font-bold text-[#2C221E]">
-              Szakmai Érdekképviselet
-            </h3>
-            <p className="text-sm text-[#63534B] leading-relaxed">
-              Összefogjuk a helyi szállásadókat, borászokat és éttermeket. Párbeszédet tartunk fent az önkormányzattal és a nemzeti turisztikai szervekkel.
-            </p>
-          </div>
-
-          <div className="card-editorial space-y-4">
-            <div className="w-12 h-12 bg-[#F7EBEF] text-[#6B1D2F] rounded-lg flex items-center justify-center border border-[#D9AAB6]">
-              <Compass className="w-6 h-6" />
-            </div>
-            <h3 className="font-serif text-xl font-bold text-[#2C221E]">
-              Stratégiai Tervezés
-            </h3>
-            <p className="text-sm text-[#63534B] leading-relaxed">
-              Előkészítjük a kőszegi turisztikai fejlesztési koncepciókat, közös pályázatokat nyújtunk be a tagság fejlődése érdekében.
-            </p>
-          </div>
-
-          <div className="card-editorial space-y-4">
-            <div className="w-12 h-12 bg-[#F7EBEF] text-[#6B1D2F] rounded-lg flex items-center justify-center border border-[#D9AAB6]">
-              <Landmark className="w-6 h-6" />
-            </div>
-            <h3 className="font-serif text-xl font-bold text-[#2C221E]">
-              Örökségvédelem & Minőség
-            </h3>
-            <p className="text-sm text-[#63534B] leading-relaxed">
-              Kőszeg egyedülálló történelmi belvárosának, kőszegi borának és natúrparki értékeinek védelme, fenntartható bemutatása.
-            </p>
-          </div>
-
-        </div>
-
-        {/* Board of Directors / Elnökség */}
-        <div className="bg-[#F3ECE0] rounded-2xl p-8 border border-[#E2D7C7]">
+        {/* Real Board Members */}
+        <div className="bg-[#F3ECE0] rounded-2xl p-8 border border-[#E2D7C7] mb-12">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
               <h3 className="font-serif text-2xl font-bold text-[#2C221E]">
-                Az Egyesület Elnöksége
+                Az Egyesület Vezetősége & Szakmai Partnerei
               </h3>
               <p className="text-sm text-[#63534B] mt-1">
-                A tagság által megválasztott tisztségviselők (2024–2028-as ciklus)
+                Kőszeg Város Önkormányzatával és a Jurisics-vár Művelődési Központtal szoros együttműködésben.
               </p>
             </div>
             <button 
               onClick={() => setActiveTab('docs-public')}
               className="btn-wine-outline text-xs uppercase tracking-wider font-semibold self-start md:self-auto"
             >
-              Közgyűlési Jegyzőkönyvek & Beszámolók
+              Polgármesteri Programfüzet (2026. Július)
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {boardMembers.map((member, idx) => (
               <div key={idx} className="bg-white p-6 rounded-xl border border-[#E2D7C7] space-y-2 shadow-sm">
-                <div className="font-serif text-lg font-bold text-[#6B1D2F]">
+                <div className="font-serif text-xl font-bold text-[#6B1D2F]">
                   {member.name}
                 </div>
-                <div className="text-xs font-semibold text-[#2C221E]">
+                <div className="text-xs font-bold text-[#2C221E]">
                   {member.role}
                 </div>
-                <div className="text-xs text-[#6B1D2F] font-medium">
+                <div className="text-xs text-[#6B1D2F] font-semibold">
                   {member.organization}
                 </div>
                 <p className="text-xs text-[#63534B] pt-2 border-t border-[#FAF6F0] leading-relaxed">
@@ -119,6 +96,26 @@ export const AboutSection = ({ setActiveTab }) => {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* 3 Active Initiatives from July 2026 Action Plan */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {initiatives.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div key={idx} className="card-editorial space-y-4">
+                <div className="w-12 h-12 bg-[#F7EBEF] text-[#6B1D2F] rounded-xl flex items-center justify-center border border-[#D9AAB6]">
+                  <Icon className="w-6 h-6" />
+                </div>
+                <h3 className="font-serif text-xl font-bold text-[#2C221E]">
+                  {item.title}
+                </h3>
+                <p className="text-xs text-[#63534B] leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
+            );
+          })}
         </div>
 
       </div>
