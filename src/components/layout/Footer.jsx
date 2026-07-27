@@ -101,9 +101,14 @@ export const Footer = ({ setActiveTab }) => {
 
         </div>
 
-        {/* Bottom copyright */}
+        {/* Bottom copyright & Developer attribution */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#A39288] gap-4">
-          <p>© 2026 Kőszegi Turisztikai Szövetség Egyesület. Minden jog fenntartva.</p>
+          <div>
+            <p>© 2026 Kőszegi Turisztikai Szövetség Egyesület. Minden jog fenntartva.</p>
+            <p className="text-[0.7rem] text-[#8C7A70] mt-0.5">
+              Software by <a href="mailto:admin@visitkoszeg.hu" className="text-[#C5A880] hover:underline font-semibold transition-colors">SA Software & Network Solutions</a>
+            </p>
+          </div>
           <div className="flex gap-4">
             <span className="hover:text-white transition-colors cursor-pointer" onClick={() => setActiveTab('docs-public')}>Adatvédelem & Impresszum</span>
             <span>•</span>
