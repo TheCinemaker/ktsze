@@ -67,3 +67,19 @@ export const socialLinks = () =>
     { label: 'Facebook', url: ORGANIZATION.facebookUrl },
     { label: 'Instagram', url: ORGANIZATION.instagramUrl }
   ].filter((l) => Boolean(l.url));
+
+/**
+ * Elnökségi tagok nyilvános bemutatkozó szövegei és portréi.
+ * Kulcs: e-mail cím vagy név részlet. Adatbázis módosítás nélkül, tetszőlegesen bővíthető.
+ */
+export const BOARD_MEMBERS_BIO = {
+  'szilveszter': {
+    bio: 'Az SA Software & Network Solutions tulajdonosa, a Kőszegi Turisztikai Szövetség Egyesület Digitális Kőszeg programjáért, a turisztikai szoftverrendszerekért és az egyesületi IT infrastruktúráért felelős alelnöke.',
+    photoUrl: null
+  },
+  'elnok': {
+    bio: 'A Kőszegi Turisztikai Szövetség Egyesület elnöke, a városi turisztikai összefogás, a helyi vállalkozói partnerség és a turisztikai fejlesztési stratégiák vezetője.',
+    photoUrl: null
+  }
+};
+

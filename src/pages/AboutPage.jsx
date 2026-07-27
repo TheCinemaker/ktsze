@@ -2,10 +2,24 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Flower2, Award, Crown, Mail, User } from 'lucide-react';
 
-import { ORGANIZATION, formattedAddress } from '../config/organization';
+import { ORGANIZATION, formattedAddress, BOARD_MEMBERS_BIO } from '../config/organization';
 import { listWorkgroups, listPublicBoardMembers } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
 import { PageHeader, EmptyState, Spinner, ErrorBlock, DetailRow } from '../components/ui';
+
+const getMemberBio = (member) => {
+  if (member.bio) return member.bio;
+  const nameLower = (member.full_name || '').toLowerCase();
+  const emailLower = (member.private_email || '').toLowerCase();
+
+  if (nameLower.includes('szilveszter') || emailLower.includes('szilveszter')) {
+    return BOARD_MEMBERS_BIO.szilveszter?.bio;
+  }
+  if (member.custom_title?.toLowerCase().includes('elnök')) {
+    return BOARD_MEMBERS_BIO.elnok?.bio;
+  }
+  return 'Az egyesület elnökségi tagja, aki aktív szerepet vállal Kőszeg turisztikai és szakmai fejlődésének támogatásában.';
+};
 
 export const AboutPage = () => {
   const { data: groups, loading, error, reload } = useAsyncData(listWorkgroups);
@@ -83,10 +97,7 @@ export const AboutPage = () => {
                         </p>
                       )}
                       <p className="text-sm leading-relaxed text-ink-600 pt-2 border-t border-sand-200">
-                        {member.bio ||
-                          (member.full_name?.includes('Szilveszter')
-                            ? 'A Kőszegi Turisztikai Szövetség Egyesület Digitális Kőszeg programjáért, a turisztikai szoftverrendszerekért és az egyesületi IT infrastruktúráért felelős alelnöke.'
-                            : 'Az egyesület elnökségi tagja, aki aktív szerepet vállal Kőszeg turisztikai és szakmai fejlődésének támogatásában.')}
+                        {getMemberBio(member)}
                       </p>
                     </div>
 
