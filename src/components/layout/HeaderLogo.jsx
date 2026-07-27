@@ -2,15 +2,15 @@ import React from 'react';
 
 export const HeaderLogo = ({ variant = 'full', className = '' }) => {
   return (
-    <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* Redesigned 2026 Elegant Emblem SVG */}
+    <div className={`flex items-center gap-2.5 select-none ${className}`}>
+      {/* Redesigned Compact Elegant Emblem SVG */}
       <svg 
-        width="44" 
-        height="44" 
+        width="38" 
+        height="38" 
         viewBox="0 0 100 100" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
-        className="transition-transform duration-300 hover:scale-105"
+        className="transition-transform duration-300 hover:scale-105 shrink-0"
       >
         {/* Outer Circular Frame */}
         <circle cx="50" cy="50" r="46" stroke="#C5A880" strokeWidth="1.5" fill="#FAF6F0" />
@@ -35,7 +35,7 @@ export const HeaderLogo = ({ variant = 'full', className = '' }) => {
           strokeLinecap="round" 
         />
 
-        {/* Subtle Grape Leaf / Heart Heritage Emblem */}
+        {/* Grape Leaf / Heart Heritage Emblem */}
         <path 
           d="M50 78 C46 72, 40 70, 40 66 C40 62, 45 61, 50 65 C55 61, 60 62, 60 66 C60 70, 54 72, 50 78 Z" 
           fill="#6B1D2F" 
@@ -43,26 +43,26 @@ export const HeaderLogo = ({ variant = 'full', className = '' }) => {
         />
       </svg>
 
-      {/* Typography - 100% Formal Sans Serif */}
+      {/* Typography - Compact Formal Sans */}
       {variant === 'full' && (
         <div className="flex flex-col text-left">
           <span 
-            className="font-bold text-lg tracking-wider uppercase leading-none font-sans" 
+            className="font-bold text-base tracking-wider uppercase leading-none font-sans" 
             style={{ color: '#6B1D2F' }}
           >
             KŐSZEGI
           </span>
           <span 
-            className="text-[0.65rem] tracking-[0.18em] uppercase font-bold mt-1 text-[#2C221E]"
+            className="text-[0.6rem] tracking-[0.16em] uppercase font-bold mt-0.5 text-[#2C221E]"
           >
             Turisztikai Szövetség
           </span>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="h-[1px] w-3 bg-[#C5A880]"></span>
-            <span className="text-[0.58rem] tracking-[0.2em] uppercase font-semibold text-[#63534B]">
+          <div className="flex items-center gap-1 mt-0.5">
+            <span className="h-[1px] w-2.5 bg-[#C5A880]"></span>
+            <span className="text-[0.55rem] tracking-[0.18em] uppercase font-semibold text-[#63534B]">
               Egyesület
             </span>
-            <span className="h-[1px] w-3 bg-[#C5A880]"></span>
+            <span className="h-[1px] w-2.5 bg-[#C5A880]"></span>
           </div>
         </div>
       )}

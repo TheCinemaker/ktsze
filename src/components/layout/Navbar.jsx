@@ -37,14 +37,14 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E2D7C7] transition-all">
+    <header className="sticky top-0 z-50 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E2D7C7] shadow-sm transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 sm:h-16">
           
           {/* Logo */}
           <button 
             onClick={() => handleNavClick('home')} 
-            className="text-left focus:outline-none bg-transparent border-0 cursor-pointer"
+            className="text-left focus:outline-none bg-transparent border-0 cursor-pointer p-0"
           >
             <HeaderLogo />
           </button>
@@ -55,7 +55,7 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`px-3.5 py-2 rounded-md text-sm font-medium transition-colors border-0 bg-transparent cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border-0 bg-transparent cursor-pointer ${
                   activeTab === item.id 
                     ? 'text-[#6B1D2F] font-bold bg-[#F7EBEF]' 
                     : 'text-[#2C221E] hover:text-[#6B1D2F] hover:bg-[#F3ECE0]'
@@ -67,58 +67,58 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
           </nav>
 
           {/* Right Action / Auth Buttons */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2.5">
             
-            {/* Role Switcher Dropdown */}
+            {/* Compact Role Switcher Dropdown */}
             <div className="relative">
               <button 
                 onClick={() => setDemoDropdownOpen(!demoDropdownOpen)}
-                className="flex items-center gap-2 text-xs px-3 py-2 rounded-full border border-[#C5A880] bg-[#FAF3E8] text-[#63534B] hover:bg-[#F3ECE0] transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 text-[0.7rem] px-2.5 py-1.5 rounded-md border border-[#C5A880] bg-[#FAF3E8] text-[#63534B] hover:bg-[#F3ECE0] transition-colors cursor-pointer"
                 title="Szerepkör váltás elnökségi bemutatóhoz"
               >
-                <span className="font-semibold text-[#6B1D2F]">Nézet:</span>
-                <span className="capitalize font-bold text-[#2C221E] flex items-center gap-1.5">
+                <span className="font-bold text-[#6B1D2F]">Nézet:</span>
+                <span className="capitalize font-bold text-[#2C221E] flex items-center gap-1">
                   {role === 'admin' ? (
                     <>
-                      <Crown className="w-3.5 h-3.5 text-[#6B1D2F]" /> Adminisztrátor
+                      <Crown className="w-3 h-3 text-[#6B1D2F]" /> Admin
                     </>
                   ) : role === 'member' ? (
                     <>
-                      <Building2 className="w-3.5 h-3.5 text-[#6B1D2F]" /> Egyesületi Tag
+                      <Building2 className="w-3 h-3 text-[#6B1D2F]" /> Tag
                     </>
                   ) : (
                     <>
-                      <Eye className="w-3.5 h-3.5 text-[#63534B]" /> Látogató
+                      <Eye className="w-3 h-3 text-[#63534B]" /> Látogató
                     </>
                   )}
                 </span>
-                <ChevronDown className="w-3.5 h-3.5 text-[#63534B]" />
+                <ChevronDown className="w-3 h-3 text-[#63534B]" />
               </button>
 
               {demoDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-52 bg-white border border-[#E2D7C7] rounded-xl shadow-xl py-1 z-50">
-                  <div className="px-3 py-1.5 text-[0.7rem] text-[#63534B] uppercase tracking-wider font-semibold border-b border-[#E2D7C7]">
+                  <div className="px-3 py-1.5 text-[0.65rem] text-[#63534B] uppercase tracking-wider font-semibold border-b border-[#E2D7C7]">
                     Szerepkör Váltás (Demo)
                   </div>
                   <button 
                     onClick={() => { loginAs('guest'); setDemoDropdownOpen(false); }}
-                    className="w-full text-left px-3.5 py-2.5 text-xs text-[#2C221E] hover:bg-[#FAF6F0] flex items-center gap-2 border-0 bg-transparent cursor-pointer"
+                    className="w-full text-left px-3.5 py-2 text-xs text-[#2C221E] hover:bg-[#FAF6F0] flex items-center gap-2 border-0 bg-transparent cursor-pointer"
                   >
-                    <Eye className="w-4 h-4 text-[#63534B]" />
+                    <Eye className="w-3.5 h-3.5 text-[#63534B]" />
                     <span>Látogató (Publikus oldal)</span>
                   </button>
                   <button 
                     onClick={() => { loginAs('member'); setDemoDropdownOpen(false); handleNavClick('member-dashboard'); }}
-                    className="w-full text-left px-3.5 py-2.5 text-xs text-[#2C221E] hover:bg-[#F7EBEF] flex items-center gap-2 border-0 bg-transparent cursor-pointer"
+                    className="w-full text-left px-3.5 py-2 text-xs text-[#2C221E] hover:bg-[#F7EBEF] flex items-center gap-2 border-0 bg-transparent cursor-pointer"
                   >
-                    <Building2 className="w-4 h-4 text-[#6B1D2F]" />
+                    <Building2 className="w-3.5 h-3.5 text-[#6B1D2F]" />
                     <span>Egyesületi Tag (Tagi portál)</span>
                   </button>
                   <button 
                     onClick={() => { loginAs('admin'); setDemoDropdownOpen(false); handleNavClick('admin-dashboard'); }}
-                    className="w-full text-left px-3.5 py-2.5 text-xs text-[#6B1D2F] font-semibold hover:bg-[#F7EBEF] flex items-center gap-2 border-0 bg-transparent cursor-pointer"
+                    className="w-full text-left px-3.5 py-2 text-xs text-[#6B1D2F] font-semibold hover:bg-[#F7EBEF] flex items-center gap-2 border-0 bg-transparent cursor-pointer"
                   >
-                    <Crown className="w-4 h-4 text-[#6B1D2F]" />
+                    <Crown className="w-3.5 h-3.5 text-[#6B1D2F]" />
                     <span>Adminisztrátor (Elnökség)</span>
                   </button>
                 </div>
@@ -129,7 +129,7 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
             {role === 'guest' ? (
               <button
                 onClick={() => handleNavClick('login')}
-                className="btn-wine text-xs uppercase tracking-wider font-semibold"
+                className="btn-wine text-xs uppercase tracking-wider font-bold py-2 px-3.5"
               >
                 <Lock className="w-3.5 h-3.5" />
                 Tagi Belépés
@@ -138,7 +138,7 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleNavClick(role === 'admin' ? 'admin-dashboard' : 'member-dashboard')}
-                  className={`btn-wine text-xs uppercase tracking-wider font-semibold ${
+                  className={`btn-wine text-xs uppercase tracking-wider font-bold py-2 px-3.5 ${
                     activeTab.includes('dashboard') ? 'ring-2 ring-[#C5A880]' : ''
                   }`}
                 >
@@ -148,7 +148,7 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
 
                 <button
                   onClick={logout}
-                  className="p-2 text-[#63534B] hover:text-[#6B1D2F] hover:bg-[#F3ECE0] rounded-md transition-colors border-0 bg-transparent cursor-pointer"
+                  className="p-1.5 text-[#63534B] hover:text-[#6B1D2F] hover:bg-[#F3ECE0] rounded-lg transition-colors border-0 bg-transparent cursor-pointer"
                   title="Kijelentkezés"
                 >
                   <LogOut className="w-4 h-4" />
@@ -164,7 +164,7 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-[#2C221E] hover:bg-[#F3ECE0] rounded-md border-0 bg-transparent cursor-pointer"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
 
@@ -178,7 +178,7 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
             <button
               key={item.id}
               onClick={() => handleNavClick(item.id)}
-              className={`block w-full text-left px-3 py-2.5 rounded-md text-base font-medium border-0 bg-transparent cursor-pointer ${
+              className={`block w-full text-left px-3 py-2 rounded-md text-sm font-semibold border-0 bg-transparent cursor-pointer ${
                 activeTab === item.id 
                   ? 'text-[#6B1D2F] font-bold bg-[#F7EBEF]' 
                   : 'text-[#2C221E] hover:bg-[#F3ECE0]'
@@ -188,24 +188,24 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
             </button>
           ))}
 
-          <div className="pt-4 border-t border-[#E2D7C7] flex flex-col gap-2">
-            <div className="text-xs text-[#63534B] font-semibold px-2 uppercase">Szerepkör (Demo)</div>
+          <div className="pt-3 border-t border-[#E2D7C7] flex flex-col gap-2">
+            <div className="text-[0.68rem] text-[#63534B] font-semibold px-1 uppercase tracking-wider">Szerepkör (Demo)</div>
             <div className="grid grid-cols-3 gap-1.5">
               <button 
                 onClick={() => { loginAs('guest'); setMobileMenuOpen(false); }}
-                className={`py-2 text-xs rounded-lg border text-center cursor-pointer flex items-center justify-center gap-1 ${role === 'guest' ? 'bg-[#6B1D2F] text-white font-bold' : 'bg-white text-[#2C221E] border-[#E2D7C7]'}`}
+                className={`py-1.5 text-xs rounded-md border text-center cursor-pointer flex items-center justify-center gap-1 ${role === 'guest' ? 'bg-[#6B1D2F] text-white font-bold' : 'bg-white text-[#2C221E] border-[#E2D7C7]'}`}
               >
                 <Eye className="w-3 h-3" /> Látogató
               </button>
               <button 
                 onClick={() => { loginAs('member'); setMobileMenuOpen(false); handleNavClick('member-dashboard'); }}
-                className={`py-2 text-xs rounded-lg border text-center cursor-pointer flex items-center justify-center gap-1 ${role === 'member' ? 'bg-[#6B1D2F] text-white font-bold' : 'bg-white text-[#2C221E] border-[#E2D7C7]'}`}
+                className={`py-1.5 text-xs rounded-md border text-center cursor-pointer flex items-center justify-center gap-1 ${role === 'member' ? 'bg-[#6B1D2F] text-white font-bold' : 'bg-white text-[#2C221E] border-[#E2D7C7]'}`}
               >
                 <Building2 className="w-3 h-3" /> Tag
               </button>
               <button 
                 onClick={() => { loginAs('admin'); setMobileMenuOpen(false); handleNavClick('admin-dashboard'); }}
-                className={`py-2 text-xs rounded-lg border text-center cursor-pointer flex items-center justify-center gap-1 ${role === 'admin' ? 'bg-[#6B1D2F] text-white font-bold' : 'bg-white text-[#2C221E] border-[#E2D7C7]'}`}
+                className={`py-1.5 text-xs rounded-md border text-center cursor-pointer flex items-center justify-center gap-1 ${role === 'admin' ? 'bg-[#6B1D2F] text-white font-bold' : 'bg-white text-[#2C221E] border-[#E2D7C7]'}`}
               >
                 <Crown className="w-3 h-3" /> Admin
               </button>
@@ -214,14 +214,14 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
             {role === 'guest' ? (
               <button
                 onClick={() => handleNavClick('login')}
-                className="btn-wine w-full justify-center mt-2"
+                className="btn-wine w-full justify-center mt-2 py-2.5 text-xs"
               >
                 Tagi Belépés
               </button>
             ) : (
               <button
                 onClick={() => handleNavClick(role === 'admin' ? 'admin-dashboard' : 'member-dashboard')}
-                className="btn-wine w-full justify-center mt-2"
+                className="btn-wine w-full justify-center mt-2 py-2.5 text-xs"
               >
                 {role === 'admin' ? 'Megnyitás: Admin Portál' : 'Megnyitás: Tagi Portál'}
               </button>

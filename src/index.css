@@ -38,17 +38,17 @@
   background: #6B1D2F;
 }
 
-/* Component Classes */
+/* Redesigned Sleek Executive Button Components */
 .btn-wine {
-  @apply bg-[#6B1D2F] text-white px-5 py-2.5 rounded-lg font-semibold text-sm border border-[#6B1D2F] cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 hover:bg-[#521422] hover:border-[#521422] hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50;
+  @apply bg-[#6B1D2F] text-white px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider border border-[#6B1D2F] cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 hover:bg-[#521422] hover:border-[#C5A880] hover:shadow-lg hover:shadow-[#6B1D2F]/20 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 select-none;
 }
 
 .btn-outline-brown {
-  @apply bg-transparent text-[#2C221E] px-5 py-2.5 rounded-lg font-semibold text-sm border border-[#E2D7C7] cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 hover:bg-[#F3ECE0] hover:border-[#C5A880] active:bg-[#EBE2D3];
+  @apply bg-white/80 backdrop-blur-sm text-[#2C221E] px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider border border-[#E2D7C7] cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 hover:bg-[#F3ECE0] hover:border-[#C5A880] hover:shadow-md hover:-translate-y-0.5 active:bg-[#EBE2D3] select-none;
 }
 
 .btn-wine-outline {
-  @apply bg-transparent text-[#6B1D2F] px-5 py-2.5 rounded-lg font-semibold text-sm border border-[#D9AAB6] cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 hover:bg-[#F7EBEF] active:bg-[#F0D5DE];
+  @apply bg-transparent text-[#6B1D2F] px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider border border-[#D9AAB6] cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 hover:bg-[#F7EBEF] hover:border-[#6B1D2F] hover:-translate-y-0.5 active:bg-[#F0D5DE] select-none;
 }
 
 .card-editorial {
