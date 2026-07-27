@@ -16,6 +16,7 @@ import { MembershipPage } from './pages/MembershipPage';
 import { ContactPage } from './pages/ContactPage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { DiagnosticsPage } from './pages/DiagnosticsPage';
 
 // A zárt felületek külön csomagban töltődnek be. Egy látogatónak, aki csak a
 // nyilvános oldalakat nézi, nem kell letöltenie az elnökségi felület kódját.
@@ -54,6 +55,9 @@ export default function App() {
           <Route path="/tagsag" element={<MembershipPage />} />
           <Route path="/kapcsolat" element={<ContactPage />} />
           <Route path="/belepes" element={<LoginPage />} />
+
+          {/* Hibakeresés: megmutatja, mit lát az alkalmazás a jogosultságaidról */}
+          <Route path="/diagnosztika" element={<DiagnosticsPage />} />
 
           {/* Zárt felületek */}
           <Route

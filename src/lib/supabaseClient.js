@@ -57,8 +57,14 @@ export const describeError = (error) => {
   const RUN_SCHEMA =
     'Futtasd le a supabase/01_schema.sql szkriptet a Supabase Dashboard → SQL Editor felületén.';
 
-  if (code === '42501' || code === '42P01') {
-    return `Nincs jogosultságod ehhez a művelethez, vagy hiányzik az adatbázis-szabály. ${RUN_SCHEMA}`;
+  // FONTOS: az eredeti szöveget MEG KELL TARTANI. A Postgres a 42501-es
+  // hibában megnevezi a táblát és a műveletet ("new row violates row-level
+  // security policy for table ..."), ami nélkül a hibakeresés vaktában megy.
+  if (code === '42501') {
+    return `Az adatbázis elutasította a műveletet (jogosultság).\n${message}\n\nHa a szerepköröd rendben van, futtasd le a supabase/07_fix_grants.sql szkriptet.`;
+  }
+  if (code === '42P01') {
+    return `Nincs ilyen tábla az adatbázisban.\n${message}\n\n${RUN_SCHEMA}`;
   }
   if (code === 'PGRST204' || code === '42703') {
     return `Hiányzó oszlop az adatbázisban (${message}). ${RUN_SCHEMA}`;
