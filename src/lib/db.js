@@ -8,7 +8,7 @@
 //    3. localStorage-ot NEM használunk. A böngésző csak megjelenít.
 // =============================================================================
 
-import { supabase, unwrap } from './supabaseClient';
+import { supabase, unwrap, describeError } from './supabaseClient';
 
 /** Ékezetes cím -> URL-barát slug. */
 export const slugify = (text) =>
@@ -37,6 +37,12 @@ const uniqueSlug = async (table, base, ignoreId = null) => {
 //  Profilok és szerepkörök
 // -----------------------------------------------------------------------------
 
+// A kapcsolatot KIFEJEZETTEN megnevezzük az idegen kulcs nevével.
+// A sima `user_roles(role)` kétértelmű lenne, ha a user_roles táblának egynél
+// több idegen kulcsa van a profiles-ra — a PostgREST ilyenkor PGRST201 hibát ad
+// ("more than one relationship was found") és nem tölt be a profil.
+const PROFILE_WITH_ROLES = '*, user_roles!user_roles_user_id_fkey(role)';
+
 const PROFILE_FIELDS = [
   'full_name',
   'private_email',
@@ -62,22 +68,54 @@ const sanitizeProfile = (input, allowed = PROFILE_FIELDS) => {
   return out;
 };
 
-export const getProfile = async (userId) =>
-  unwrap(
-    await supabase
-      .from('profiles')
-      .select('*, user_roles(role)')
-      .eq('id', userId)
-      .maybeSingle()
-  );
+/**
+ * Igaz, ha a hiba a beágyazott kapcsolat feloldásáról szól.
+ * PGRST200 = nincs ilyen kapcsolat, PGRST201 = több kapcsolat is illeszkedik.
+ */
+const isEmbedError = (error) =>
+  error && (error.code === 'PGRST200' || error.code === 'PGRST201' || /relationship/i.test(error.message || ''));
 
-export const listMembers = async () =>
-  unwrap(
-    await supabase
-      .from('profiles')
-      .select('*, user_roles(role)')
-      .order('full_name', { ascending: true, nullsFirst: false })
-  ) || [];
+/**
+ * Saját profil a szerepkörökkel.
+ *
+ * Két úton is megpróbálja. A beágyazott kérés egy körben végez, de ha az
+ * adatbázis-kapcsolat bármiért nem oldható fel, NEM bukik el a belépés —
+ * ilyenkor két külön kéréssel szedjük össze ugyanazt.
+ */
+export const getProfile = async (userId) => {
+  const embedded = await supabase.from('profiles').select(PROFILE_WITH_ROLES).eq('id', userId).maybeSingle();
+
+  if (!embedded.error) return embedded.data;
+  if (!isEmbedError(embedded.error)) throw new Error(describeError(embedded.error));
+
+  console.warn('[db] A szerepkörök beágyazása nem sikerült, tartalék útra váltok. Futtasd le a supabase/04_fix_embed.sql szkriptet.');
+
+  const profile = unwrap(await supabase.from('profiles').select('*').eq('id', userId).maybeSingle());
+  if (!profile) return null;
+
+  const roles = unwrap(await supabase.from('user_roles').select('role').eq('user_id', userId)) || [];
+  return { ...profile, user_roles: roles };
+};
+
+/** Teljes tagnyilvántartás a szerepkörökkel, ugyanezzel a tartalék úttal. */
+export const listMembers = async () => {
+  const embedded = await supabase
+    .from('profiles')
+    .select(PROFILE_WITH_ROLES)
+    .order('full_name', { ascending: true, nullsFirst: false });
+
+  if (!embedded.error) return embedded.data || [];
+  if (!isEmbedError(embedded.error)) throw new Error(describeError(embedded.error));
+
+  const profiles =
+    unwrap(await supabase.from('profiles').select('*').order('full_name', { ascending: true, nullsFirst: false })) || [];
+  const allRoles = unwrap(await supabase.from('user_roles').select('user_id, role')) || [];
+
+  return profiles.map((p) => ({
+    ...p,
+    user_roles: allRoles.filter((r) => r.user_id === p.id).map((r) => ({ role: r.role }))
+  }));
+};
 
 /** A tag a saját profilját szerkeszti. custom_title-t itt NEM engedünk. */
 export const updateOwnProfile = async (userId, patch) => {
@@ -87,7 +125,7 @@ export const updateOwnProfile = async (userId, patch) => {
       .from('profiles')
       .update(sanitizeProfile(patch, allowed))
       .eq('id', userId)
-      .select('*, user_roles(role)')
+      .select(PROFILE_WITH_ROLES)
       .single()
   );
 };
@@ -99,7 +137,7 @@ export const updateMemberProfile = async (profileId, patch) =>
       .from('profiles')
       .update(sanitizeProfile(patch))
       .eq('id', profileId)
-      .select('*, user_roles(role)')
+      .select(PROFILE_WITH_ROLES)
       .single()
   );
 

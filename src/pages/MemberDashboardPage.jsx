@@ -22,7 +22,7 @@ const TABS = [
 ];
 
 export const MemberDashboardPage = () => {
-  const { profile, roleLabel, profileLoading } = useAuth();
+  const { profile, roleLabel, profileLoading, profileError, refreshProfile } = useAuth();
   const [active, setActive] = useState('dues');
 
   if (profileLoading && !profile) return <LoadingBlock label="Adatlap betöltése…" />;
@@ -39,13 +39,22 @@ export const MemberDashboardPage = () => {
         }
       />
 
-      {!profile && (
-        <div className="card border-caution-300 bg-caution-50 p-5">
-          <h2 className="font-display text-lg text-ink-900">Az adatlapod még nem jött létre</h2>
+      {!profile && !profileLoading && (
+        <div className="card border-caution-300 bg-caution-50 p-5" role="alert">
+          <h2 className="font-display text-lg text-ink-900">Az adatlap nem tölthető be</h2>
           <p className="mt-1.5 text-sm text-ink-600">
-            A belépés sikerült, de a profil nem tölthető be. Ez akkor fordul elő, ha az adatbázis-szkriptek még nem
-            futottak le. Jelezd a rendszergazdának.
+            A belépés sikerült, de a profil nem jött meg az adatbázisból.
           </p>
+
+          {profileError && (
+            <p className="mt-3 rounded-lg border border-sand-400 bg-white p-3 font-mono text-xs text-ink-800">
+              {profileError}
+            </p>
+          )}
+
+          <button type="button" onClick={refreshProfile} className="btn-secondary btn-sm mt-4">
+            Újrapróbálom
+          </button>
         </div>
       )}
 

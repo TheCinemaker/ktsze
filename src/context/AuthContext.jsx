@@ -30,24 +30,41 @@ export const AuthProvider = ({ children }) => {
   const [initializing, setInitializing] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
 
+  // Ha a profil betöltése elhasal, a szövegét megjelenítjük a felületen —
+  // nem kell konzolt nyitni ahhoz, hogy kiderüljön, mi a baj.
+  const [profileError, setProfileError] = useState(null);
+
+  // A Supabase PASSWORD_RECOVERY eseményt küld, amikor a felhasználó a
+  // jelszó-visszaállító linkről érkezik. Ilyenkor van munkamenete, de új
+  // jelszót kell adnia — a belépőoldal erre külön űrlapot mutat.
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
+
   const loadProfile = useCallback(async (userId) => {
     if (!userId) {
       setProfile(null);
       setRoles([]);
+      setProfileError(null);
       return null;
     }
     setProfileLoading(true);
+    setProfileError(null);
     try {
       const data = await getProfile(userId);
       setProfile(data || null);
       setRoles(extractRoles(data));
+      if (!data) {
+        setProfileError(
+          'A belépés sikeres, de ehhez a fiókhoz nincs profil sor az adatbázisban. Futtasd le a supabase/04_fix_embed.sql szkriptet — az pótolja a hiányzó profilokat.'
+        );
+      }
       return data;
     } catch (err) {
-      // A munkamenet érvényes, csak a profil nem jött meg (pl. nincs lefuttatva
-      // a séma). Ne dobjuk ki a felhasználót, de jelezzük a konzolon.
+      // A munkamenet érvényes, csak a profil nem jött meg. Ne dobjuk ki a
+      // felhasználót, de mondjuk meg neki, mi a baj.
       console.error('[auth] A profil betöltése nem sikerült:', err.message);
       setProfile(null);
       setRoles([]);
+      setProfileError(err.message);
       return null;
     } finally {
       setProfileLoading(false);
@@ -67,12 +84,17 @@ export const AuthProvider = ({ children }) => {
     const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!active) return;
       setSession(nextSession ?? null);
+
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
+      if (event === 'SIGNED_OUT') setPasswordRecovery(false);
+
       if (nextSession?.user) {
         // Ne blokkoljuk a callbacket await-tel — a supabase-js ezt nem szereti.
         loadProfile(nextSession.user.id);
       } else {
         setProfile(null);
         setRoles([]);
+        setProfileError(null);
       }
     });
 
@@ -134,6 +156,8 @@ export const AuthProvider = ({ children }) => {
     if (error) throw new Error(describeError(error));
     setProfile(null);
     setRoles([]);
+    setProfileError(null);
+    setPasswordRecovery(false);
   }, []);
 
   const requestPasswordReset = useCallback(async (identifier) => {
@@ -143,6 +167,17 @@ export const AuthProvider = ({ children }) => {
       redirectTo: `${window.location.origin}/belepes`
     });
     if (error) throw new Error(describeError(error));
+    return true;
+  }, []);
+
+  /** Új jelszó beállítása a visszaállító linkről érkezve. */
+  const updatePassword = useCallback(async (newPassword) => {
+    if (!newPassword || newPassword.length < 8) {
+      throw new Error('A jelszó legyen legalább 8 karakter.');
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw new Error(describeError(error));
+    setPasswordRecovery(false);
     return true;
   }, []);
 
@@ -167,6 +202,8 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: Boolean(session?.user),
     initializing,
     profileLoading,
+    profileError,
+    passwordRecovery,
     roleLabel: primaryRoleLabel(roles),
     /** Jogosultság-ellenőrzés, pl. can('news.manage') */
     can: (action) => checkPermission(roles, action),
@@ -174,11 +211,12 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     requestPasswordReset,
+    updatePassword,
     updateOwnProfile,
     refreshProfile
   }), [
-    session, profile, roles, initializing, profileLoading,
-    login, register, logout, requestPasswordReset, updateOwnProfile, refreshProfile
+    session, profile, roles, initializing, profileLoading, profileError, passwordRecovery,
+    login, register, logout, requestPasswordReset, updatePassword, updateOwnProfile, refreshProfile
   ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

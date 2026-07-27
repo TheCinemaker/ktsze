@@ -94,11 +94,15 @@ begin
   end if;
 end $$;
 
+-- FONTOS: a granted_by szándékosan az auth.users-re hivatkozik, NEM a
+-- profiles-ra. Ha mindkét oszlop a profiles-ra mutatna, a PostgREST nem tudná
+-- eldönteni, melyik kapcsolaton oldja fel a profiles?select=*,user_roles(role)
+-- kérést, és PGRST201 hibát adna ("more than one relationship was found").
 create table public.user_roles (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references public.profiles(id) on delete cascade,
   role       public.app_role not null,
-  granted_by uuid references public.profiles(id) on delete set null,
+  granted_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   unique (user_id, role)
 );

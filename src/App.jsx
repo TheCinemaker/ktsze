@@ -4,6 +4,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { RequireAuth } from './components/auth/RequireAuth';
+import { AuthCallback } from './components/auth/AuthCallback';
 import { LoadingBlock } from './components/ui';
 
 import { HomePage } from './pages/HomePage';
@@ -38,6 +39,8 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollToTop />
+      {/* Az e-mail linkekről érkező tokent feldolgozza és eltünteti a címsorból */}
+      <AuthCallback />
       <Navbar />
 
       <main id="main" className="flex-1">

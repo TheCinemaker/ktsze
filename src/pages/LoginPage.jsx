@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { LogIn, UserPlus, MailCheck } from 'lucide-react';
+import { LogIn, UserPlus, MailCheck, KeyRound } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -278,6 +278,79 @@ const RegisterForm = ({ onSwitch, onNeedsConfirmation }) => {
   );
 };
 
+/**
+ * Új jelszó megadása a visszaállító linkről érkezve.
+ *
+ * Ez korábban hiányzott: a rendszer kiküldte a levelet, de nem volt hova
+ * megérkezni — a felhasználó nem tudott új jelszót beállítani.
+ */
+const SetNewPasswordForm = () => {
+  const { updatePassword } = useAuth();
+  const toast = useToast();
+  const navigate = useNavigate();
+
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [pending, setPending] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (password !== confirm) {
+      toast.error('A két jelszó nem egyezik.');
+      return;
+    }
+    setPending(true);
+    try {
+      await updatePassword(password);
+      toast.success('Az új jelszavad elmentve.');
+      navigate('/tagi', { replace: true });
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+      <div className="rounded-lg border border-caution-300 bg-caution-50 p-3">
+        <p className="text-sm text-ink-800">
+          A visszaállító linkről érkeztél. Adj meg egy új jelszót a folytatáshoz.
+        </p>
+      </div>
+
+      <TextInput
+        label="Új jelszó"
+        type="password"
+        required
+        minLength={8}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        autoComplete="new-password"
+        hint="Legalább 8 karakter."
+      />
+
+      <TextInput
+        label="Új jelszó megerősítése"
+        type="password"
+        required
+        value={confirm}
+        onChange={(e) => setConfirm(e.target.value)}
+        autoComplete="new-password"
+      />
+
+      <button type="submit" disabled={pending} className="btn-primary w-full">
+        {pending ? <Spinner label="Mentés…" className="text-white" /> : (
+          <>
+            <KeyRound className="h-4 w-4" aria-hidden="true" />
+            Új jelszó mentése
+          </>
+        )}
+      </button>
+    </form>
+  );
+};
+
 const ConfirmationNotice = ({ email }) => (
   <div className="text-center">
     <MailCheck className="mx-auto mb-4 h-9 w-9 text-positive-600" aria-hidden="true" />
@@ -294,12 +367,32 @@ const ConfirmationNotice = ({ email }) => (
 );
 
 export const LoginPage = () => {
-  const { isAuthenticated, initializing } = useAuth();
+  const { isAuthenticated, initializing, passwordRecovery } = useAuth();
   const [mode, setMode] = useState('login');
   const [confirmationEmail, setConfirmationEmail] = useState(null);
   const location = useLocation();
 
   if (initializing) return <LoadingBlock label="Munkamenet ellenőrzése…" />;
+
+  // Jelszó-visszaállításnál van munkamenet, de itt kell maradni: új jelszót
+  // kell megadni. Ezért ez a vizsgálat megelőzi az átirányítást.
+  if (passwordRecovery) {
+    return (
+      <div className="container-page flex justify-center py-12 sm:py-16">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center">
+            <div className="mb-4 inline-flex justify-center">
+              <HeaderLogo variant="mark" />
+            </div>
+            <h1 className="font-display text-2xl text-ink-900">Új jelszó beállítása</h1>
+          </div>
+          <div className="card p-6 sm:p-8">
+            <SetNewPasswordForm />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Belépve nincs mit keresni a belépőoldalon.
   if (isAuthenticated) return <Navigate to={location.state?.from || '/tagi'} replace />;

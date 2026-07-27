@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LoadingBlock, EmptyState } from '../ui';
+import { LoadingBlock, EmptyState, ErrorBlock } from '../ui';
 import { ShieldAlert } from 'lucide-react';
 
 /**
@@ -14,7 +14,7 @@ import { ShieldAlert } from 'lucide-react';
  * @param {string} [permission] pl. 'admin.access'
  */
 export const RequireAuth = ({ permission, children }) => {
-  const { isAuthenticated, initializing, profileLoading, can } = useAuth();
+  const { isAuthenticated, initializing, profileLoading, profileError, profile, can, refreshProfile } = useAuth();
   const location = useLocation();
 
   // Amíg a munkamenetet ellenőrizzük, ne irányítsunk át — különben
@@ -30,6 +30,24 @@ export const RequireAuth = ({ permission, children }) => {
   // A jogosultság a profilhoz csatolt szerepkörökből jön — várjuk meg.
   if (permission && profileLoading) {
     return <LoadingBlock label="Jogosultságok ellenőrzése…" />;
+  }
+
+  // FONTOS: ha a profil be sem töltött, a szerepkörök üresek — ilyenkor NEM
+  // szabad "nincs jogosultságod"-ot írni, mert az félrevezető. A tényleges
+  // adatbázishibát kell megmutatni, különben a rendszergazda azt hiszi, hogy
+  // elvesztette a hozzáférését.
+  if (permission && !profile) {
+    return (
+      <div className="container-page py-16">
+        <ErrorBlock
+          message={
+            profileError ||
+            'A profil nem tölthető be az adatbázisból, ezért a jogosultságokat sem tudjuk ellenőrizni.'
+          }
+          onRetry={refreshProfile}
+        />
+      </div>
+    );
   }
 
   if (permission && !can(permission)) {

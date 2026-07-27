@@ -1,95 +1,89 @@
 -- =============================================================================
---  Adminisztrátor és tisztségviselő beállítása
+--  Rendszergazda és tisztségviselők beállítása
 --
---  ELŐFELTÉTEL — ezt kézzel kell megtenni, mert jelszót SQL-ből nem állítunk:
+--  ELŐFELTÉTEL: a fiókoknak MÁR LÉTEZNIÜK KELL a Supabase Authentication
+--  felületén. Jelszót SQL-ből nem állítunk.
 --
---    Supabase Dashboard -> Authentication -> Users -> "Add user"
---       -> "Create new user"
---       -> Email:    admin@visitkoszeg.hu
---       -> Password: (a megbeszélt admin jelszó)
---       -> "Auto Confirm User"  <-- FONTOS, pipáld be
---       -> Create user
+--    Dashboard -> Authentication -> Users -> "Add user" -> "Create new user"
+--       Email:    admin@visitkoszeg.hu
+--       Password: (a megbeszélt jelszó)
+--       "Auto Confirm User"  <-- FONTOS, pipáld be
 --
---  Ismételd meg a saját, személyes fiókodra is (pl. avar.szilveszter@gmail.com).
---
---  Ezután futtasd le ezt a szkriptet. Újrafuttatható.
+--  Ha ezt a szkriptet a fiókok létrehozása ELŐTT futtatod le, egyszerűen
+--  kihagyja őket — utána futtasd le újra. Bármikor újrafuttatható.
 --
 --  A jelszó SOHA nem kerül a forráskódba és nem kerül ki a böngészőbe.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
---  1. Rendszergazda fiók
+--  Segédfüggvény: szerepkör kiosztása e-mail cím alapján
 -- -----------------------------------------------------------------------------
-do $$
+create or replace function public.grant_role_by_email(
+  target_email text,
+  target_role  text,
+  target_title text default null,
+  drop_member  boolean default true
+)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
 declare
-  admin_email text := 'admin@visitkoszeg.hu';   -- <- igazítsd, ha mást használsz
   uid uuid;
 begin
-  select id into uid from auth.users where lower(email) = lower(admin_email);
+  select id into uid from auth.users where lower(email) = lower(target_email);
 
   if uid is null then
-    raise exception
-      'Nincs ilyen felhasználó: %. Előbb hozd létre a Dashboard -> Authentication -> Users felületen (Auto Confirm bepipálva).',
-      admin_email;
+    return format('KIHAGYVA — nincs ilyen felhasznalo: %s (hozd letre a Dashboardon, majd futtasd ujra)', target_email);
   end if;
 
-  -- Profil (a trigger már létrehozta; itt csak a tisztségnevet írjuk rá)
-  insert into public.profiles (id, account_email, full_name, custom_title, member_category)
-  values (uid, admin_email, 'Rendszergazda', 'Rendszergazda', 'Elnökségi tag')
-  on conflict (id) do update
-    set custom_title    = coalesce(excluded.custom_title, public.profiles.custom_title),
-        member_category = coalesce(excluded.member_category, public.profiles.member_category);
+  -- Profil pótlása, ha a felhasználó a séma előtt jött létre
+  insert into public.profiles (id, account_email)
+  values (uid, target_email)
+  on conflict (id) do nothing;
 
-  -- Admin szerepkör
+  if target_title is not null then
+    update public.profiles
+       set custom_title    = target_title,
+           member_category = 'Elnökségi tag'
+     where id = uid;
+  end if;
+
   insert into public.user_roles (user_id, role)
-  values (uid, 'admin')
+  values (uid, target_role::public.app_role)
   on conflict (user_id, role) do nothing;
 
-  -- A regisztrációs trigger által adott 'member' szerep itt már felesleges
-  delete from public.user_roles where user_id = uid and role = 'member';
+  -- A regisztrációs trigger által adott alap szerep itt már felesleges
+  if drop_member then
+    delete from public.user_roles
+     where user_id = uid
+       and role in ('member'::public.app_role, 'patron'::public.app_role);
+  end if;
 
-  raise notice 'Rendszergazda beállítva: % (%)', admin_email, uid;
+  return format('OK — %s -> %s', target_email, target_role);
 end $$;
 
 -- -----------------------------------------------------------------------------
---  2. Digitális Kőszeg alelnök
+--  Szerepkörök kiosztása
 --
---  Az 'admin' szerepkör mellé nem kell más. Ha ez a fiók CSAK alelnök legyen
---  (tartalom + munkacsoportok + dokumentumok, tagdíj nélkül), akkor hagyd
---  benne a 'vicepresident' sort és NE add hozzá az 'admin'-t.
+--  Igazítsd az e-mail címeket, ha máshogy hívják a fiókokat.
 -- -----------------------------------------------------------------------------
-do $$
-declare
-  vp_email text := 'avar.szilveszter@gmail.com';  -- <- igazítsd, ha kell
-  vp_title text := 'Digitális Kőszeg alelnök';
-  uid uuid;
-begin
-  select id into uid from auth.users where lower(email) = lower(vp_email);
+select public.grant_role_by_email('admin@visitkoszeg.hu', 'admin', 'Rendszergazda')        as eredmeny
+union all
+select public.grant_role_by_email('avar.szilveszter@gmail.com', 'admin', 'Digitális Kőszeg alelnök');
 
-  if uid is null then
-    raise notice
-      'Kihagyva: nincs ilyen felhasználó: %. Hozd létre a Dashboardon, majd futtasd újra.',
-      vp_email;
-    return;
-  end if;
-
-  insert into public.profiles (id, account_email, custom_title, member_category)
-  values (uid, vp_email, vp_title, 'Elnökségi tag')
-  on conflict (id) do update
-    set custom_title    = vp_title,
-        member_category = 'Elnökségi tag';
-
-  insert into public.user_roles (user_id, role)
-  values (uid, 'vicepresident')
-  on conflict (user_id, role) do nothing;
-
-  delete from public.user_roles where user_id = uid and role = 'member';
-
-  raise notice 'Alelnök beállítva: % — %', vp_email, vp_title;
-end $$;
+-- Megjegyzés: a fenti sor az avar.szilveszter fióknak 'admin' szerepkört ad,
+-- hogy azonnal MINDENT láss. Ha később szűkíteni akarod tényleges alelnöki
+-- jogkörre (tartalom + munkacsoportok + dokumentumok, tagdíj nélkül), futtasd:
+--
+--   delete from public.user_roles
+--    where user_id = (select id from auth.users where email = 'avar.szilveszter@gmail.com')
+--      and role = 'admin';
+--   select public.grant_role_by_email('avar.szilveszter@gmail.com', 'vicepresident', 'Digitális Kőszeg alelnök');
 
 -- -----------------------------------------------------------------------------
---  3. Ellenőrzés — ezt érdemes megnézni futtatás után
+--  Ellenőrzés — ennek kell látszania a futtatás után
 -- -----------------------------------------------------------------------------
 select
   p.account_email,
