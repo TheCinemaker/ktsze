@@ -28,6 +28,7 @@ export const AboutSection = ({ setActiveTab }) => {
       name: "Vörös Róbert",
       role: "Alelnök",
       organization: "Portré Étterem és Panzió",
+      icon: UtensilsCrossed,
       bio: "A kőszegi gasztronómia, belvárosi vendéglátás és az őszi forgalomnövelő Kőszegi Esték felelőse."
     },
     {
@@ -106,7 +107,7 @@ export const AboutSection = ({ setActiveTab }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {boardMembers.map((member, idx) => {
-              const Icon = member.icon;
+              const Icon = member.icon || Award;
               return (
                 <div key={idx} className="bg-white p-6 rounded-xl border border-[#E2D7C7] hover:border-[#C5A880] space-y-2 shadow-sm transition-all">
                   <div className="flex items-center justify-between">
@@ -136,7 +137,7 @@ export const AboutSection = ({ setActiveTab }) => {
         {/* 3 Active Workgroups */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {initiatives.map((item, idx) => {
-            const Icon = item.icon;
+            const Icon = item.icon || Award;
             return (
               <div key={idx} className="card-editorial space-y-4">
                 <div className="w-12 h-12 bg-[#F7EBEF] text-[#6B1D2F] rounded-xl flex items-center justify-center border border-[#D9AAB6]">
