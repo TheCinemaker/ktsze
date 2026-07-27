@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Flower2, Award, Crown } from 'lucide-react';
+import { Users, Flower2, Award, Crown, Mail, User } from 'lucide-react';
 
 import { ORGANIZATION, formattedAddress } from '../config/organization';
 import { listWorkgroups, listPublicBoardMembers } from '../lib/db';
@@ -24,11 +24,11 @@ export const AboutPage = () => {
       {/* Elnökség & Vezetőség */}
       <section className="mt-12">
         <div className="flex items-center gap-2">
-          <Crown className="h-5 w-5 text-wine-600" aria-hidden="true" />
+          <Crown className="h-6 w-6 text-wine-600" aria-hidden="true" />
           <h2 className="font-display text-2xl text-ink-900">Elnökség &amp; Tisztségviselők</h2>
         </div>
         <p className="mt-1 text-sm text-ink-600">
-          Az egyesület hivatalosan megválasztott elnöksége és tisztségviselői.
+          Az egyesület hivatalosan megválasztott elnöksége, tisztségviselői és szakmai vezetői.
         </p>
 
         <div className="mt-6">
@@ -41,26 +41,69 @@ export const AboutPage = () => {
           )}
 
           {boardMembers && boardMembers.length > 0 && (
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {boardMembers.map((member) => (
-                <div key={member.id} className="card p-6 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-display text-lg font-bold text-wine-700">
-                      {member.full_name || 'Tisztségviselő'}
-                    </span>
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-wine-100 text-wine-700">
-                      <Award className="h-4 w-4" />
+                <article
+                  key={member.id}
+                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white"
+                >
+                  {/* Portré kép / Helykitöltő header */}
+                  <div className="relative h-64 w-full bg-gradient-to-br from-sand-200 via-wine-900/10 to-sand-300 flex items-center justify-center border-b border-sand-300">
+                    {member.avatar_url ? (
+                      <img
+                        src={member.avatar_url}
+                        alt={member.full_name}
+                        className="h-full w-full object-cover object-top"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center space-y-2 text-wine-800/70">
+                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-wine-100 text-wine-800 text-2xl font-bold font-display shadow-inner">
+                          {member.full_name?.split(' ').map((n) => n[0]).join('').slice(0, 2) || 'TK'}
+                        </div>
+                        <span className="text-xs font-medium text-ink-500">Portré feltöltésre vár</span>
+                      </div>
+                    )}
+                    <div className="absolute top-3 right-3 rounded-full bg-wine-700/90 text-white p-1.5 shadow">
+                      <Award className="h-4 w-4" aria-hidden="true" />
                     </div>
                   </div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-ink-900">
-                    {member.custom_title || 'Elnökségi Tag'}
-                  </div>
-                  {(member.service_location_name || member.business_activity) && (
-                    <div className="text-xs text-ink-600">
-                      {member.service_location_name || member.business_activity}
+
+                  {/* Tartalom & Bemutatkozás */}
+                  <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-2">
+                      <span className="inline-block rounded-full bg-wine-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-wine-800">
+                        {member.custom_title || 'Elnökségi Tag'}
+                      </span>
+                      <h3 className="font-display text-xl font-bold text-ink-900">
+                        {member.full_name}
+                      </h3>
+                      {(member.service_location_name || member.business_activity) && (
+                        <p className="text-xs font-medium text-wine-700">
+                          {member.service_location_name || member.business_activity}
+                        </p>
+                      )}
+                      <p className="text-sm leading-relaxed text-ink-600 pt-2 border-t border-sand-200">
+                        {member.bio ||
+                          (member.full_name?.includes('Szilveszter')
+                            ? 'A Kőszegi Turisztikai Szövetség Egyesület Digitális Kőszeg programjáért, a turisztikai szoftverrendszerekért és az egyesületi IT infrastruktúráért felelős alelnöke.'
+                            : 'Az egyesület elnökségi tagja, aki aktív szerepet vállal Kőszeg turisztikai és szakmai fejlődésének támogatásában.')}
+                      </p>
                     </div>
-                  )}
-                </div>
+
+                    {/* Elérhetőség */}
+                    {member.private_email && (
+                      <div className="pt-3 border-t border-sand-200">
+                        <a
+                          href={`mailto:${member.private_email}`}
+                          className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
+                        >
+                          <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+                          {member.private_email}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </article>
               ))}
             </div>
           )}

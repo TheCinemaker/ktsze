@@ -154,13 +154,13 @@ export const deleteMemberProfile = async (profileId) => {
 export const listPublicBoardMembers = async () => {
   const embedded = await supabase
     .from('profiles')
-    .select('id, full_name, custom_title, service_location_name, business_activity, account_email, user_roles!user_roles_user_id_fkey(role)');
+    .select('id, full_name, custom_title, service_location_name, business_activity, account_email, private_email, avatar_url, bio, user_roles!user_roles_user_id_fkey(role)');
 
   let profiles = [];
   if (!embedded.error && embedded.data) {
     profiles = embedded.data;
   } else {
-    const rawProfiles = unwrap(await supabase.from('profiles').select('id, full_name, custom_title, service_location_name, business_activity, account_email')) || [];
+    const rawProfiles = unwrap(await supabase.from('profiles').select('id, full_name, custom_title, service_location_name, business_activity, account_email, private_email, avatar_url, bio')) || [];
     const allRoles = unwrap(await supabase.from('user_roles').select('user_id, role')) || [];
     profiles = rawProfiles.map((p) => ({
       ...p,
@@ -183,7 +183,10 @@ export const listPublicBoardMembers = async () => {
       full_name: p.full_name,
       custom_title: p.custom_title || 'Tisztségviselő',
       service_location_name: p.service_location_name,
-      business_activity: p.business_activity
+      business_activity: p.business_activity,
+      private_email: p.private_email || p.account_email,
+      avatar_url: p.avatar_url || null,
+      bio: p.bio || null
     }));
 };
 
