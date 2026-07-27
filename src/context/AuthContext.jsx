@@ -241,8 +241,6 @@ export const AuthProvider = ({ children }) => {
     const emailClean = (registrationData.account_email || '').toLowerCase().trim();
     const existingMember = members.find(m => (m.account_email || '').toLowerCase().trim() === emailClean);
 
-    const isFirstUser = members.length === 0 || (members.length === 1 && existingMember);
-
     const newProfile = {
       id: existingMember ? existingMember.id : `user-${Date.now()}`,
       account_email: registrationData.account_email,
@@ -250,15 +248,15 @@ export const AuthProvider = ({ children }) => {
       full_name: registrationData.full_name,
       home_address: registrationData.home_address || '',
       phone: registrationData.phone,
-      member_category: registrationData.member_category || (isFirstUser ? 'Elnökségi tag' : 'Rendes tag'),
-      custom_title: registrationData.custom_title || (existingMember?.custom_title ? existingMember.custom_title : (isFirstUser ? 'Elnök' : '')),
+      member_category: registrationData.member_category || 'Rendes tag',
+      custom_title: registrationData.custom_title || (existingMember?.custom_title ? existingMember.custom_title : ''),
       business_activity: registrationData.business_activity || 'szolgáltató',
       service_location_name: registrationData.service_location_name || 'Szolgáltatás',
       service_street: registrationData.service_street || '',
       service_house_number: registrationData.service_house_number || '',
       service_contacts: registrationData.service_contacts || registrationData.phone,
       workgroups: registrationData.workgroups || [],
-      role: registrationData.role || (existingMember?.role ? existingMember.role : (isFirstUser ? 'admin' : (isPatron ? 'patron' : 'member'))),
+      role: existingMember?.role ? existingMember.role : (isPatron ? 'patron' : 'member'),
       joined_date: existingMember?.joined_date || new Date().toISOString().split('T')[0],
       dues_2026: { 
         status: existingMember?.dues_2026?.status || "pending", 

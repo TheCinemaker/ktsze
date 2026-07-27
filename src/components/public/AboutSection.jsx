@@ -12,27 +12,6 @@ export const AboutSection = ({ setActiveTab }) => {
     (m.custom_title && m.custom_title.trim() !== '')
   );
 
-  const initiatives = [
-    {
-      title: "„Kőszeg Virágzik” Munkacsoport",
-      leader: "Szalók Adrienn Alelnök vezetésével",
-      desc: "Főtéri kaspók és virágládák örökbefogadása, virágos sarkok gondozása a városi kertész szakmai irányításával.",
-      icon: Flower2
-    },
-    {
-      title: "„Digitális Kőszegért” Munkacsoport",
-      leader: "Avar Szilveszter Alelnök (SA Software) vezetésével",
-      desc: "Egyesületi digitális platform, tagi portál, kétirányú Google Drive integráció és B2B edukációs akciónapok.",
-      icon: Laptop
-    },
-    {
-      title: "Őszi Forgalomnövelés & B2B Nyílt Nap",
-      leader: "Szekér Zoltán, Farkas Péter & Vörös Róbert Alelnökök",
-      desc: "Aktív & gasztro csomagok, Kőszegi Esték sorozat, kuponfüzet és szeptemberi B2B Szakmai Nyílt Nap & Média Study Tour.",
-      icon: Sparkles
-    }
-  ];
-
   return (
     <section className="py-16 bg-[#FAF6F0]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -108,29 +87,34 @@ export const AboutSection = ({ setActiveTab }) => {
           </div>
         </div>
 
-        {/* 3 Active Workgroups */}
+        {/* Active Workgroups */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {initiatives.map((item, idx) => {
-            const Icon = item.icon || Award;
-            return (
+          {workgroups.length > 0 ? (
+            workgroups.map((item, idx) => (
               <div key={idx} className="card-editorial space-y-4">
                 <div className="w-12 h-12 bg-[#F7EBEF] text-[#6B1D2F] rounded-xl flex items-center justify-center border border-[#D9AAB6]">
-                  <Icon className="w-6 h-6" />
+                  <Flower2 className="w-6 h-6" />
                 </div>
                 <div>
                   <h3 className="font-serif text-xl font-bold text-[#2C221E]">
-                    {item.title}
+                    {item.name}
                   </h3>
                   <div className="text-xs text-[#6B1D2F] font-semibold mt-0.5">
-                    {item.leader}
+                    Vezető: {item.leader_name || "Elnökségi kijelölés alatt"}
                   </div>
                 </div>
                 <p className="text-xs text-[#63534B] leading-relaxed">
-                  {item.desc}
+                  {item.description}
                 </p>
               </div>
-            );
-          })}
+            ))
+          ) : (
+            <div className="col-span-full p-6 text-center bg-white rounded-xl border border-dashed border-[#E2D7C7]">
+              <Sparkles className="w-6 h-6 text-[#C5A880] mx-auto mb-1" />
+              <h4 className="font-serif font-bold text-sm text-[#2C221E]">Munkacsoportok Előkészítés Alatt</h4>
+              <p className="text-xs text-[#63534B]">Az Elnökségi Admin felületen hozhatók létre új egyesületi munkacsoportok.</p>
+            </div>
+          )}
         </div>
 
       </div>

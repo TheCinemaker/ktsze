@@ -17,17 +17,17 @@ export const MemberDashboardPage = ({ setActiveTab }) => {
         <div className="bg-[#F3ECE0] rounded-2xl p-6 sm:p-8 border border-[#E2D7C7] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-[#6B1D2F] text-white rounded-2xl flex items-center justify-center font-serif text-2xl font-bold shadow-md">
-              {currentUser?.organization_name?.charAt(0) || "T"}
+              {(currentUser?.service_location_name || currentUser?.full_name || "T").charAt(0)}
             </div>
             <div>
               <div className="text-xs font-semibold text-[#6B1D2F] uppercase tracking-wider">
-                Egyesületi Tagi Portál
+                Egyesületi Tagi Portál {currentUser?.custom_title ? `• ${currentUser.custom_title}` : ''}
               </div>
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#2C221E]">
-                {currentUser?.organization_name || "Jurisics Vár Hotel & Étterem"}
+                {currentUser?.service_location_name || currentUser?.full_name || "Egyesületi Tag"}
               </h1>
               <p className="text-xs text-[#63534B]">
-                Képviselő: <strong className="text-[#2C221E]">{currentUser?.full_name || "Nagy István"}</strong> ({currentUser?.email})
+                Tag: <strong className="text-[#2C221E]">{currentUser?.full_name || "Bejelentkezett Tag"}</strong> ({currentUser?.account_email || ''})
               </p>
             </div>
           </div>

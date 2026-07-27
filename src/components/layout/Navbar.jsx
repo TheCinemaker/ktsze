@@ -74,7 +74,7 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
                 className="btn-wine text-xs uppercase tracking-wider font-bold py-2 px-3.5"
               >
                 <Lock className="w-3.5 h-3.5" />
-                Tagi & Admin Belépés
+                Belépés
               </button>
             ) : (
               <div className="flex items-center gap-2">
@@ -115,7 +115,7 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
 
       {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#FAF6F0] border-b border-[#E2D7C7] px-4 pt-2 pb-6 space-y-2">
+        <div className="lg:hidden bg-[#FAF6F0] border-b border-[#E2D7C7] px-4 pt-2 pb-6 space-y-3 shadow-lg">
           {navItems.map((item) => (
             <button
               key={item.id}
@@ -129,44 +129,30 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
               {item.label}
             </button>
           ))}
-
-          <div className="pt-3 border-t border-[#E2D7C7] flex flex-col gap-2">
-            <div className="text-[0.68rem] text-[#63534B] font-semibold px-1 uppercase tracking-wider">Szerepkör (Demo)</div>
-            <div className="grid grid-cols-3 gap-1.5">
-              <button 
-                onClick={() => { loginAs('guest'); setMobileMenuOpen(false); }}
-                className={`py-1.5 text-xs rounded-md border text-center cursor-pointer flex items-center justify-center gap-1 ${role === 'guest' ? 'bg-[#6B1D2F] text-white font-bold' : 'bg-white text-[#2C221E] border-[#E2D7C7]'}`}
-              >
-                <Eye className="w-3 h-3" /> Látogató
-              </button>
-              <button 
-                onClick={() => { loginAs('member'); setMobileMenuOpen(false); handleNavClick('member-dashboard'); }}
-                className={`py-1.5 text-xs rounded-md border text-center cursor-pointer flex items-center justify-center gap-1 ${role === 'member' ? 'bg-[#6B1D2F] text-white font-bold' : 'bg-white text-[#2C221E] border-[#E2D7C7]'}`}
-              >
-                <Building2 className="w-3 h-3" /> Tag
-              </button>
-              <button 
-                onClick={() => { loginAs('admin'); setMobileMenuOpen(false); handleNavClick('admin-dashboard'); }}
-                className={`py-1.5 text-xs rounded-md border text-center cursor-pointer flex items-center justify-center gap-1 ${role === 'admin' ? 'bg-[#6B1D2F] text-white font-bold' : 'bg-white text-[#2C221E] border-[#E2D7C7]'}`}
-              >
-                <Crown className="w-3 h-3" /> Admin
-              </button>
-            </div>
-
+          <div className="pt-3 border-t border-[#E2D7C7]">
             {role === 'guest' ? (
               <button
                 onClick={() => handleNavClick('login')}
-                className="btn-wine w-full justify-center mt-2 py-2.5 text-xs"
+                className="btn-wine w-full justify-center py-2.5 text-xs uppercase tracking-wider font-bold"
               >
-                Tagi Belépés
+                <Lock className="w-4 h-4" /> Belépés
               </button>
             ) : (
-              <button
-                onClick={() => handleNavClick(role === 'admin' ? 'admin-dashboard' : 'member-dashboard')}
-                className="btn-wine w-full justify-center mt-2 py-2.5 text-xs"
-              >
-                {role === 'admin' ? 'Megnyitás: Admin Portál' : 'Megnyitás: Tagi Portál'}
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleNavClick(role === 'admin' ? 'admin-dashboard' : 'member-dashboard')}
+                  className="btn-wine w-full justify-center text-xs font-bold uppercase tracking-wider py-2.5"
+                >
+                  {role === 'admin' ? <Crown className="w-4 h-4" /> : <Building className="w-4 h-4" />}
+                  {role === 'admin' ? 'Admin Portál' : 'Tagi Portál'}
+                </button>
+                <button
+                  onClick={() => { logout(); setMobileMenuOpen(false); }}
+                  className="btn-outline-brown w-full justify-center text-xs font-bold uppercase tracking-wider py-2"
+                >
+                  <LogOut className="w-4 h-4 text-[#6B1D2F]" /> Kijelentkezés
+                </button>
+              </div>
             )}
           </div>
         </div>
