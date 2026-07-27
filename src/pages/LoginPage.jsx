@@ -4,7 +4,7 @@ import { HeaderLogo } from '../components/layout/HeaderLogo';
 import { Lock, Mail, Key, ShieldCheck, ArrowRight, UserCheck, Building2, Crown, UserPlus, Phone, MapPin, Building, HeartHandshake } from 'lucide-react';
 
 export const LoginPage = ({ setActiveTab }) => {
-  const { loginWithEmail, registerMember } = useAuth();
+  const { loginWithCredentials, registerMember } = useAuth();
   
   const [activeTabMode, setActiveTabMode] = useState('login'); // 'login' | 'register'
 
@@ -28,7 +28,7 @@ export const LoginPage = ({ setActiveTab }) => {
 
   const handleCustomLogin = (e) => {
     e.preventDefault();
-    const result = loginWithEmail(email);
+    const result = loginWithCredentials(email, password);
     if (result.success) {
       if (result.user.role === 'admin') {
         setActiveTab('admin-dashboard');
@@ -116,15 +116,15 @@ export const LoginPage = ({ setActiveTab }) => {
               /* Login Form */
               <form onSubmit={handleCustomLogin} className="space-y-4 text-xs">
                 <div>
-                  <label className="block font-semibold text-[#2C221E] mb-1">Fiók E-mail Cím *</label>
+                  <label className="block font-semibold text-[#2C221E] mb-1">E-mail Cím vagy Felhasználónév *</label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-[#63534B] absolute left-3 top-3" />
                     <input 
-                      type="email" 
+                      type="text" 
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="tag@jurisicsvarhotel.hu"
+                      placeholder="admin vagy e-mail cím..."
                       className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-[#E2D7C7] bg-[#FAF6F0] text-[#2C221E] focus:outline-none focus:border-[#6B1D2F]"
                     />
                   </div>

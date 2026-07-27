@@ -140,11 +140,30 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('ktsze_drive', JSON.stringify(driveFolders));
   }, [driveFolders]);
 
-  // Auth Functions
-  const loginWithEmail = (emailInput) => {
+  // Auth Functions with Superadmin Master Credential
+  const loginWithCredentials = (emailOrUsername, passwordInput) => {
+    const inputClean = (emailOrUsername || '').toLowerCase().trim();
+    
+    // Master Superadmin check (beégetve / ENV-ből)
+    if ((inputClean === 'admin' || inputClean === 'admin@visitkoszeg.hu') && passwordInput === 'Nyanyuska_0169') {
+      const superAdminUser = {
+        id: 'super-admin-1',
+        account_email: 'admin@visitkoszeg.hu',
+        full_name: 'SuperAdmin (SA Software)',
+        custom_title: 'Rendszergazda & Fejlesztő',
+        member_category: 'Elnökségi tag',
+        role: 'admin',
+        phone: '+36 30 555 7788'
+      };
+      setCurrentUser(superAdminUser);
+      setRole('admin');
+      return { success: true, user: superAdminUser };
+    }
+
+    // Normal Member Login via Supabase / local profiles
     const foundUser = members.find(m => 
-      m.account_email?.toLowerCase().trim() === emailInput?.toLowerCase().trim() || 
-      m.private_email?.toLowerCase().trim() === emailInput?.toLowerCase().trim()
+      m.account_email?.toLowerCase().trim() === inputClean || 
+      m.private_email?.toLowerCase().trim() === inputClean
     );
 
     if (foundUser) {
@@ -153,34 +172,22 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: foundUser };
     }
 
-    if (members.length > 0) {
-      setCurrentUser(members[0]);
-      setRole(members[0].role || 'member');
-      return { success: true, user: members[0] };
-    }
-
-    return { success: false, message: 'Nem található regisztrált felhasználó ezzel az e-mail címmel.' };
+    return { success: false, message: 'Érvénytelen bejelentkezési adatok! Helyes Superadmin: admin / Nyanyuska_0169' };
   };
 
   const loginAs = (selectedRole) => {
     if (selectedRole === 'admin') {
-      const adminUser = members.find(m => m.role === 'admin') || currentUser || (members.length > 0 ? members[0] : null);
-      if (adminUser) {
-        setCurrentUser(adminUser);
-        setRole('admin');
-      }
-    } else if (selectedRole === 'member') {
-      const memberUser = members.find(m => m.role === 'member') || currentUser || (members.length > 0 ? members[0] : null);
-      if (memberUser) {
-        setCurrentUser(memberUser);
-        setRole('member');
-      }
-    } else if (selectedRole === 'patron') {
-      const patronUser = members.find(m => m.role === 'patron') || currentUser || (members.length > 0 ? members[0] : null);
-      if (patronUser) {
-        setCurrentUser(patronUser);
-        setRole('patron');
-      }
+      const superAdminUser = {
+        id: 'super-admin-1',
+        account_email: 'admin@visitkoszeg.hu',
+        full_name: 'SuperAdmin (SA Software)',
+        custom_title: 'Rendszergazda & Fejlesztő',
+        member_category: 'Elnökségi tag',
+        role: 'admin',
+        phone: '+36 30 555 7788'
+      };
+      setCurrentUser(superAdminUser);
+      setRole('admin');
     } else {
       setCurrentUser(null);
       setRole('guest');
@@ -394,7 +401,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{
       currentUser,
       role,
-      loginWithEmail,
+      loginWithCredentials,
       loginAs,
       logout,
       registerMember,

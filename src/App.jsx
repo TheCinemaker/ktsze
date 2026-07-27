@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 
@@ -17,6 +17,7 @@ import { ContactSection } from './components/public/ContactSection';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('home');
+  const { role } = useAuth();
 
   const renderContent = () => {
     switch (activeTab) {
@@ -51,9 +52,9 @@ function AppContent() {
       case 'login':
         return <LoginPage setActiveTab={setActiveTab} />;
       case 'member-dashboard':
-        return <MemberDashboardPage setActiveTab={setActiveTab} />;
+        return role !== 'guest' ? <MemberDashboardPage setActiveTab={setActiveTab} /> : <LoginPage setActiveTab={setActiveTab} />;
       case 'admin-dashboard':
-        return <AdminDashboardPage setActiveTab={setActiveTab} />;
+        return role === 'admin' ? <AdminDashboardPage setActiveTab={setActiveTab} /> : <LoginPage setActiveTab={setActiveTab} />;
       default:
         return <HomePage setActiveTab={setActiveTab} />;
     }

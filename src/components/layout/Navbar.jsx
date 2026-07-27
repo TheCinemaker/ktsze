@@ -68,71 +68,13 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
 
           {/* Right Action / Auth Buttons */}
           <div className="hidden lg:flex items-center gap-2.5">
-            
-            {/* Compact Role Switcher Dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setDemoDropdownOpen(!demoDropdownOpen)}
-                className="flex items-center gap-1.5 text-[0.7rem] px-2.5 py-1.5 rounded-md border border-[#C5A880] bg-[#FAF3E8] text-[#63534B] hover:bg-[#F3ECE0] transition-colors cursor-pointer"
-                title="Szerepkör váltás elnökségi bemutatóhoz"
-              >
-                <span className="font-bold text-[#6B1D2F]">Nézet:</span>
-                <span className="capitalize font-bold text-[#2C221E] flex items-center gap-1">
-                  {role === 'admin' ? (
-                    <>
-                      <Crown className="w-3 h-3 text-[#6B1D2F]" /> Admin
-                    </>
-                  ) : role === 'member' ? (
-                    <>
-                      <Building2 className="w-3 h-3 text-[#6B1D2F]" /> Tag
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-3 h-3 text-[#63534B]" /> Látogató
-                    </>
-                  )}
-                </span>
-                <ChevronDown className="w-3 h-3 text-[#63534B]" />
-              </button>
-
-              {demoDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white border border-[#E2D7C7] rounded-xl shadow-xl py-1 z-50">
-                  <div className="px-3 py-1.5 text-[0.65rem] text-[#63534B] uppercase tracking-wider font-semibold border-b border-[#E2D7C7]">
-                    Szerepkör Váltás (Demo)
-                  </div>
-                  <button 
-                    onClick={() => { loginAs('guest'); setDemoDropdownOpen(false); }}
-                    className="w-full text-left px-3.5 py-2 text-xs text-[#2C221E] hover:bg-[#FAF6F0] flex items-center gap-2 border-0 bg-transparent cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-[#63534B]" />
-                    <span>Látogató (Publikus oldal)</span>
-                  </button>
-                  <button 
-                    onClick={() => { loginAs('member'); setDemoDropdownOpen(false); handleNavClick('member-dashboard'); }}
-                    className="w-full text-left px-3.5 py-2 text-xs text-[#2C221E] hover:bg-[#F7EBEF] flex items-center gap-2 border-0 bg-transparent cursor-pointer"
-                  >
-                    <Building2 className="w-3.5 h-3.5 text-[#6B1D2F]" />
-                    <span>Egyesületi Tag (Tagi portál)</span>
-                  </button>
-                  <button 
-                    onClick={() => { loginAs('admin'); setDemoDropdownOpen(false); handleNavClick('admin-dashboard'); }}
-                    className="w-full text-left px-3.5 py-2 text-xs text-[#6B1D2F] font-semibold hover:bg-[#F7EBEF] flex items-center gap-2 border-0 bg-transparent cursor-pointer"
-                  >
-                    <Crown className="w-3.5 h-3.5 text-[#6B1D2F]" />
-                    <span>Adminisztrátor (Elnökség)</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Role-based Dashboard Button */}
             {role === 'guest' ? (
               <button
                 onClick={() => handleNavClick('login')}
                 className="btn-wine text-xs uppercase tracking-wider font-bold py-2 px-3.5"
               >
                 <Lock className="w-3.5 h-3.5" />
-                Tagi Belépés
+                Tagi & Admin Belépés
               </button>
             ) : (
               <div className="flex items-center gap-2">
