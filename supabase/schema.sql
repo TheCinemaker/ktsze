@@ -92,13 +92,17 @@ ALTER TABLE workgroup_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE membership_dues ENABLE ROW LEVEL SECURITY;
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 
--- RLS házirendek (Read permissions) - Újrafuttatható biztonságos megadás
+-- RLS házirendek (Read, Insert, Update permissions) - Újrafuttatható biztonságos megadás
 DROP POLICY IF EXISTS "Public read workgroups" ON workgroups;
 DROP POLICY IF EXISTS "Public read public documents" ON documents;
 DROP POLICY IF EXISTS "Members read internal documents" ON documents;
 DROP POLICY IF EXISTS "Profiles read own or public profile" ON profiles;
+DROP POLICY IF EXISTS "Public insert profiles" ON profiles;
+DROP POLICY IF EXISTS "Public update profiles" ON profiles;
 
 CREATE POLICY "Public read workgroups" ON workgroups FOR SELECT USING (true);
 CREATE POLICY "Public read public documents" ON documents FOR SELECT USING (access_level = 'public');
 CREATE POLICY "Members read internal documents" ON documents FOR SELECT USING (true);
 CREATE POLICY "Profiles read own or public profile" ON profiles FOR SELECT USING (true);
+CREATE POLICY "Public insert profiles" ON profiles FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update profiles" ON profiles FOR UPDATE USING (true);

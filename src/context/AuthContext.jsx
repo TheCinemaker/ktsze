@@ -224,7 +224,9 @@ export const AuthProvider = ({ children }) => {
           if (error.code === 'PGRST204' || error.message?.includes('custom_title')) {
             const fallbackPayload = { ...payload };
             delete fallbackPayload.custom_title;
-            supabase.from('profiles').upsert(fallbackPayload, { onConflict: 'account_email' });
+            supabase.from('profiles').upsert(fallbackPayload, { onConflict: 'account_email' }).catch(() => {});
+          } else if (error.code === '42501') {
+            console.warn('Supabase RLS policy requires INSERT/UPDATE permission SQL script execution on Dashboard.');
           } else {
             console.error('Supabase profile sync error:', error);
           }
