@@ -15,22 +15,66 @@ export const AuthProvider = ({ children }) => {
 
   const [members, setMembers] = useState(() => {
     const saved = localStorage.getItem('ktsze_members');
-    return saved ? JSON.parse(saved) : INITIAL_MEMBERS;
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      const cleanMembers = parsed.filter(m => 
+        m.id && 
+        !['m-1', 'm-2', 'm-3', 'm-4', 'm-5', 'm-6'].includes(m.id) &&
+        m.account_email !== 'elnok@koszegiturizmus.hu' &&
+        m.account_email !== 'szalok.adrienn@koszegiturizmus.hu' &&
+        m.account_email !== 'farkas.peter@ibrahimhotel.hu' &&
+        m.account_email !== 'voros.robert@portre.hu' &&
+        m.account_email !== 'avar.szilveszter@sasoftware.hu' &&
+        m.account_email !== 'szeker.zoltan@jurisicsvar.hu'
+      );
+      // Deduplicate by account_email
+      const unique = [];
+      const seen = new Set();
+      for (const m of cleanMembers) {
+        const key = (m.account_email || '').toLowerCase().trim();
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          unique.push(m);
+        }
+      }
+      return unique;
+    } catch {
+      return [];
+    }
   });
 
   const [workgroups, setWorkgroups] = useState(() => {
     const saved = localStorage.getItem('ktsze_workgroups');
-    return saved ? JSON.parse(saved) : INITIAL_WORKGROUPS;
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.filter(w => !['wg-1', 'wg-2', 'wg-3'].includes(w.id));
+    } catch {
+      return [];
+    }
   });
 
   const [newsProjects, setNewsProjects] = useState(() => {
     const saved = localStorage.getItem('ktsze_news');
-    return saved ? JSON.parse(saved) : INITIAL_NEWS_PROJECTS;
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.filter(n => !['np-1', 'np-2', 'np-3'].includes(n.id));
+    } catch {
+      return [];
+    }
   });
 
   const [documents, setDocuments] = useState(() => {
     const saved = localStorage.getItem('ktsze_documents');
-    return saved ? JSON.parse(saved) : INITIAL_DOCUMENTS;
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.filter(d => !['doc-1', 'doc-2', 'doc-3'].includes(d.id));
+    } catch {
+      return [];
+    }
   });
 
   const [driveFolders, setDriveFolders] = useState(() => {
@@ -62,8 +106,8 @@ export const AuthProvider = ({ children }) => {
   // Auth Functions
   const loginWithEmail = (emailInput) => {
     const foundUser = members.find(m => 
-      m.account_email?.toLowerCase() === emailInput.toLowerCase() || 
-      m.private_email?.toLowerCase() === emailInput.toLowerCase()
+      m.account_email?.toLowerCase().trim() === emailInput?.toLowerCase().trim() || 
+      m.private_email?.toLowerCase().trim() === emailInput?.toLowerCase().trim()
     );
 
     if (foundUser) {
@@ -72,7 +116,6 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: foundUser };
     }
 
-    // Default fallback if logging in as first registered user
     if (members.length > 0) {
       setCurrentUser(members[0]);
       setRole(members[0].role || 'member');
@@ -84,17 +127,23 @@ export const AuthProvider = ({ children }) => {
 
   const loginAs = (selectedRole) => {
     if (selectedRole === 'admin') {
-      const adminUser = members.find(m => m.role === 'admin') || currentUser || { full_name: 'Drescher Gábor', role: 'admin', custom_title: 'Elnök' };
-      setCurrentUser(adminUser);
-      setRole('admin');
+      const adminUser = members.find(m => m.role === 'admin') || currentUser || (members.length > 0 ? members[0] : null);
+      if (adminUser) {
+        setCurrentUser(adminUser);
+        setRole('admin');
+      }
     } else if (selectedRole === 'member') {
-      const memberUser = members.find(m => m.role === 'member') || currentUser;
-      setCurrentUser(memberUser);
-      setRole('member');
+      const memberUser = members.find(m => m.role === 'member') || currentUser || (members.length > 0 ? members[0] : null);
+      if (memberUser) {
+        setCurrentUser(memberUser);
+        setRole('member');
+      }
     } else if (selectedRole === 'patron') {
-      const patronUser = members.find(m => m.role === 'patron') || currentUser;
-      setCurrentUser(patronUser);
-      setRole('patron');
+      const patronUser = members.find(m => m.role === 'patron') || currentUser || (members.length > 0 ? members[0] : null);
+      if (patronUser) {
+        setCurrentUser(patronUser);
+        setRole('patron');
+      }
     } else {
       setCurrentUser(null);
       setRole('guest');
@@ -109,34 +158,40 @@ export const AuthProvider = ({ children }) => {
   // Member Registration (Supabase Auth / Local State)
   const registerMember = (registrationData) => {
     const isPatron = registrationData.member_category === 'Pártoló tag';
-    // Első regisztráló automatikusan kaphat Admin / Elnök szerepkört ha kívánja
-    const isFirstUser = members.length === 0;
+    const emailClean = (registrationData.account_email || '').toLowerCase().trim();
+    const existingMember = members.find(m => (m.account_email || '').toLowerCase().trim() === emailClean);
+
+    const isFirstUser = members.length === 0 || (members.length === 1 && existingMember);
 
     const newProfile = {
-      id: `m-${Date.now()}`,
+      id: existingMember ? existingMember.id : `user-${Date.now()}`,
       account_email: registrationData.account_email,
       private_email: registrationData.private_email || '',
       full_name: registrationData.full_name,
       home_address: registrationData.home_address || '',
       phone: registrationData.phone,
       member_category: registrationData.member_category || (isFirstUser ? 'Elnökségi tag' : 'Rendes tag'),
-      custom_title: registrationData.custom_title || (isFirstUser ? 'Elnök' : ''),
+      custom_title: registrationData.custom_title || (existingMember?.custom_title ? existingMember.custom_title : (isFirstUser ? 'Elnök' : '')),
       business_activity: registrationData.business_activity || 'szolgáltató',
       service_location_name: registrationData.service_location_name || 'Szolgáltatás',
       service_street: registrationData.service_street || '',
       service_house_number: registrationData.service_house_number || '',
       service_contacts: registrationData.service_contacts || registrationData.phone,
       workgroups: registrationData.workgroups || [],
-      role: registrationData.role || (isFirstUser ? 'admin' : (isPatron ? 'patron' : 'member')),
-      joined_date: new Date().toISOString().split('T')[0],
+      role: registrationData.role || (existingMember?.role ? existingMember.role : (isFirstUser ? 'admin' : (isPatron ? 'patron' : 'member'))),
+      joined_date: existingMember?.joined_date || new Date().toISOString().split('T')[0],
       dues_2026: { 
-        status: "pending", 
+        status: existingMember?.dues_2026?.status || "pending", 
         amount: isPatron ? 15000 : (registrationData.business_activity === 'szállásadó' || registrationData.business_activity === 'vendéglős' ? 36000 : 24000), 
-        paid_at: null 
+        paid_at: existingMember?.dues_2026?.paid_at || null 
       }
     };
 
-    setMembers(prev => [newProfile, ...prev]);
+    setMembers(prev => {
+      const filtered = prev.filter(m => (m.account_email || '').toLowerCase().trim() !== emailClean);
+      return [newProfile, ...filtered];
+    });
+
     setCurrentUser(newProfile);
     setRole(newProfile.role);
     return newProfile;

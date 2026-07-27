@@ -56,68 +56,80 @@ export const ProjectsNews = () => {
 
         {/* News Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {filteredItems.map((item) => {
-            const hasError = imageErrors[item.id];
-            return (
-              <article 
-                key={item.id}
-                className="card-editorial flex flex-col justify-between group cursor-pointer"
-                onClick={() => setActiveModalItem(item)}
-              >
-                <div className="space-y-4">
-                  
-                  {/* Image / Fallback Placeholder Banner */}
-                  <div className="rounded-xl overflow-hidden h-44 -mx-1 -mt-1 mb-2 relative bg-[#F3ECE0] border border-[#E2D7C7]">
-                    {!hasError && item.image ? (
-                      <img 
-                        src={item.image} 
-                        alt=""
-                        onError={() => handleImageError(item.id)}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#F7EBEF] to-[#F3ECE0] text-[#6B1D2F] p-4 text-center">
-                        <Building2 className="w-8 h-8 mb-1" />
-                        <span className="font-serif font-bold text-xs">Kőszegi Turisztikai Szövetség</span>
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item) => {
+              const hasError = imageErrors[item.id];
+              return (
+                <article 
+                  key={item.id}
+                  className="card-editorial flex flex-col justify-between group cursor-pointer"
+                  onClick={() => setActiveModalItem(item)}
+                >
+                  <div className="space-y-4">
+                    
+                    {/* Image / Fallback Placeholder Banner */}
+                    <div className="rounded-xl overflow-hidden h-44 -mx-1 -mt-1 mb-2 relative bg-[#F3ECE0] border border-[#E2D7C7]">
+                      {!hasError && item.image ? (
+                        <img 
+                          src={item.image} 
+                          alt=""
+                          onError={() => handleImageError(item.id)}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#F7EBEF] to-[#F3ECE0] text-[#6B1D2F] p-4 text-center">
+                          <Building2 className="w-8 h-8 mb-1" />
+                          <span className="font-serif font-bold text-xs">Kőszegi Turisztikai Szövetség</span>
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3">
+                        <span className="badge-wine uppercase text-[0.65rem] font-bold">
+                          {item.type}
+                        </span>
                       </div>
-                    )}
-                    <div className="absolute top-3 left-3">
-                      <span className="badge-wine uppercase text-[0.65rem] font-bold">
-                        {item.type}
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs text-[#63534B]">
+                      <span className="flex items-center gap-1 text-[#6B1D2F] font-semibold">
+                        <Tag className="w-3.5 h-3.5" />
+                        {item.category}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-[#C5A880]" />
+                        {item.date}
                       </span>
                     </div>
+
+                    <h3 className="font-serif text-lg sm:text-xl font-bold text-[#2C221E] group-hover:text-[#6B1D2F] transition-colors leading-snug">
+                      {item.title}
+                    </h3>
+
+                    <p className="text-xs text-[#63534B] line-clamp-3 leading-relaxed">
+                      {item.summary}
+                    </p>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs text-[#63534B]">
-                    <span className="flex items-center gap-1 text-[#6B1D2F] font-semibold">
-                      <Tag className="w-3.5 h-3.5" />
-                      {item.category}
+                  <div className="pt-4 mt-4 border-t border-[#E2D7C7] flex items-center justify-between">
+                    <span className="text-xs font-semibold text-[#6B1D2F] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      Részletes Tájékoztató <ArrowRight className="w-3.5 h-3.5" />
                     </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-[#C5A880]" />
-                      {item.date}
-                    </span>
+                    <span className="text-[0.65rem] text-[#A39288] uppercase tracking-wider">KTSzE Hivatalos</span>
                   </div>
-
-                  <h3 className="font-serif text-lg sm:text-xl font-bold text-[#2C221E] group-hover:text-[#6B1D2F] transition-colors leading-snug">
-                    {item.title}
-                  </h3>
-
-                  <p className="text-xs text-[#63534B] line-clamp-3 leading-relaxed">
-                    {item.summary}
-                  </p>
-                </div>
-
-                <div className="pt-4 mt-4 border-t border-[#E2D7C7] flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#6B1D2F] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                    Részletes Tájékoztató <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                  <span className="text-[0.65rem] text-[#A39288] uppercase tracking-wider">KTSzE Hivatalos</span>
-                </div>
-              </article>
-            );
-          })}
+                </article>
+              );
+            })
+          ) : (
+            <div className="col-span-full p-8 text-center bg-white rounded-xl border border-dashed border-[#C5A880]">
+              <FileText className="w-8 h-8 text-[#C5A880] mx-auto mb-2" />
+              <h4 className="font-serif text-lg font-bold text-[#2C221E]">
+                Még nincsenek feltöltött hírek vagy közlemények
+              </h4>
+              <p className="text-xs text-[#63534B] max-w-md mx-auto mt-1">
+                Az egyesületi híreket és közleményeket az Adminisztrációs Kezelőfelületen töltheti fel a Hírek & CMS menüpontban.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Full Article Modal */}

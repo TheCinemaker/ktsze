@@ -1,8 +1,12 @@
 import React from 'react';
 import { HeaderLogo } from './HeaderLogo';
 import { Mail, Phone, MapPin, FileText, ShieldCheck, User } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const Footer = ({ setActiveTab }) => {
+  const { members } = useAuth();
+  const president = members.find(m => m.custom_title?.toLowerCase().includes('elnök') || m.member_category === 'Elnökségi tag') || members[0];
+
   return (
     <footer className="bg-[#2C221E] text-[#FAF6F0] pt-14 pb-8 border-t-4 border-[#6B1D2F]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,7 +33,7 @@ export const Footer = ({ setActiveTab }) => {
             </h4>
             <ul className="space-y-2 text-xs text-[#E2D7C7]">
               <li><strong className="text-white">Név:</strong> Kőszegi Turisztikai Szövetség Egyesület</li>
-              <li><strong className="text-white">Elnök:</strong> Drescher Gábor</li>
+              <li><strong className="text-white">Elnökség:</strong> {president ? (president.full_name + (president.custom_title ? ` (${president.custom_title})` : '')) : 'Regisztrált Vezetőség'}</li>
               <li><strong className="text-white">Adószám:</strong> 18889211-1-18</li>
               <li><strong className="text-white">Nyilvántartási szám:</strong> 18-02-0001234</li>
               <li><strong className="text-white">Bankszámla:</strong> OTP 11747051-20019948</li>
@@ -48,13 +52,13 @@ export const Footer = ({ setActiveTab }) => {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#C5A880] shrink-0" />
-                <a href="mailto:elnok@koszegiturizmus.hu" className="hover:text-[#C5A880] transition-colors">
-                  elnok@koszegiturizmus.hu
+                <a href={`mailto:${president?.account_email || 'info@koszegiturizmus.hu'}`} className="hover:text-[#C5A880] transition-colors">
+                  {president?.account_email || 'info@koszegiturizmus.hu'}
                 </a>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#C5A880] shrink-0" />
-                <span>+36 94 563 001</span>
+                <span>{president?.phone || '+36 94 563 001'}</span>
               </div>
             </div>
           </div>
