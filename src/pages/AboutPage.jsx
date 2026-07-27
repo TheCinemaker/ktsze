@@ -21,6 +21,28 @@ const getMemberBio = (member) => {
   return 'Az egyesület elnökségi tagja, aki aktív szerepet vállal Kőszeg turisztikai és szakmai fejlődésének támogatásában.';
 };
 
+const getMemberPhoto = (member) => {
+  if (member.avatar_url) return member.avatar_url;
+  const nameLower = (member.full_name || '').toLowerCase();
+  const emailLower = (member.private_email || '').toLowerCase();
+
+  if (nameLower.includes('szilveszter') || emailLower.includes('szilveszter')) {
+    return BOARD_MEMBERS_BIO.szilveszter?.photoUrl;
+  }
+  return null;
+};
+
+const getMemberMotto = (member) => {
+  if (member.motto) return member.motto;
+  const nameLower = (member.full_name || '').toLowerCase();
+  const emailLower = (member.private_email || '').toLowerCase();
+
+  if (nameLower.includes('szilveszter') || emailLower.includes('szilveszter')) {
+    return BOARD_MEMBERS_BIO.szilveszter?.motto;
+  }
+  return null;
+};
+
 export const AboutPage = () => {
   const { data: groups, loading, error, reload } = useAsyncData(listWorkgroups);
   const { data: boardMembers, loading: boardLoading } = useAsyncData(listPublicBoardMembers);
@@ -59,15 +81,15 @@ export const AboutPage = () => {
               {boardMembers.map((member) => (
                 <article
                   key={member.id}
-                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white"
+                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white group"
                 >
                   {/* Portré kép / Helykitöltő header */}
-                  <div className="relative h-64 w-full bg-gradient-to-br from-sand-200 via-wine-900/10 to-sand-300 flex items-center justify-center border-b border-sand-300">
-                    {member.avatar_url ? (
+                  <div className="relative h-72 w-full bg-sand-200 overflow-hidden flex items-center justify-center border-b border-sand-300">
+                    {getMemberPhoto(member) ? (
                       <img
-                        src={member.avatar_url}
+                        src={getMemberPhoto(member)}
                         alt={member.full_name}
-                        className="h-full w-full object-cover object-top"
+                        className="h-full w-full object-cover object-[center_20%] transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div className="flex flex-col items-center space-y-2 text-wine-800/70">
@@ -96,6 +118,13 @@ export const AboutPage = () => {
                           {member.service_location_name || member.business_activity}
                         </p>
                       )}
+
+                      {getMemberMotto(member) && (
+                        <blockquote className="text-xs italic font-medium text-wine-900 bg-sand-100 p-2.5 rounded-lg border-l-2 border-wine-600 my-2">
+                          {getMemberMotto(member)}
+                        </blockquote>
+                      )}
+
                       <p className="text-xs leading-relaxed text-ink-600 pt-2 border-t border-sand-200">
                         {getMemberBio(member)}
                       </p>
