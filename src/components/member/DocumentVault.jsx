@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { FileText, Download, Search, Upload, Lock, ShieldCheck, Filter, Eye, Plus, Check } from 'lucide-react';
 
 export const DocumentVault = () => {
   const { documents, addDocument, role } = useAuth();
+  const toast = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Minden');
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -23,14 +25,19 @@ export const DocumentVault = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleCreateDocument = (e) => {
+  const [saving, setSaving] = useState(false);
+
+  const handleCreateDocument = async (e) => {
     e.preventDefault();
     if (!newTitle) return;
     if (role !== 'admin') {
-      alert("Hiba: Csak egyesületi adminisztrátor tölthet fel hivatalos dokumentumot!");
+      toast.error('Csak egyesületi adminisztrátor tölthet fel hivatalos dokumentumot.', {
+        title: 'Nincs jogosultság'
+      });
       return;
     }
-    addDocument({
+    setSaving(true);
+    const result = await addDocument({
       title: newTitle,
       category: newCategory,
       access_level: newAccess,
@@ -38,10 +45,16 @@ export const DocumentVault = () => {
       file_size: '1.5 MB',
       file_url: '#'
     });
+    setSaving(false);
+
+    if (!result.ok) {
+      toast.error(result.error, { title: 'A dokumentum nem került be az adatbázisba' });
+      return;
+    }
     setShowUploadModal(false);
     setNewTitle('');
     setNewDesc('');
-    alert("Dokumentum sikeresen rögzítve!");
+    toast.success(`A(z) „${result.document.title}” dokumentum rögzítve a Supabase adatbázisban.`);
   };
 
   return (
@@ -148,13 +161,13 @@ export const DocumentVault = () => {
               
               <div className="flex gap-2">
                 <button 
-                  onClick={() => alert(`Dokumentum megtekintése: ${doc.title}`)}
+                  onClick={() => toast.info(`Dokumentum megtekintése: ${doc.title}`)}
                   className="btn-wine-outline text-xs py-1 px-2.5"
                 >
                   <Eye className="w-3.5 h-3.5" /> Megtekintés
                 </button>
                 <button 
-                  onClick={() => alert(`Letöltés elindult: ${doc.title}`)}
+                  onClick={() => toast.info(`Letöltés elindult: ${doc.title}`)}
                   className="btn-wine text-xs py-1 px-2.5"
                 >
                   <Download className="w-3.5 h-3.5" /> Letöltés
@@ -233,8 +246,8 @@ export const DocumentVault = () => {
                 <button type="button" onClick={() => setShowUploadModal(false)} className="btn-outline-brown text-xs">
                   Mégse
                 </button>
-                <button type="submit" className="btn-wine text-xs">
-                  Feltöltés Rögzítése
+                <button type="submit" disabled={saving} className="btn-wine text-xs disabled:opacity-60">
+                  {saving ? 'Mentés az adatbázisba…' : 'Feltöltés Rögzítése'}
                 </button>
               </div>
             </form>

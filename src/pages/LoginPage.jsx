@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { HeaderLogo } from '../components/layout/HeaderLogo';
 import { Lock, Mail, Key, ShieldCheck, ArrowRight, UserCheck, Building2, Crown, UserPlus, Phone, MapPin, Building, HeartHandshake } from 'lucide-react';
 
 export const LoginPage = ({ setActiveTab }) => {
   const { loginWithCredentials, registerMember } = useAuth();
+  const toast = useToast();
   
   const [activeTabMode, setActiveTabMode] = useState('login'); // 'login' | 'register'
 
@@ -36,18 +38,23 @@ export const LoginPage = ({ setActiveTab }) => {
         setActiveTab('member-dashboard');
       }
     } else {
-      alert(result.message || 'Hiba a bejelentkezés során.');
+      toast.error(result.message || 'Hiba a bejelentkezés során.', { title: 'Sikertelen belépés' });
     }
   };
 
-  const handleCustomRegister = (e) => {
+  const [registering, setRegistering] = useState(false);
+
+  const handleCustomRegister = async (e) => {
     e.preventDefault();
     if (!regAccountEmail || !regFullName || !regPhone) {
-      alert("Kérjük töltse ki a kötelező mezőket!");
+      toast.error('Kérjük töltse ki a kötelező mezőket (név, fiók e-mail, telefonszám).', {
+        title: 'Hiányzó adatok'
+      });
       return;
     }
 
-    const createdProfile = registerMember({
+    setRegistering(true);
+    const result = await registerMember({
       account_email: regAccountEmail,
       private_email: regPrivateEmail,
       full_name: regFullName,
@@ -60,8 +67,16 @@ export const LoginPage = ({ setActiveTab }) => {
       service_house_number: regHouseNum,
       service_contacts: regContacts || regPhone
     });
+    setRegistering(false);
 
-    alert(`Sikeres regisztráció! Üdvözöljük a KTSZE ${regCategory} soraiban!`);
+    if (!result.ok) {
+      toast.error(result.error, { title: 'A regisztráció nem került be az adatbázisba' });
+      return;
+    }
+
+    toast.success(`Üdvözöljük a KTSZE ${regCategory} soraiban! Profilja elmentve az adatbázisba.`, {
+      title: 'Sikeres regisztráció'
+    });
     setActiveTab('member-dashboard');
   };
 
@@ -306,8 +321,8 @@ export const LoginPage = ({ setActiveTab }) => {
                   </div>
                 </div>
 
-                <button type="submit" className="btn-wine w-full justify-center py-3 text-xs uppercase font-bold tracking-wider">
-                  Regisztráció Mentése (Supabase)
+                <button type="submit" disabled={registering} className="btn-wine w-full justify-center py-3 text-xs uppercase font-bold tracking-wider disabled:opacity-60">
+                  {registering ? 'Mentés a Supabase adatbázisba…' : 'Regisztráció Mentése (Supabase)'}
                 </button>
               </form>
 

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { Users, Search, CheckCircle2, Clock, Mail, Phone, MapPin, Edit3, Save, X, Plus, Building2, UserCheck, ShieldCheck, Crown } from 'lucide-react';
 
 export const MemberManagement = () => {
   const { members, updateMemberDuesStatus, updateMemberProfile, workgroups } = useAuth();
+  const toast = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('Minden');
   const [filterStatus, setFilterStatus] = useState('Minden');
@@ -22,12 +24,34 @@ export const MemberManagement = () => {
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  const handleSaveEdit = (e) => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!editingMember) return;
-    updateMemberProfile(editingMember.id, editingMember);
+    setSaving(true);
+    const result = await updateMemberProfile(editingMember.id, editingMember);
+    setSaving(false);
+
+    if (!result.ok) {
+      toast.error(result.error, { title: 'A tag adatai nem mentődtek el' });
+      return;
+    }
     setEditingMember(null);
-    alert("Tag adatai sikeresen frissítve!");
+    toast.success(`${result.member.full_name} adatai frissültek a Supabase adatbázisban.`);
+  };
+
+  const handleDuesChange = async (memberId, status) => {
+    const result = await updateMemberDuesStatus(memberId, status);
+    if (!result.ok) {
+      toast.error(result.error, { title: 'A tagdíj státusz nem mentődött el' });
+      return;
+    }
+    toast.success(
+      status === 'paid'
+        ? `${result.member.full_name} tagdíja rendezettként rögzítve.`
+        : `${result.member.full_name} tagdíja függőben állapotra állítva.`
+    );
   };
 
   return (
@@ -203,14 +227,14 @@ export const MemberManagement = () => {
 
                     {member.dues_2026?.status === 'pending' ? (
                       <button 
-                        onClick={() => updateMemberDuesStatus(member.id, 'paid')}
+                        onClick={() => handleDuesChange(member.id, 'paid')}
                         className="btn-wine text-[0.7rem] py-1 px-2.5 w-full justify-center"
                       >
                         Befizetve
                       </button>
                     ) : (
                       <button 
-                        onClick={() => updateMemberDuesStatus(member.id, 'pending')}
+                        onClick={() => handleDuesChange(member.id, 'pending')}
                         className="btn-outline-brown text-[0.7rem] py-1 px-2.5 w-full justify-center"
                       >
                         Függőben
@@ -413,8 +437,8 @@ export const MemberManagement = () => {
                 <button type="button" onClick={() => setEditingMember(null)} className="btn-outline-brown text-xs">
                   Mégse
                 </button>
-                <button type="submit" className="btn-wine text-xs">
-                  <Save className="w-4 h-4" /> Módosítások Mentése
+                <button type="submit" disabled={saving} className="btn-wine text-xs disabled:opacity-60">
+                  <Save className="w-4 h-4" /> {saving ? 'Mentés az adatbázisba…' : 'Módosítások Mentése'}
                 </button>
               </div>
 

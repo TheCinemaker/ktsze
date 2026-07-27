@@ -1,9 +1,11 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { FileText, Download, ShieldCheck, Lock, Eye } from 'lucide-react';
 
 export const DocumentPublicPage = () => {
   const { documents } = useAuth();
+  const toast = useToast();
   const publicDocs = documents.filter(d => d.access_level === 'public');
 
   return (
@@ -43,14 +45,14 @@ export const DocumentPublicPage = () => {
 
               <div className="flex gap-2 shrink-0 self-end sm:self-auto">
                 <button 
-                  onClick={() => alert(`Dokumentum megtekintése: ${doc.title}`)}
+                  onClick={() => toast.info(`Dokumentum megtekintése: ${doc.title}`)}
                   className="btn-wine-outline text-xs py-2 px-3"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   Megtekintés
                 </button>
                 <button 
-                  onClick={() => alert(`Letöltés elindult: ${doc.title}`)}
+                  onClick={() => toast.info(`Letöltés elindult: ${doc.title}`)}
                   className="btn-wine text-xs py-2 px-3"
                 >
                   <Download className="w-3.5 h-3.5" />

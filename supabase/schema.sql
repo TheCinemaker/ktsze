@@ -33,8 +33,17 @@ CREATE TABLE IF NOT EXISTS profiles (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Biztosítjuk, hogy a meglévő profiles táblában is meglegyen a custom_title oszlop:
+-- Biztosítjuk, hogy a meglévő profiles táblában is meglegyenek az újabb oszlopok:
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS custom_title TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS workgroups TEXT[] DEFAULT '{}';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS dues_status TEXT DEFAULT 'pending';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS dues_amount INTEGER DEFAULT 24000;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS dues_paid_at DATE;
+
+-- A phone / service_location_name NOT NULL megkötés megbuktatja a mentést, ha a
+-- felhasználó üresen hagyja a mezőt. Lazítjuk, a kötelezőséget a frontend őrzi.
+ALTER TABLE profiles ALTER COLUMN phone DROP NOT NULL;
+ALTER TABLE profiles ALTER COLUMN service_location_name DROP NOT NULL;
 
 -- 2. Workgroups Table (Munkacsoportok - Admin által dinamikusan kezelhető)
 CREATE TABLE IF NOT EXISTS workgroups (
@@ -48,6 +57,9 @@ CREATE TABLE IF NOT EXISTS workgroups (
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- A description NOT NULL feleslegesen buktatja az upsertet, ha üresen hagyják:
+ALTER TABLE workgroups ALTER COLUMN description DROP NOT NULL;
 
 -- 3. Workgroup Members Junction Table (Melyik tag melyik munkacsoportban van bent)
 CREATE TABLE IF NOT EXISTS workgroup_members (
@@ -85,6 +97,30 @@ CREATE TABLE IF NOT EXISTS documents (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- A frontend ezeket az oszlopokat is küldi — enélkül a beszúrás PGRST204 hibával elszáll:
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS slug TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_type TEXT DEFAULT 'PDF';
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS uploaded_at DATE DEFAULT CURRENT_DATE;
+-- A file_url NOT NULL megbuktatja a rögzítést, amíg nincs tényleges fájlfeltöltés:
+ALTER TABLE documents ALTER COLUMN file_url DROP NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS documents_slug_key ON documents (slug);
+
+-- 6. News & Projects Table (CMS - Hírek és készülő projektek)
+CREATE TABLE IF NOT EXISTS news_projects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  type TEXT DEFAULT 'hír',            -- 'hír' | 'projekt'
+  category TEXT,
+  summary TEXT,
+  content TEXT,
+  image TEXT,
+  is_published BOOLEAN DEFAULT true,
+  published_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Row Level Security (RLS) szabályok
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workgroups ENABLE ROW LEVEL SECURITY;
@@ -117,3 +153,30 @@ DROP POLICY IF EXISTS "Public insert documents" ON documents;
 DROP POLICY IF EXISTS "Public update documents" ON documents;
 CREATE POLICY "Public insert documents" ON documents FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public update documents" ON documents FOR UPDATE USING (true);
+
+ALTER TABLE news_projects ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read news" ON news_projects;
+DROP POLICY IF EXISTS "Public insert news" ON news_projects;
+DROP POLICY IF EXISTS "Public update news" ON news_projects;
+CREATE POLICY "Public read news" ON news_projects FOR SELECT USING (true);
+CREATE POLICY "Public insert news" ON news_projects FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update news" ON news_projects FOR UPDATE USING (true);
+
+-- DELETE házirendek. RLS alatt DELETE policy NÉLKÜL a törlés NEM hibázik,
+-- csak csendben 0 sort érint — ezért kell külön kimondani.
+DROP POLICY IF EXISTS "Public delete profiles" ON profiles;
+DROP POLICY IF EXISTS "Public delete workgroups" ON workgroups;
+DROP POLICY IF EXISTS "Public delete documents" ON documents;
+DROP POLICY IF EXISTS "Public delete news" ON news_projects;
+CREATE POLICY "Public delete profiles" ON profiles FOR DELETE USING (true);
+CREATE POLICY "Public delete workgroups" ON workgroups FOR DELETE USING (true);
+CREATE POLICY "Public delete documents" ON documents FOR DELETE USING (true);
+CREATE POLICY "Public delete news" ON news_projects FOR DELETE USING (true);
+
+-- Diagnosztikai teszt sorok takarítása (a kapcsolat ellenőrzésekor keletkeztek).
+-- A DELETE korábban azért nem működött, mert nem volt DELETE policy — fentebb pótoltuk.
+DELETE FROM profiles WHERE account_email IN (
+  'teszt.debug@example.com', 'teszt.ekezet@example.com', 'sema.teszt@example.com'
+);
+DELETE FROM workgroups WHERE slug = 'teszt-csoport';
+DELETE FROM documents WHERE title = 'X';

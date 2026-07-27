@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { Flower2, Plus, Edit3, Save, X, Users, Image, Sparkles, Check } from 'lucide-react';
 
 export const WorkgroupAdmin = () => {
   const { workgroups, addWorkgroup, updateWorkgroup, members } = useAuth();
+  const toast = useToast();
 
   // Create Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -15,30 +17,47 @@ export const WorkgroupAdmin = () => {
   // Edit Modal
   const [editingGroup, setEditingGroup] = useState(null);
 
-  const handleCreateGroup = (e) => {
+  const [saving, setSaving] = useState(false);
+
+  const handleCreateGroup = async (e) => {
     e.preventDefault();
     if (!newName) return;
-    addWorkgroup({
+    setSaving(true);
+    const result = await addWorkgroup({
       name: newName,
       leader_name: newLeader || "Elnökség",
       description: newDesc,
       latest_updates: newUpdates,
       image_url: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1200&q=80"
     });
+    setSaving(false);
+
+    if (!result.ok) {
+      toast.error(result.error, { title: 'A munkacsoport nem került be az adatbázisba' });
+      return;
+    }
+
     setShowCreateModal(false);
     setNewName('');
     setNewLeader('');
     setNewDesc('');
     setNewUpdates('');
-    alert("Új munkacsoport sikeresen létrehozva!");
+    toast.success(`A(z) „${result.workgroup.name}” munkacsoport elmentve a Supabase adatbázisba.`);
   };
 
-  const handleSaveEditGroup = (e) => {
+  const handleSaveEditGroup = async (e) => {
     e.preventDefault();
     if (!editingGroup) return;
-    updateWorkgroup(editingGroup.id, editingGroup);
+    setSaving(true);
+    const result = await updateWorkgroup(editingGroup.id, editingGroup);
+    setSaving(false);
+
+    if (!result.ok) {
+      toast.error(result.error, { title: 'A módosítás nem mentődött el' });
+      return;
+    }
     setEditingGroup(null);
-    alert("Munkacsoport adatai frissítve!");
+    toast.success('A munkacsoport adatai frissültek az adatbázisban.');
   };
 
   return (
@@ -190,8 +209,8 @@ export const WorkgroupAdmin = () => {
                 <button type="button" onClick={() => setShowCreateModal(false)} className="btn-outline-brown text-xs">
                   Mégse
                 </button>
-                <button type="submit" className="btn-wine text-xs">
-                  Csoport Létrehozása
+                <button type="submit" disabled={saving} className="btn-wine text-xs disabled:opacity-60">
+                  {saving ? 'Mentés az adatbázisba…' : 'Csoport Létrehozása'}
                 </button>
               </div>
             </form>
@@ -262,8 +281,8 @@ export const WorkgroupAdmin = () => {
                 <button type="button" onClick={() => setEditingGroup(null)} className="btn-outline-brown text-xs">
                   Mégse
                 </button>
-                <button type="submit" className="btn-wine text-xs">
-                  <Save className="w-4 h-4" /> Módosítások Mentése
+                <button type="submit" disabled={saving} className="btn-wine text-xs disabled:opacity-60">
+                  <Save className="w-4 h-4" /> {saving ? 'Mentés…' : 'Módosítások Mentése'}
                 </button>
               </div>
             </form>

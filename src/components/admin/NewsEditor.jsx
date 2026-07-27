@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { FileEdit, Plus, Sparkles, Image, Check, Trash2 } from 'lucide-react';
 
 export const NewsEditor = () => {
   const { newsProjects, addNewsProject } = useAuth();
+  const toast = useToast();
   const [showModal, setShowModal] = useState(false);
 
   const [title, setTitle] = useState('');
@@ -12,10 +14,13 @@ export const NewsEditor = () => {
   const [summary, setSummary] = useState('');
   const [content, setContent] = useState('');
 
-  const handleSubmit = (e) => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title || !summary) return;
-    addNewsProject({
+    setSaving(true);
+    const result = await addNewsProject({
       title,
       type,
       category,
@@ -23,10 +28,17 @@ export const NewsEditor = () => {
       content: content || summary,
       image: "https://images.unsplash.com/photo-1548625361-185b376d8b37?auto=format&fit=crop&w=1000&q=80"
     });
+    setSaving(false);
+
+    if (!result.ok) {
+      toast.error(result.error, { title: 'A tartalom nem került be az adatbázisba' });
+      return;
+    }
     setShowModal(false);
     setTitle('');
     setSummary('');
     setContent('');
+    toast.success(`A(z) „${result.news.title}” ${result.news.type} publikálva és elmentve.`);
   };
 
   return (
@@ -155,8 +167,8 @@ export const NewsEditor = () => {
                 <button type="button" onClick={() => setShowModal(false)} className="btn-outline-brown text-xs">
                   Mégse
                 </button>
-                <button type="submit" className="btn-wine text-xs">
-                  Publikálás
+                <button type="submit" disabled={saving} className="btn-wine text-xs disabled:opacity-60">
+                  {saving ? 'Mentés az adatbázisba…' : 'Publikálás'}
                 </button>
               </div>
             </form>

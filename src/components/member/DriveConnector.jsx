@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { FolderGit2, HardDrive, RefreshCw, ExternalLink, File, Upload, CheckCircle2, CloudSync, Sparkles } from 'lucide-react';
 
 export const DriveConnector = () => {
   const { driveFolders, addFileToDriveFolder } = useAuth();
+  const toast = useToast();
   const [selectedFolder, setSelectedFolder] = useState(driveFolders[0]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [uploadFileName, setUploadFileName] = useState('');
@@ -22,7 +24,7 @@ export const DriveConnector = () => {
     addFileToDriveFolder(selectedFolder.id, uploadFileName, '2.4 MB');
     setUploadFileName('');
     setShowUploadModal(false);
-    alert(`A(z) "${uploadFileName}" fájl felkerült a megosztott Google Drive mappába!`);
+    toast.success(`A(z) „${uploadFileName}” fájl felkerült a megosztott Google Drive mappába.`);
   };
 
   return (

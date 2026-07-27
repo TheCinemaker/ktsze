@@ -1,9 +1,13 @@
 import React from 'react';
 import { Database, CloudSync, Shield, CheckCircle2, Server, Key, FileCheck } from 'lucide-react';
-import { isSupabaseConfigured } from '../../lib/supabaseClient';
+import { isSupabaseConfigured, supabaseUrl, supabaseProjectRef } from '../../lib/supabaseClient';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 export const AdminSettings = () => {
   const isSupabaseLive = isSupabaseConfigured();
+  const { syncState } = useAuth();
+  const toast = useToast();
 
   return (
     <div className="space-y-6">
@@ -35,12 +39,37 @@ export const AdminSettings = () => {
           </div>
 
           <div className="space-y-2 text-xs text-[#63534B]">
-            <div className="flex justify-between">
-              <span>Adatbázis URL:</span>
-              <strong className="font-mono text-[#2C221E]">
-                {isSupabaseLive ? import.meta.env.VITE_SUPABASE_URL : 'demo-koszeg-turizmus.supabase.co'}
+            <div className="flex justify-between gap-3">
+              <span className="shrink-0">Adatbázis URL:</span>
+              <strong className="font-mono text-[#2C221E] break-all text-right">{supabaseUrl}</strong>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="shrink-0">Projekt azonosító:</span>
+              <strong className="font-mono text-[#2C221E]">{supabaseProjectRef}</strong>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="shrink-0">Utolsó írás állapota:</span>
+              <strong
+                className={
+                  syncState.status === 'error'
+                    ? 'text-[#6B1D2F] font-bold text-right'
+                    : 'text-green-700 font-bold text-right'
+                }
+              >
+                {syncState.status === 'error'
+                  ? 'Hiba'
+                  : syncState.status === 'saving'
+                    ? 'Mentés folyamatban…'
+                    : syncState.status === 'saved'
+                      ? 'Sikeres mentés'
+                      : 'Nem volt írás'}
               </strong>
             </div>
+            {syncState.error && (
+              <div className="p-2.5 rounded-lg bg-[#F7EBEF] border border-[#D9AAB6] text-[#6B1D2F] text-[0.7rem] leading-relaxed break-words">
+                {syncState.error}
+              </div>
+            )}
             <div className="flex justify-between">
               <span>Row Level Security (RLS):</span>
               <strong className="text-green-700 font-bold">Aktív (Engedélyezve)</strong>
@@ -82,7 +111,7 @@ export const AdminSettings = () => {
           </div>
 
           <button 
-            onClick={() => alert("Google Drive API kapcsolat tesztelve: Minden mappa elérhető.")}
+            onClick={() => toast.success('Google Drive API kapcsolat tesztelve: minden mappa elérhető.')}
             className="btn-wine-outline text-xs w-full justify-center"
           >
             Kapcsolat Tesztelése

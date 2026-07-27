@@ -1,12 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  INITIAL_NEWS_PROJECTS, 
-  INITIAL_MEMBERS, 
-  INITIAL_DOCUMENTS, 
-  INITIAL_DRIVE_FOLDERS,
-  INITIAL_WORKGROUPS 
-} from '../mock/initialData';
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { INITIAL_DRIVE_FOLDERS } from '../mock/initialData';
+import { supabase, isSupabaseConfigured, describeError } from '../lib/supabaseClient';
 
 const AuthContext = createContext();
 
@@ -16,99 +10,209 @@ if (typeof window !== 'undefined' && !localStorage.getItem('ktsze_v4_purged')) {
   localStorage.setItem('ktsze_v4_purged', 'true');
 }
 
+const readLocal = (key, filterFn) => {
+  const saved = localStorage.getItem(key);
+  if (!saved) return [];
+  try {
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? (filterFn ? parsed.filter(filterFn) : parsed) : [];
+  } catch {
+    return [];
+  }
+};
+
+const slugify = (value, fallback) =>
+  (value || fallback || 'elem')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || fallback || 'elem';
+
+const duesAmountFor = (category, activity) => {
+  if (category === 'Pártoló tag') return 15000;
+  return activity === 'szállásadó' || activity === 'vendéglős' ? 36000 : 24000;
+};
+
+// --- DB sor <-> app objektum leképezés -------------------------------------
+
+const rowToMember = (row) => ({
+  ...row,
+  workgroups: row.workgroups || [],
+  dues_2026: {
+    status: row.dues_status || 'pending',
+    amount: row.dues_amount ?? duesAmountFor(row.member_category, row.business_activity),
+    paid_at: row.dues_paid_at || null
+  }
+});
+
+const memberToRow = (m) => ({
+  account_email: m.account_email,
+  full_name: m.full_name || '',
+  home_address: m.home_address || '',
+  phone: m.phone || '',
+  private_email: m.private_email || '',
+  member_category: m.member_category || 'Rendes tag',
+  business_activity: m.business_activity || 'szolgáltató',
+  service_location_name: m.service_location_name || m.full_name || '',
+  service_street: m.service_street || '',
+  service_house_number: m.service_house_number || '',
+  service_contacts: m.service_contacts || m.phone || '',
+  custom_title: m.custom_title || '',
+  role: m.role || 'member',
+  joined_date: m.joined_date || new Date().toISOString().split('T')[0],
+  workgroups: m.workgroups || [],
+  dues_status: m.dues_2026?.status || 'pending',
+  dues_amount: m.dues_2026?.amount ?? duesAmountFor(m.member_category, m.business_activity),
+  dues_paid_at: m.dues_2026?.paid_at || null
+});
+
+const workgroupToRow = (w) => ({
+  name: w.name,
+  slug: w.slug,
+  leader_name: w.leader_name || '',
+  description: w.description || '',
+  latest_updates: w.latest_updates || '',
+  image_url: w.image_url || '',
+  is_active: w.is_active !== false
+});
+
+const documentToRow = (d) => ({
+  title: d.title,
+  slug: d.slug,
+  category: d.category || 'Általános',
+  access_level: d.access_level || 'members',
+  file_url: d.file_url && d.file_url !== '#' ? d.file_url : null,
+  file_size: d.file_size || '',
+  file_type: d.file_type || 'PDF',
+  description: d.description || '',
+  uploaded_at: d.uploaded_at || new Date().toISOString().split('T')[0]
+});
+
+const newsToRow = (n) => ({
+  title: n.title,
+  slug: n.slug,
+  type: n.type || 'hír',
+  category: n.category || '',
+  summary: n.summary || '',
+  content: n.content || n.summary || '',
+  image: n.image || '',
+  is_published: n.is_published !== false,
+  published_at: n.published_at || new Date().toISOString()
+});
+
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [role, setRole] = useState('guest'); // 'guest', 'member', 'patron', 'admin'
+  const [syncState, setSyncState] = useState({ status: 'idle', error: null });
 
-  const [members, setMembers] = useState(() => {
-    const saved = localStorage.getItem('ktsze_members');
-    if (!saved) return [];
-    try {
-      const parsed = JSON.parse(saved);
-      const cleanMembers = parsed.filter(m => 
-        m.id && 
-        !m.id.startsWith('m-') &&
-        !m.account_email?.includes('partolotag.hu') &&
-        !m.account_email?.includes('koszegiturizmus.hu') &&
-        m.account_email !== 'farkas.peter@ibrahimhotel.hu' &&
-        m.account_email !== 'voros.robert@portre.hu' &&
-        m.account_email !== 'avar.szilveszter@sasoftware.hu' &&
-        m.account_email !== 'szeker.zoltan@jurisicsvar.hu'
-      );
-      return cleanMembers;
-    } catch {
-      return [];
-    }
-  });
-
-  const [workgroups, setWorkgroups] = useState(() => {
-    const saved = localStorage.getItem('ktsze_workgroups');
-    if (!saved) return [];
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.filter(w => !['wg-1', 'wg-2', 'wg-3'].includes(w.id));
-    } catch {
-      return [];
-    }
-  });
-
-  const [newsProjects, setNewsProjects] = useState(() => {
-    const saved = localStorage.getItem('ktsze_news');
-    if (!saved) return [];
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.filter(n => !['np-1', 'np-2', 'np-3'].includes(n.id));
-    } catch {
-      return [];
-    }
-  });
-
-  const [documents, setDocuments] = useState(() => {
-    const saved = localStorage.getItem('ktsze_documents');
-    if (!saved) return [];
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.filter(d => !['doc-1', 'doc-2', 'doc-3'].includes(d.id));
-    } catch {
-      return [];
-    }
-  });
-
+  const [members, setMembers] = useState(() => readLocal('ktsze_members', (m) => m.id));
+  const [workgroups, setWorkgroups] = useState(() => readLocal('ktsze_workgroups'));
+  const [newsProjects, setNewsProjects] = useState(() => readLocal('ktsze_news'));
+  const [documents, setDocuments] = useState(() => readLocal('ktsze_documents'));
   const [driveFolders, setDriveFolders] = useState(() => {
     const saved = localStorage.getItem('ktsze_drive');
     return saved ? JSON.parse(saved) : INITIAL_DRIVE_FOLDERS;
   });
 
-  // Sync profiles and workgroups from Supabase DB if live
-  useEffect(() => {
-    if (isSupabaseConfigured()) {
-      supabase.from('profiles').select('*').then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          const validProfiles = data.filter(p => 
-            p.account_email !== 'avar.szilveszter@sasoftware.hu' &&
-            p.account_email !== 'elnok@koszegiturizmus.hu' &&
-            !p.account_email?.includes('partolotag.hu')
-          );
-          setMembers(validProfiles.map(p => ({
-            ...p,
-            dues_2026: { status: 'pending', amount: 24000, paid_at: null }
-          })));
-        }
-      }).catch(err => console.warn('Supabase fetch error:', err));
-
-      supabase.from('workgroups').select('*').then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          setWorkgroups(data.map(w => ({
-            ...w,
-            leader_name: w.leader_name || '',
-            description: w.description || ''
-          })));
-        }
-      }).catch(err => console.warn('Supabase workgroups fetch error:', err));
+  /**
+   * Egységes írás Supabase-be.
+   * A supabase-js builder NEM Promise (nincs rajta `.catch()`), ezért `await` +
+   * `error` vizsgálat kell. A hibát felszínre hozzuk, nem nyeljük el.
+   */
+  const runWrite = useCallback(async (label, buildQuery) => {
+    if (!isSupabaseConfigured()) {
+      const error = 'Supabase nincs konfigurálva (hiányzó URL vagy anon kulcs).';
+      setSyncState({ status: 'error', error });
+      return { ok: false, error };
+    }
+    setSyncState({ status: 'saving', error: null });
+    try {
+      const { data, error } = await buildQuery();
+      if (error) {
+        const message = describeError(error);
+        console.error(`[Supabase] ${label} sikertelen:`, error);
+        setSyncState({ status: 'error', error: message });
+        return { ok: false, error: message, data: null };
+      }
+      setSyncState({ status: 'saved', error: null });
+      return { ok: true, error: null, data };
+    } catch (err) {
+      const message = err?.message || String(err);
+      console.error(`[Supabase] ${label} kivétel:`, err);
+      setSyncState({ status: 'error', error: message });
+      return { ok: false, error: message, data: null };
     }
   }, []);
 
-  // Sync state to localStorage
+  // --- Kezdeti betöltés: a Supabase az igazság forrása -----------------------
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    let cancelled = false;
+
+    (async () => {
+      const [profilesRes, workgroupsRes, documentsRes, newsRes] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('workgroups').select('*').order('created_at', { ascending: false }),
+        supabase.from('documents').select('*').order('created_at', { ascending: false }),
+        supabase.from('news_projects').select('*').order('published_at', { ascending: false })
+      ]);
+      if (cancelled) return;
+
+      const firstError = [profilesRes, workgroupsRes, documentsRes, newsRes].find((r) => r.error)?.error;
+      if (firstError) {
+        console.error('[Supabase] betöltési hiba:', firstError);
+        setSyncState({ status: 'error', error: describeError(firstError) });
+      }
+
+      if (!profilesRes.error) setMembers(profilesRes.data.map(rowToMember));
+      if (!workgroupsRes.error) setWorkgroups(workgroupsRes.data);
+      if (!documentsRes.error) setDocuments(documentsRes.data);
+      if (!newsRes.error) setNewsProjects(newsRes.data);
+
+      // Egyszeri migráció: ami korábban csak a localStorage-ban ragadt, most felmegy.
+      if (!localStorage.getItem('ktsze_migrated_to_db')) {
+        const localMembers = readLocal('ktsze_members', (m) => m.account_email);
+        const localWorkgroups = readLocal('ktsze_workgroups', (w) => w.name);
+        let migrated = false;
+
+        if (!profilesRes.error && profilesRes.data.length === 0 && localMembers.length > 0) {
+          const { error } = await supabase
+            .from('profiles')
+            .upsert(localMembers.map(memberToRow), { onConflict: 'account_email' })
+            .select();
+          if (error) console.error('[Supabase] tag-migráció hiba:', error);
+          else migrated = true;
+        }
+        if (!workgroupsRes.error && workgroupsRes.data.length === 0 && localWorkgroups.length > 0) {
+          const { error } = await supabase
+            .from('workgroups')
+            .upsert(
+              localWorkgroups.map((w) => workgroupToRow({ ...w, slug: w.slug || slugify(w.name) })),
+              { onConflict: 'slug' }
+            )
+            .select();
+          if (error) console.error('[Supabase] munkacsoport-migráció hiba:', error);
+          else migrated = true;
+        }
+
+        localStorage.setItem('ktsze_migrated_to_db', 'true');
+        if (migrated && !cancelled) {
+          const [p, w] = await Promise.all([
+            supabase.from('profiles').select('*'),
+            supabase.from('workgroups').select('*')
+          ]);
+          if (cancelled) return;
+          if (!p.error) setMembers(p.data.map(rowToMember));
+          if (!w.error) setWorkgroups(w.data);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // --- Helyi gyorsítótár (offline nézet) -----------------------------------
   useEffect(() => {
     localStorage.setItem('ktsze_members', JSON.stringify(members));
   }, [members]);
@@ -129,30 +233,30 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('ktsze_drive', JSON.stringify(driveFolders));
   }, [driveFolders]);
 
-  // Auth Functions with Superadmin Master Credential
+  // --- Auth ----------------------------------------------------------------
+  const SUPER_ADMIN = {
+    id: 'super-admin-1',
+    account_email: 'admin@visitkoszeg.hu',
+    full_name: 'SuperAdmin (SA Software)',
+    custom_title: 'Rendszergazda & Fejlesztő',
+    member_category: 'Elnökségi tag',
+    role: 'admin',
+    phone: '+36 30 555 7788'
+  };
+
   const loginWithCredentials = (emailOrUsername, passwordInput) => {
     const inputClean = (emailOrUsername || '').toLowerCase().trim();
-    
-    // Master Superadmin check (beégetve / ENV-ből)
+
     if ((inputClean === 'admin' || inputClean === 'admin@visitkoszeg.hu') && passwordInput === 'Nyanyuska_0169') {
-      const superAdminUser = {
-        id: 'super-admin-1',
-        account_email: 'admin@visitkoszeg.hu',
-        full_name: 'SuperAdmin (SA Software)',
-        custom_title: 'Rendszergazda & Fejlesztő',
-        member_category: 'Elnökségi tag',
-        role: 'admin',
-        phone: '+36 30 555 7788'
-      };
-      setCurrentUser(superAdminUser);
+      setCurrentUser(SUPER_ADMIN);
       setRole('admin');
-      return { success: true, user: superAdminUser };
+      return { success: true, user: SUPER_ADMIN };
     }
 
-    // Normal Member Login via Supabase / local profiles
-    const foundUser = members.find(m => 
-      m.account_email?.toLowerCase().trim() === inputClean || 
-      m.private_email?.toLowerCase().trim() === inputClean
+    const foundUser = members.find(
+      (m) =>
+        m.account_email?.toLowerCase().trim() === inputClean ||
+        m.private_email?.toLowerCase().trim() === inputClean
     );
 
     if (foundUser) {
@@ -166,16 +270,7 @@ export const AuthProvider = ({ children }) => {
 
   const loginAs = (selectedRole) => {
     if (selectedRole === 'admin') {
-      const superAdminUser = {
-        id: 'super-admin-1',
-        account_email: 'admin@visitkoszeg.hu',
-        full_name: 'SuperAdmin (SA Software)',
-        custom_title: 'Rendszergazda & Fejlesztő',
-        member_category: 'Elnökségi tag',
-        role: 'admin',
-        phone: '+36 30 555 7788'
-      };
-      setCurrentUser(superAdminUser);
+      setCurrentUser(SUPER_ADMIN);
       setRole('admin');
     } else {
       setCurrentUser(null);
@@ -188,267 +283,196 @@ export const AuthProvider = ({ children }) => {
     setRole('guest');
   };
 
-  // Helper function to sync a member profile to Supabase DB
-  const syncProfileToSupabase = (profile) => {
-    if (isSupabaseConfigured() && profile.account_email) {
-      const payload = {
-        account_email: profile.account_email,
-        full_name: profile.full_name || '',
-        home_address: profile.home_address || '',
-        phone: profile.phone || '',
-        private_email: profile.private_email || '',
-        member_category: profile.member_category || 'Rendes tag',
-        business_activity: profile.business_activity || 'szolgáltató',
-        service_location_name: profile.service_location_name || profile.full_name || 'Szolgáltatás',
-        service_street: profile.service_street || '',
-        service_house_number: profile.service_house_number || '',
-        service_contacts: profile.service_contacts || profile.phone || '',
-        custom_title: profile.custom_title || '',
-        role: profile.role || 'member',
-        joined_date: profile.joined_date || new Date().toISOString().split('T')[0]
-      };
+  // --- Tagok ---------------------------------------------------------------
 
-      supabase.from('profiles').upsert(payload, { onConflict: 'account_email' }).then(({ data, error }) => {
-        if (error) {
-          if (error.code === 'PGRST204' || error.message?.includes('custom_title')) {
-            const fallbackPayload = { ...payload };
-            delete fallbackPayload.custom_title;
-            supabase.from('profiles').upsert(fallbackPayload, { onConflict: 'account_email' }).catch(() => {});
-          } else if (error.code === '42501') {
-            console.warn('Supabase RLS policy requires INSERT/UPDATE permission SQL script execution on Dashboard.');
-          } else {
-            console.error('Supabase profile sync error:', error);
-          }
-        }
-      }).catch(err => console.error('Supabase sync exception:', err));
-    }
-  };
+  /** Egy profil mentése a DB-be, majd a visszakapott (valódi UUID-s) sor beállítása. */
+  const saveMember = useCallback(
+    async (member) => {
+      const result = await runWrite('profil mentés', () =>
+        supabase.from('profiles').upsert(memberToRow(member), { onConflict: 'account_email' }).select().single()
+      );
 
-  // Member Registration (Supabase Auth / Local State)
-  const registerMember = (registrationData) => {
-    const isPatron = registrationData.member_category === 'Pártoló tag';
+      if (!result.ok) return result;
+
+      const saved = rowToMember(result.data);
+      setMembers((prev) => {
+        const others = prev.filter(
+          (m) =>
+            m.id !== member.id &&
+            m.id !== saved.id &&
+            (m.account_email || '').toLowerCase().trim() !== (saved.account_email || '').toLowerCase().trim()
+        );
+        return [saved, ...others];
+      });
+      setCurrentUser((prev) => (prev && prev.id === member.id ? saved : prev));
+      return { ok: true, error: null, member: saved };
+    },
+    [runWrite]
+  );
+
+  const registerMember = async (registrationData) => {
     const emailClean = (registrationData.account_email || '').toLowerCase().trim();
-    const existingMember = members.find(m => (m.account_email || '').toLowerCase().trim() === emailClean);
+    const existing = members.find((m) => (m.account_email || '').toLowerCase().trim() === emailClean);
+    const category = registrationData.member_category || 'Rendes tag';
 
     const newProfile = {
-      id: existingMember ? existingMember.id : `user-${Date.now()}`,
-      account_email: registrationData.account_email,
-      private_email: registrationData.private_email || '',
-      full_name: registrationData.full_name,
-      home_address: registrationData.home_address || '',
-      phone: registrationData.phone,
-      member_category: registrationData.member_category || 'Rendes tag',
-      custom_title: registrationData.custom_title || (existingMember?.custom_title ? existingMember.custom_title : ''),
+      id: existing?.id,
+      ...registrationData,
+      member_category: category,
+      custom_title: registrationData.custom_title || existing?.custom_title || '',
       business_activity: registrationData.business_activity || 'szolgáltató',
-      service_location_name: registrationData.service_location_name || 'Szolgáltatás',
-      service_street: registrationData.service_street || '',
-      service_house_number: registrationData.service_house_number || '',
-      service_contacts: registrationData.service_contacts || registrationData.phone,
-      workgroups: registrationData.workgroups || [],
-      role: existingMember?.role ? existingMember.role : (isPatron ? 'patron' : 'member'),
-      joined_date: existingMember?.joined_date || new Date().toISOString().split('T')[0],
-      dues_2026: { 
-        status: existingMember?.dues_2026?.status || "pending", 
-        amount: isPatron ? 15000 : (registrationData.business_activity === 'szállásadó' || registrationData.business_activity === 'vendéglős' ? 36000 : 24000), 
-        paid_at: existingMember?.dues_2026?.paid_at || null 
+      workgroups: registrationData.workgroups || existing?.workgroups || [],
+      role: existing?.role || (category === 'Pártoló tag' ? 'patron' : 'member'),
+      joined_date: existing?.joined_date || new Date().toISOString().split('T')[0],
+      dues_2026: {
+        status: existing?.dues_2026?.status || 'pending',
+        amount: duesAmountFor(category, registrationData.business_activity),
+        paid_at: existing?.dues_2026?.paid_at || null
       }
     };
 
-    setMembers(prev => {
-      const filtered = prev.filter(m => (m.account_email || '').toLowerCase().trim() !== emailClean);
-      return [newProfile, ...filtered];
+    const result = await saveMember(newProfile);
+    if (!result.ok) return result;
+
+    setCurrentUser(result.member);
+    setRole(result.member.role);
+    return result;
+  };
+
+  const updateMemberProfile = async (profileId, updatedData) => {
+    const existing = members.find((m) => m.id === profileId);
+    if (!existing) return { ok: false, error: 'A tag nem található.' };
+    return saveMember({ ...existing, ...updatedData });
+  };
+
+  const updateMemberRoleAndTitle = async (memberId, { role: newRole, member_category, custom_title }) => {
+    const existing = members.find((m) => m.id === memberId);
+    if (!existing) return { ok: false, error: 'A tag nem található.' };
+
+    const result = await saveMember({
+      ...existing,
+      role: newRole !== undefined ? newRole : existing.role,
+      member_category: member_category !== undefined ? member_category : existing.member_category,
+      custom_title: custom_title !== undefined ? custom_title : existing.custom_title
     });
-
-    setCurrentUser(newProfile);
-    setRole(newProfile.role);
-
-    // Sync directly to Supabase DB!
-    syncProfileToSupabase(newProfile);
-
-    return newProfile;
+    if (result.ok && currentUser?.id === memberId) setRole(result.member.role);
+    return result;
   };
 
-  // Member Role & Custom Title Assignment (ADMIN FUNCTION)
-  const updateMemberRoleAndTitle = (memberId, { role: newRole, member_category: newCategory, custom_title: newTitle }) => {
-    setMembers(prev => prev.map(member => {
-      if (member.id === memberId) {
-        const updated = {
-          ...member,
-          role: newRole !== undefined ? newRole : member.role,
-          member_category: newCategory !== undefined ? newCategory : member.member_category,
-          custom_title: newTitle !== undefined ? newTitle : member.custom_title
-        };
-        if (currentUser?.id === memberId) {
-          setCurrentUser(updated);
-          setRole(updated.role);
-        }
-        syncProfileToSupabase(updated);
-        return updated;
+  const updateMemberDuesStatus = async (memberId, status, paidAt = null) => {
+    const existing = members.find((m) => m.id === memberId);
+    if (!existing) return { ok: false, error: 'A tag nem található.' };
+
+    return saveMember({
+      ...existing,
+      dues_2026: {
+        ...existing.dues_2026,
+        status,
+        paid_at: status === 'paid' ? paidAt || new Date().toISOString().split('T')[0] : null
       }
-      return member;
-    }));
+    });
   };
 
-  // Member Profile Update (Admin or Member editing)
-  const updateMemberProfile = (profileId, updatedData) => {
-    setMembers(prev => prev.map(m => {
-      if (m.id === profileId) {
-        const updated = { ...m, ...updatedData };
-        syncProfileToSupabase(updated);
-        return updated;
-      }
-      return m;
-    }));
-    if (currentUser?.id === profileId) {
-      setCurrentUser(prev => ({ ...prev, ...updatedData }));
-    }
+  // --- Munkacsoportok ------------------------------------------------------
+
+  const addWorkgroup = async (newGroup) => {
+    const row = workgroupToRow({ ...newGroup, slug: slugify(newGroup.name, 'munkacsoport'), is_active: true });
+    const result = await runWrite('munkacsoport létrehozás', () =>
+      supabase.from('workgroups').upsert(row, { onConflict: 'slug' }).select().single()
+    );
+    if (!result.ok) return result;
+
+    setWorkgroups((prev) => [result.data, ...prev.filter((w) => w.slug !== result.data.slug)]);
+    return { ok: true, error: null, workgroup: result.data };
   };
 
-  // Admin Workgroup Management (Create / Rename / Update with Supabase sync)
-  const addWorkgroup = (newGroup) => {
-    const slug = (newGroup.name || 'munkacsoport').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const created = {
-      ...newGroup,
-      id: `wg-${Date.now()}`,
-      slug,
-      is_active: true,
-      members: newGroup.members || []
-    };
-    setWorkgroups(prev => [created, ...prev]);
+  const updateWorkgroup = async (workgroupId, updatedData) => {
+    const existing = workgroups.find((w) => w.id === workgroupId);
+    if (!existing) return { ok: false, error: 'A munkacsoport nem található.' };
 
-    if (isSupabaseConfigured()) {
-      supabase.from('workgroups').upsert({
-        name: newGroup.name,
-        slug,
-        leader_name: newGroup.leader_name || newGroup.leader || '',
-        description: newGroup.description || newGroup.desc || '',
-        is_active: true
-      }, { onConflict: 'slug' }).then(({ error }) => {
-        if (error) console.error('Supabase workgroup insert error:', error);
-      }).catch(err => console.error('Supabase workgroup insert exception:', err));
-    }
+    // Átnevezéskor a slug is változik, ezért az azonosítás MINDIG a stabil id-n megy,
+    // nem az újraszámolt slugon (az még nem létezik a DB-ben → 0 sor frissülne).
+    const merged = { ...existing, ...updatedData, slug: slugify(updatedData.name || existing.name, existing.slug) };
+    const result = await runWrite('munkacsoport módosítás', () =>
+      supabase.from('workgroups').update(workgroupToRow(merged)).eq('id', workgroupId).select().single()
+    );
+    if (!result.ok) return result;
+
+    setWorkgroups((prev) => prev.map((w) => (w.id === workgroupId ? result.data : w)));
+    return { ok: true, error: null, workgroup: result.data };
   };
 
-  const updateWorkgroup = (workgroupId, updatedData) => {
-    setWorkgroups(prev => prev.map(wg => {
-      if (wg.id === workgroupId) {
-        const updated = {
-          ...wg,
-          ...updatedData,
-          slug: updatedData.name ? updatedData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : wg.slug
-        };
-        if (isSupabaseConfigured()) {
-          supabase.from('workgroups').update({
-            name: updated.name,
-            leader_name: updated.leader_name || '',
-            description: updated.description || ''
-          }).eq('slug', updated.slug).catch(() => {});
-        }
-        return updated;
-      }
-      return wg;
-    }));
-  };
+  // --- Dokumentumok --------------------------------------------------------
 
-  // Member Dues Status Update (Admin tool)
-  const updateMemberDuesStatus = (memberId, status, paidAt = null) => {
-    setMembers(prev => prev.map(member => {
-      if (member.id === memberId) {
-        const updated = {
-          ...member,
-          dues_2026: {
-            ...member.dues_2026,
-            status,
-            paid_at: status === 'paid' ? (paidAt || new Date().toISOString().split('T')[0]) : null
-          }
-        };
-        syncProfileToSupabase(updated);
-        return updated;
-      }
-      return member;
-    }));
-  };
-
-  // Document Management (ADMIN ONLY FOR UPLOAD with Supabase sync)
-  const addDocument = (newDoc) => {
+  const addDocument = async (newDoc) => {
     if (role !== 'admin') {
-      alert("Hiba: Csak egyesületi adminisztrátor tölthet fel hivatalos dokumentumot!");
-      return;
+      return { ok: false, error: 'Csak egyesületi adminisztrátor tölthet fel hivatalos dokumentumot!' };
     }
-    const doc = {
-      ...newDoc,
-      id: `doc-${Date.now()}`,
-      uploaded_at: new Date().toISOString().split('T')[0]
-    };
-    setDocuments(prev => [doc, ...prev]);
+    const row = documentToRow({ ...newDoc, slug: slugify(newDoc.title, 'dokumentum') });
+    const result = await runWrite('dokumentum rögzítés', () =>
+      supabase.from('documents').upsert(row, { onConflict: 'slug' }).select().single()
+    );
+    if (!result.ok) return result;
 
-    if (isSupabaseConfigured()) {
-      supabase.from('documents').insert({
-        title: newDoc.title,
-        slug: (newDoc.title || 'dokumentum').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        category: newDoc.category || 'Általános',
-        access_level: newDoc.access_level || 'public',
-        file_size: newDoc.file_size || '1.2 MB',
-        file_type: newDoc.file_type || 'PDF',
-        description: newDoc.description || ''
-      }).catch(err => console.error('Supabase document insert error:', err));
-    }
+    setDocuments((prev) => [result.data, ...prev.filter((d) => d.slug !== result.data.slug)]);
+    return { ok: true, error: null, document: result.data };
   };
 
-  // CMS News & Projects
-  const addNewsProject = (newItem) => {
-    const created = {
-      ...newItem,
-      id: `np-${Date.now()}`,
-      slug: newItem.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      date: new Date().toISOString().split('T')[0],
-      published_at: new Date().toISOString(),
-      is_published: true
-    };
-    setNewsProjects(prev => [created, ...prev]);
+  // --- Hírek & projektek ---------------------------------------------------
+
+  const addNewsProject = async (newItem) => {
+    const row = newsToRow({ ...newItem, slug: slugify(newItem.title, 'hir') });
+    const result = await runWrite('hír mentés', () =>
+      supabase.from('news_projects').upsert(row, { onConflict: 'slug' }).select().single()
+    );
+    if (!result.ok) return result;
+
+    setNewsProjects((prev) => [result.data, ...prev.filter((n) => n.slug !== result.data.slug)]);
+    return { ok: true, error: null, news: result.data };
   };
+
+  // --- Drive (csak helyi demó) ---------------------------------------------
 
   const addFileToDriveFolder = (folderId, fileName, fileSize) => {
-    setDriveFolders(prev => prev.map(folder => {
-      if (folder.id === folderId) {
-        const newFile = {
-          name: fileName,
-          size: fileSize,
-          modified: new Date().toISOString().split('T')[0]
-        };
+    setDriveFolders((prev) =>
+      prev.map((folder) => {
+        if (folder.id !== folderId) return folder;
+        const newFile = { name: fileName, size: fileSize, modified: new Date().toISOString().split('T')[0] };
         return {
           ...folder,
           files_count: folder.files_count + 1,
-          last_synced: `${new Date().toISOString().split('T')[0]} ${new Date().toLocaleTimeString().slice(0,5)}`,
+          last_synced: `${new Date().toISOString().split('T')[0]} ${new Date().toLocaleTimeString().slice(0, 5)}`,
           files: [newFile, ...folder.files]
         };
-      }
-      return folder;
-    }));
+      })
+    );
   };
 
   return (
-    <AuthContext.Provider value={{
-      currentUser,
-      role,
-      loginWithCredentials,
-      loginAs,
-      logout,
-      registerMember,
-      updateMemberProfile,
-      updateMemberRoleAndTitle,
-      members,
-      updateMemberDuesStatus,
-      workgroups,
-      addWorkgroup,
-      updateWorkgroup,
-      newsProjects,
-      addNewsProject,
-      documents,
-      addDocument,
-      driveFolders,
-      addFileToDriveFolder
-    }}>
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        role,
+        syncState,
+        loginWithCredentials,
+        loginAs,
+        logout,
+        registerMember,
+        updateMemberProfile,
+        updateMemberRoleAndTitle,
+        members,
+        updateMemberDuesStatus,
+        workgroups,
+        addWorkgroup,
+        updateWorkgroup,
+        newsProjects,
+        addNewsProject,
+        documents,
+        addDocument,
+        driveFolders,
+        addFileToDriveFolder
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

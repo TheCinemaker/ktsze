@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useToast } from '../../context/ToastContext';
 import { CheckCircle2, FileText, Download, Building2, UtensilsCrossed, Wine, Users2, Flower2, Sparkles } from 'lucide-react';
 
 export const MembershipInfo = ({ setActiveTab }) => {
+  const toast = useToast();
   const [showAppModal, setShowAppModal] = useState(false);
   const [showViragzikModal, setShowViragzikModal] = useState(false);
 
@@ -195,7 +197,7 @@ export const MembershipInfo = ({ setActiveTab }) => {
                 </button>
                 <button 
                   onClick={() => {
-                    alert("Köszönjük jelentkezését! Drescher Gábor elnök és a munkacsoport vezetője hamarosan felveszi Önnel a kapcsolatot.");
+                    toast.success('Drescher Gábor elnök és a munkacsoport vezetője hamarosan felveszi Önnel a kapcsolatot.', { title: 'Köszönjük jelentkezését!' });
                     setShowViragzikModal(false);
                   }}
                   className="btn-wine text-xs"
@@ -242,7 +244,7 @@ export const MembershipInfo = ({ setActiveTab }) => {
                 </button>
                 <button 
                   onClick={() => {
-                    alert("Köszönjük! Kérelmét rögzítettük. Munkatársunk hamarosan keresni fogja.");
+                    toast.success('Kérelmét rögzítettük, munkatársunk hamarosan keresni fogja.', { title: 'Köszönjük!' });
                     setShowAppModal(false);
                   }}
                   className="btn-wine text-xs"
