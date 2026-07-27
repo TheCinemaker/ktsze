@@ -10,13 +10,10 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 const AuthContext = createContext();
 
-// One-time localStorage purge of legacy demo keys
-if (typeof window !== 'undefined' && !localStorage.getItem('ktsze_v3_purged')) {
-  localStorage.removeItem('ktsze_members');
-  localStorage.removeItem('ktsze_workgroups');
-  localStorage.removeItem('ktsze_news');
-  localStorage.removeItem('ktsze_documents');
-  localStorage.setItem('ktsze_v3_purged', 'true');
+// One-time total localStorage purge of legacy mock keys
+if (typeof window !== 'undefined' && !localStorage.getItem('ktsze_v4_purged')) {
+  localStorage.clear();
+  localStorage.setItem('ktsze_v4_purged', 'true');
 }
 
 export const AuthProvider = ({ children }) => {
@@ -38,17 +35,7 @@ export const AuthProvider = ({ children }) => {
         m.account_email !== 'avar.szilveszter@sasoftware.hu' &&
         m.account_email !== 'szeker.zoltan@jurisicsvar.hu'
       );
-      // Deduplicate by account_email
-      const unique = [];
-      const seen = new Set();
-      for (const m of cleanMembers) {
-        const key = (m.account_email || '').toLowerCase().trim();
-        if (key && !seen.has(key)) {
-          seen.add(key);
-          unique.push(m);
-        }
-      }
-      return unique;
+      return cleanMembers;
     } catch {
       return [];
     }
@@ -97,23 +84,15 @@ export const AuthProvider = ({ children }) => {
     if (isSupabaseConfigured()) {
       supabase.from('profiles').select('*').then(({ data, error }) => {
         if (!error && data && data.length > 0) {
-          setMembers(prev => {
-            // Merge Supabase profiles with local ones, preferring Supabase
-            const combinedMap = new Map();
-            data.forEach(p => {
-              combinedMap.set(p.account_email?.toLowerCase().trim(), {
-                ...p,
-                dues_2026: { status: 'pending', amount: 24000, paid_at: null }
-              });
-            });
-            prev.forEach(m => {
-              const key = m.account_email?.toLowerCase().trim();
-              if (key && !combinedMap.has(key)) {
-                combinedMap.set(key, m);
-              }
-            });
-            return Array.from(combinedMap.values());
-          });
+          const validProfiles = data.filter(p => 
+            p.account_email !== 'avar.szilveszter@sasoftware.hu' &&
+            p.account_email !== 'elnok@koszegiturizmus.hu' &&
+            !p.account_email?.includes('partolotag.hu')
+          );
+          setMembers(validProfiles.map(p => ({
+            ...p,
+            dues_2026: { status: 'pending', amount: 24000, paid_at: null }
+          })));
         }
       }).catch(err => console.warn('Supabase fetch error:', err));
     }
