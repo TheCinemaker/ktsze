@@ -10,6 +10,15 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 const AuthContext = createContext();
 
+// One-time localStorage purge of legacy demo keys
+if (typeof window !== 'undefined' && !localStorage.getItem('ktsze_v3_purged')) {
+  localStorage.removeItem('ktsze_members');
+  localStorage.removeItem('ktsze_workgroups');
+  localStorage.removeItem('ktsze_news');
+  localStorage.removeItem('ktsze_documents');
+  localStorage.setItem('ktsze_v3_purged', 'true');
+}
+
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [role, setRole] = useState('guest'); // 'guest', 'member', 'patron', 'admin'
@@ -21,9 +30,9 @@ export const AuthProvider = ({ children }) => {
       const parsed = JSON.parse(saved);
       const cleanMembers = parsed.filter(m => 
         m.id && 
-        !['m-1', 'm-2', 'm-3', 'm-4', 'm-5', 'm-6'].includes(m.id) &&
-        m.account_email !== 'elnok@koszegiturizmus.hu' &&
-        m.account_email !== 'szalok.adrienn@koszegiturizmus.hu' &&
+        !m.id.startsWith('m-') &&
+        !m.account_email?.includes('partolotag.hu') &&
+        !m.account_email?.includes('koszegiturizmus.hu') &&
         m.account_email !== 'farkas.peter@ibrahimhotel.hu' &&
         m.account_email !== 'voros.robert@portre.hu' &&
         m.account_email !== 'avar.szilveszter@sasoftware.hu' &&
