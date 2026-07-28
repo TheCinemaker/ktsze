@@ -146,7 +146,7 @@ export const DonationModal = ({ open, onClose, workgroup, onSuccess, defaultDono
               <span className="font-bold text-ink-900">{formatHuf(selectedAmount || 0)}</span>
             </div>
             <div className="flex justify-between text-ink-500">
-              <span>SA Software platform &amp; tranzakciós díj (5%):</span>
+              <span>Tranzakciós díj (5%):</span>
               <span>{formatHuf(commission)}</span>
             </div>
             <div className="flex justify-between text-wine-800 font-bold border-t border-sand-300 pt-2 text-sm">
