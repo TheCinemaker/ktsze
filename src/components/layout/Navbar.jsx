@@ -43,7 +43,7 @@ export const Navbar = () => {
   const displayName = profile?.full_name || profile?.service_location_name || profile?.account_email;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-sand-400 bg-sand-100/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-sand-300/80 bg-sand-50/85 backdrop-blur-xl shadow-xs transition-all">
       {/* Billentyűzetes navigációhoz: átugrás a tartalomra */}
       <a
         href="#main"

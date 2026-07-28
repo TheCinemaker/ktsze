@@ -235,4 +235,36 @@
   .sr-only-focusable:not(:focus):not(:focus-within) {
     @apply sr-only;
   }
+
+  /* --- Luxury Glassmorphism & Custom Scrollbar --- */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(108, 29, 48, 0.2);
+    border-radius: 9999px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(108, 29, 48, 0.4);
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-xl border border-sand-300/80 shadow-md hover:shadow-xl transition-all duration-300;
+  }
+
+  .glass-hero {
+    @apply relative overflow-hidden bg-gradient-to-br from-wine-950 via-wine-900 to-amber-950 text-white border border-wine-500/30 shadow-2xl backdrop-blur-2xl;
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.35);
+  }
+
+  .glow-wine {
+    box-shadow: 0 0 25px -5px rgba(108, 29, 48, 0.4);
+  }
 }

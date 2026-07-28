@@ -1,35 +1,52 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Newspaper, FileText, Users } from 'lucide-react';
+import { ArrowRight, Newspaper, FileText, Users, Sparkles, Compass, ShieldCheck, Heart } from 'lucide-react';
 
 import { ORGANIZATION } from '../config/organization';
-import { listPublishedNews, listWorkgroups } from '../lib/db';
+import { listPublishedNews, listWorkgroups, getWorkgroupStats, listMyWorkgroupMemberships } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
+import { useAuth } from '../context/AuthContext';
 import { EmptyState, Spinner, ErrorBlock, FormattedText } from '../components/ui';
 import { NewsCard } from '../components/public/NewsCard';
-
-/*
-  Ez az oldal SEMMILYEN kitalált adatot nem tartalmaz.
-
-  A korábbi verzióból eltávolítva:
-    - "15+ éves szakmai múlt", "40+ tagvállalkozás", "100% közhasznú működés"
-      (mind találgatás volt, miközben a tagnyilvántartó nullán állt)
-    - "Kőszegi Turisztikai Stratégia 2026–2030" mint létező dokumentum
-    - külső Unsplash fotó, ami nem is Kőszeget ábrázolta
-
-  Amit itt látsz, az mind az adatbázisból jön. Ha nincs benne adat, üres
-  állapot jelenik meg — nem példatartalom.
-*/
+import { WorkgroupCard } from '../components/workgroups/WorkgroupCard';
 
 const HeroSection = () => (
-  <section className="border-b border-sand-400 bg-sand-100">
-    <div className="container-page py-16 sm:py-20">
-      <div className="max-w-3xl space-y-4">
-        <p className="eyebrow">{ORGANIZATION.tagline}</p>
+  <section className="container-page py-6 sm:py-8">
+    <div className="glass-hero rounded-3xl p-8 sm:p-14 shadow-2xl relative overflow-hidden border border-wine-700/40">
+      {/* Ragyogó Ambient Fénygömbök a Háttérben */}
+      <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-amber-500/15 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-wine-500/20 blur-3xl pointer-events-none" />
 
-        <h1 className="font-display text-4xl text-ink-900 sm:text-5xl">{ORGANIZATION.legalName}</h1>
+      <div className="relative z-10 max-w-3xl space-y-6">
+        <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 border border-amber-400/30 px-3.5 py-1 text-xs font-bold uppercase tracking-widest text-amber-300 backdrop-blur-md">
+          <Sparkles className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
+          <span>Smart Tourism Platform</span>
+        </div>
 
-        <p className="prose-body text-lg">{ORGANIZATION.mission}</p>
+        <h1 className="font-display text-4xl text-white sm:text-6xl font-bold tracking-tight leading-tight">
+          {ORGANIZATION.legalName}
+        </h1>
+
+        <p className="text-lg text-sand-200 leading-relaxed font-normal max-w-2xl">
+          {ORGANIZATION.mission}
+        </p>
+
+        <div className="pt-4 flex flex-wrap items-center gap-4">
+          <Link
+            to="/munkacsoportok"
+            className="btn py-3 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-wine-950 font-bold rounded-xl shadow-lg hover:shadow-amber-500/25 transition-all flex items-center gap-2 border-0"
+          >
+            <Compass className="h-4 w-4" />
+            Munkacsoportok felfedezése
+          </Link>
+          <Link
+            to="/egyesulet"
+            className="btn py-3 px-6 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/20 backdrop-blur-md transition-all flex items-center gap-2"
+          >
+            Egyesületről
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </div>
   </section>
@@ -40,22 +57,26 @@ const LatestNews = () => {
   const items = (news || []).slice(0, 3);
 
   return (
-    <section className="section bg-sand-50">
-      <div className="container-page space-y-8">
-        <div>
-          <div className="flex flex-wrap items-end justify-between gap-4 pb-4">
-            <div>
-              <p className="eyebrow">Friss tartalom</p>
-              <h2 className="mt-1 font-display text-3xl text-ink-900">Legutóbbi hírek</h2>
+    <section className="section bg-sand-50/60 relative py-8">
+      <div className="container-page space-y-6">
+        {/* Odaragasztott Glass Sticky Fejléc a Híreknél */}
+        <div className="sticky top-[68px] z-30 bg-white/85 backdrop-blur-xl py-3.5 px-5 border border-sand-300/70 rounded-2xl shadow-xs transition-all flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-wine-100/80 text-wine-700">
+              <Newspaper className="h-5 w-5" />
             </div>
-            {items.length > 0 && (
-              <Link to="/hirek" className="btn-secondary btn-sm">
-                Összes hír
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </Link>
-            )}
+            <div>
+              <p className="eyebrow text-[10px]">Friss hírek &amp; Események</p>
+              <h2 className="font-display text-xl sm:text-2xl text-ink-900 font-bold">Legutóbbi hírek</h2>
+            </div>
           </div>
-          <hr className="border-sand-400" />
+
+          {items.length > 0 && (
+            <Link to="/hirek" className="btn-secondary btn-sm rounded-lg font-bold">
+              Összes hír
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
+          )}
         </div>
 
         {loading && <Spinner />}
@@ -70,7 +91,7 @@ const LatestNews = () => {
         )}
 
         {items.length > 0 && (
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3 pt-2">
             {items.map((item) => (
               <NewsCard key={item.id} item={item} />
             ))}
@@ -82,27 +103,42 @@ const LatestNews = () => {
 };
 
 const Workgroups = () => {
-  const { data: groups, loading } = useAsyncData(listWorkgroups);
+  const { profile } = useAuth();
+  const { data: groups, loading, reload: reloadGroups } = useAsyncData(listWorkgroups);
+  const stats = useAsyncData(getWorkgroupStats, [], { initialData: {} });
+  const memberships = useAsyncData(
+    () => listMyWorkgroupMemberships(profile?.id),
+    [profile?.id],
+    { enabled: Boolean(profile?.id), initialData: [] }
+  );
+
   const active = (groups || []).filter((g) => g.is_active);
 
+  const reloadAll = () => {
+    reloadGroups();
+    stats.reload();
+    memberships.reload();
+  };
+
   return (
-    <section className="section bg-sand-100">
-      <div className="container-page space-y-8">
-        <div>
-          <div className="flex flex-wrap items-end justify-between gap-4 pb-4">
-            <div>
-              <p className="eyebrow">Szakmai munka</p>
-              <h2 className="mt-1 font-display text-3xl text-ink-900">Munkacsoportok</h2>
-              <p className="mt-2 max-w-prose text-base text-ink-600">
-                Az egyesület munkája munkacsoportokban zajlik, és bárki jelentkezhet, aki részt vállalna.
-              </p>
+    <section className="section bg-sand-100/50 relative py-8">
+      <div className="container-page space-y-6">
+        {/* Odaragasztott Glass Sticky Fejléc a Munkacsoportoknál */}
+        <div className="sticky top-[68px] z-30 bg-white/85 backdrop-blur-xl py-3.5 px-5 border border-sand-300/70 rounded-2xl shadow-xs transition-all flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-emerald-100/80 text-emerald-700">
+              <Users className="h-5 w-5" />
             </div>
-            <Link to="/munkacsoportok" className="btn-primary btn-sm">
-              Csatlakozás
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </Link>
+            <div>
+              <p className="eyebrow text-[10px]">Szakmai Összefogás</p>
+              <h2 className="font-display text-xl sm:text-2xl text-ink-900 font-bold">Munkacsoportok</h2>
+            </div>
           </div>
-          <hr className="border-sand-400" />
+
+          <Link to="/munkacsoportok" className="btn-primary btn-sm bg-wine-700 hover:bg-wine-800 rounded-lg font-bold">
+            Csatlakozás
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
         </div>
 
         {loading && <Spinner />}
@@ -116,29 +152,20 @@ const Workgroups = () => {
         )}
 
         {active.length > 0 && (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {active.map((group) => (
-              <article key={group.id} className="card p-6">
-                <h3 className="font-display text-lg text-ink-900">
-                  <Link
-                    to={`/munkacsoportok/${group.slug}`}
-                    className="rounded transition-colors hover:text-wine-600"
-                  >
-                    {group.name}
-                  </Link>
-                </h3>
-                {group.leader_name && (
-                  <p className="mt-1 text-xs font-medium uppercase tracking-wide text-wine-600">
-                    Vezető: {group.leader_name}
-                  </p>
-                )}
-                {group.description && (
-                  <div className="mt-3 text-sm text-ink-600">
-                    <FormattedText>{group.description}</FormattedText>
-                  </div>
-                )}
-              </article>
-            ))}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pt-2">
+            {active.map((group) => {
+              const groupStats = (stats.data || {})[group.id];
+              const membership = (memberships.data || []).find((m) => m.workgroup_id === group.id);
+              return (
+                <WorkgroupCard
+                  key={group.id}
+                  workgroup={group}
+                  stats={groupStats}
+                  membership={membership}
+                  onChanged={reloadAll}
+                />
+              );
+            })}
           </div>
         )}
       </div>
