@@ -1,22 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ArrowRight, Heart } from 'lucide-react';
 import { JoinWorkgroupButton } from './JoinWorkgroupButton';
 import { DonationModal } from './DonationModal';
 import { FormattedText } from '../ui';
-import { getWorkgroupDonationStats } from '../../lib/barion';
+import { getWorkgroupDonationStats, fetchWorkgroupDonationStats } from '../../lib/barion';
 import { formatHuf } from '../../lib/format';
+import { supabase } from '../../lib/supabaseClient';
 
 export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
   const [donationOpen, setDonationOpen] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
+  const isCrowdfundingEnabled = Boolean(workgroup.enable_crowdfunding);
+  const [donationStats, setDonationStats] = useState(() =>
+    isCrowdfundingEnabled ? getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000) : null
+  );
+
+  const reloadDonationStats = useCallback(async () => {
+    if (!isCrowdfundingEnabled) return;
+    const fresh = await fetchWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000);
+    setDonationStats(fresh);
+  }, [workgroup.id, workgroup.target_amount, isCrowdfundingEnabled]);
+
+  // Realtime Supabase Adatbázis Feliratkozás (Élő frissítés!)
+  useEffect(() => {
+    if (!isCrowdfundingEnabled) return;
+    reloadDonationStats();
+
+    const channel = supabase
+      .channel(`realtime_donations_${workgroup.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workgroup_donations',
+          filter: `workgroup_id=eq.${workgroup.id}`
+        },
+        () => {
+          reloadDonationStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [workgroup.id, isCrowdfundingEnabled, reloadDonationStats]);
 
   const memberCount = stats?.approved ?? 0;
-  const isCrowdfundingEnabled = Boolean(workgroup.enable_crowdfunding);
-  const donationStats = isCrowdfundingEnabled ? getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000) : null;
 
   const handleDonationSuccess = () => {
-    setReloadKey((k) => k + 1);
+    reloadDonationStats();
     if (onChanged) onChanged();
   };
 

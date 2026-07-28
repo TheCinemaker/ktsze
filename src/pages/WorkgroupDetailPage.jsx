@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Users, Flower2, Heart, CreditCard, Sparkles } from 'lucide-react';
 
@@ -8,14 +8,14 @@ import { useAuth } from '../context/AuthContext';
 import { PageHeader, EmptyState, LoadingBlock, ErrorBlock, FormattedText } from '../components/ui';
 import { JoinWorkgroupButton } from '../components/workgroups/JoinWorkgroupButton';
 import { DonationModal } from '../components/workgroups/DonationModal';
-import { getWorkgroupDonationStats } from '../lib/barion';
+import { getWorkgroupDonationStats, fetchWorkgroupDonationStats } from '../lib/barion';
 import { formatHuf } from '../lib/format';
+import { supabase } from '../lib/supabaseClient';
 
 export const WorkgroupDetailPage = () => {
   const { slug } = useParams();
   const { profile } = useAuth();
   const [donationOpen, setDonationOpen] = useState(false);
-  const [donationVersion, setDonationVersion] = useState(0);
 
   const group = useAsyncData(() => getWorkgroupBySlug(slug), [slug]);
   const stats = useAsyncData(getWorkgroupStats, [], { initialData: {} });
@@ -25,9 +25,45 @@ export const WorkgroupDetailPage = () => {
     { enabled: Boolean(profile?.id), initialData: [] }
   );
 
+  const workgroup = group.data;
+  const isCrowdfundingEnabled = Boolean(workgroup?.enable_crowdfunding);
+  const [donationStats, setDonationStats] = useState(null);
+
+  const reloadDonationStats = useCallback(async () => {
+    if (!workgroup || !isCrowdfundingEnabled) return;
+    const fresh = await fetchWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000);
+    setDonationStats(fresh);
+  }, [workgroup, isCrowdfundingEnabled]);
+
+  // Realtime Supabase Adatbázis ÉLŐ Frissítés!
+  useEffect(() => {
+    if (!workgroup || !isCrowdfundingEnabled) return;
+    reloadDonationStats();
+
+    const channel = supabase
+      .channel(`realtime_detail_donations_${workgroup.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workgroup_donations',
+          filter: `workgroup_id=eq.${workgroup.id}`
+        },
+        () => {
+          reloadDonationStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [workgroup, isCrowdfundingEnabled, reloadDonationStats]);
+
   const reloadAll = useCallback(async () => {
-    await Promise.all([stats.reload(), memberships.reload()]);
-  }, [stats, memberships]);
+    await Promise.all([stats.reload(), memberships.reload(), reloadDonationStats()]);
+  }, [stats, memberships, reloadDonationStats]);
 
   if (group.loading) return <LoadingBlock />;
 
@@ -56,11 +92,8 @@ export const WorkgroupDetailPage = () => {
     );
   }
 
-  const workgroup = group.data;
   const memberCount = (stats.data || {})[workgroup.id]?.approved ?? 0;
   const membership = (memberships.data || []).find((m) => m.workgroup_id === workgroup.id);
-  const isCrowdfundingEnabled = Boolean(workgroup.enable_crowdfunding);
-  const donationStats = isCrowdfundingEnabled ? getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000) : null;
 
   return (
     <div className="container-page py-12 sm:py-16">

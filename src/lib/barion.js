@@ -24,23 +24,76 @@ export const getStoredDonations = () => {
   }
 };
 
-/** Kiszámolja egy munkacsoport gyűjtési egyenlegét és legutóbbi támogatóit. */
-export const getWorkgroupDonationStats = (workgroupId, defaultTarget = 250000, defaultCurrent = 0) => {
+/**
+ * Szinkron számláló (azonnali megjelenítéshez).
+ */
+export const getWorkgroupDonationStats = (workgroupId, defaultTarget = 250000) => {
   const allDonations = getStoredDonations();
   const groupDonations = allDonations[workgroupId] || [];
 
   const addedTotal = groupDonations.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const totalRaised = defaultCurrent + addedTotal;
   const target = Number(defaultTarget) || 250000;
-  const percentage = Math.min(Math.round((totalRaised / target) * 100), 100);
+  const percentage = Math.min(Math.round((addedTotal / target) * 100), 100);
 
   return {
     targetAmount: target,
-    currentAmount: totalRaised,
+    currentAmount: addedTotal,
     percentage,
     donationCount: groupDonations.length,
     recentDonations: groupDonations.slice(-5).reverse()
   };
+};
+
+/**
+ * Közvetlenül a Supabase `workgroup_donations` táblából kérdezi le az adományokat.
+ * Ha törölnek egy sort a Supabase-ben, EZ a függvény pontosan a törölt állapot szerinti összeget adja vissza!
+ */
+export const fetchWorkgroupDonationStats = async (workgroupId, targetAmount = 250000) => {
+  const target = Number(targetAmount) || 250000;
+
+  try {
+    const { data, error } = await supabase
+      .from('workgroup_donations')
+      .select('id, amount, donor_name, created_at')
+      .eq('workgroup_id', workgroupId)
+      .eq('status', 'Succeeded')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      const dbTotal = data.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+      const dbPercentage = Math.min(Math.round((dbTotal / target) * 100), 100);
+      const dbRecent = data.slice(0, 5).map((item) => ({
+        id: item.id,
+        donorName: item.donor_name || 'Névtelen Támogató',
+        amount: Number(item.amount)
+      }));
+
+      // Helyi tároló szinkronizálása a Supabase valódi adataival!
+      try {
+        const allDonations = getStoredDonations();
+        allDonations[workgroupId] = dbRecent.map((d) => ({
+          id: d.id,
+          amount: d.amount,
+          donorName: d.donorName
+        }));
+        localStorage.setItem(DONATIONS_STORAGE_KEY, JSON.stringify(allDonations));
+      } catch (e) {
+        // ignore
+      }
+
+      return {
+        targetAmount: target,
+        currentAmount: dbTotal,
+        percentage: dbPercentage,
+        donationCount: data.length,
+        recentDonations: dbRecent
+      };
+    }
+  } catch (err) {
+    console.warn('Supabase workgroup_donations lekérdezési hiba, tartalékolás:', err);
+  }
+
+  return getWorkgroupDonationStats(workgroupId, target);
 };
 
 /**
