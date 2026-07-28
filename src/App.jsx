@@ -7,6 +7,7 @@ import { RequireAuth } from './components/auth/RequireAuth';
 import { AuthCallback } from './components/auth/AuthCallback';
 import { LoadingBlock } from './components/ui';
 import { ScrollToTopButton } from './components/ui/ScrollToTopButton';
+import { CookieBanner } from './components/ui/CookieBanner';
 
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
@@ -16,6 +17,7 @@ import { DocumentsPage } from './pages/DocumentsPage';
 import { MembershipPage } from './pages/MembershipPage';
 import { ContactPage } from './pages/ContactPage';
 import { LoginPage } from './pages/LoginPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { DiagnosticsPage } from './pages/DiagnosticsPage';
 import { WorkgroupsPage } from './pages/WorkgroupsPage';
@@ -60,6 +62,7 @@ export default function App() {
           <Route path="/tagsag" element={<MembershipPage />} />
           <Route path="/kapcsolat" element={<ContactPage />} />
           <Route path="/belepes" element={<LoginPage />} />
+          <Route path="/adatvedelem" element={<PrivacyPolicyPage />} />
 
           {/* Hibakeresés: megmutatja, mit lát az alkalmazás a jogosultságaidról */}
           <Route path="/diagnosztika" element={<DiagnosticsPage />} />
@@ -92,6 +95,7 @@ export default function App() {
 
       <Footer />
       <ScrollToTopButton />
+      <CookieBanner />
     </div>
   );
 }

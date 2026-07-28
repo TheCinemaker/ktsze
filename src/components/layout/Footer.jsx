@@ -13,7 +13,8 @@ const NAV = [
   { to: '/hirek', label: 'Hírek' },
   { to: '/dokumentumok', label: 'Dokumentumok' },
   { to: '/tagsag', label: 'Tagság' },
-  { to: '/kapcsolat', label: 'Kapcsolat' }
+  { to: '/kapcsolat', label: 'Kapcsolat' },
+  { to: '/adatvedelem', label: 'Adatvédelem & GDPR' }
 ];
 
 export const Footer = () => {
