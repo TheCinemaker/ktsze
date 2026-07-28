@@ -327,3 +327,38 @@ export const DetailRow = ({ label, value, children }) => {
     </div>
   );
 };
+
+/**
+ * Automatikus hivatkozásfelismerő és törésbiztos szövegintegrátor.
+ * Felismeri az URL-eket (http://, https://, www.), és kattintható linkké alakítja őket.
+ * A long URL-ek a 'break-all' / 'break-words' CSS osztállyal SOHA nem lógnak ki a kártyából!
+ */
+export const FormattedText = ({ children, className = '' }) => {
+  if (!children || typeof children !== 'string') return children;
+
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+  const parts = children.split(urlRegex);
+
+  return (
+    <span className={`break-words [overflow-wrap:anywhere] ${className}`}>
+      {parts.map((part, index) => {
+        if (part.match(urlRegex)) {
+          const href = part.startsWith('http') ? part : `https://${part}`;
+          return (
+            <a
+              key={index}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-wine-600 underline underline-offset-2 hover:text-wine-800 break-all transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {part}
+            </a>
+          );
+        }
+        return part;
+      })}
+    </span>
+  );
+};

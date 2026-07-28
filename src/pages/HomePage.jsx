@@ -5,7 +5,7 @@ import { ArrowRight, Newspaper, FileText, Users } from 'lucide-react';
 import { ORGANIZATION } from '../config/organization';
 import { listPublishedNews, listWorkgroups } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
-import { EmptyState, Spinner, ErrorBlock } from '../components/ui';
+import { EmptyState, Spinner, ErrorBlock, FormattedText } from '../components/ui';
 import { NewsCard } from '../components/public/NewsCard';
 
 /*
@@ -132,7 +132,11 @@ const Workgroups = () => {
                     Vezető: {group.leader_name}
                   </p>
                 )}
-                {group.description && <p className="mt-3 text-sm text-ink-600">{group.description}</p>}
+                {group.description && (
+                  <div className="mt-3 text-sm text-ink-600">
+                    <FormattedText>{group.description}</FormattedText>
+                  </div>
+                )}
               </article>
             ))}
           </div>

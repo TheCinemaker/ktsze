@@ -4,7 +4,7 @@ import { ArrowLeft, Newspaper } from 'lucide-react';
 
 import { supabase, unwrap } from '../lib/supabaseClient';
 import { useAsyncData } from '../lib/useAsyncData';
-import { LoadingBlock, ErrorBlock, EmptyState } from '../components/ui';
+import { LoadingBlock, ErrorBlock, EmptyState, FormattedText } from '../components/ui';
 import { coverUrl, formatDate } from '../lib/format';
 
 const fetchBySlug = (slug) => async () =>
@@ -64,7 +64,11 @@ export const NewsDetailPage = () => {
 
         <h1 className="font-display text-3xl text-ink-900 sm:text-4xl">{item.title}</h1>
 
-        {item.excerpt && <p className="text-lg text-ink-600">{item.excerpt}</p>}
+        {item.excerpt && (
+          <p className="text-lg text-ink-600">
+            <FormattedText>{item.excerpt}</FormattedText>
+          </p>
+        )}
       </header>
 
       {cover && (
@@ -80,7 +84,7 @@ export const NewsDetailPage = () => {
           {item.body.split(/\n{2,}/).map((paragraph, index) => (
             // eslint-disable-next-line react/no-array-index-key
             <p key={index} className={index > 0 ? 'mt-4' : undefined}>
-              {paragraph}
+              <FormattedText>{paragraph}</FormattedText>
             </p>
           ))}
         </div>

@@ -5,7 +5,7 @@ import { Users, Flower2, Award, Crown, Mail, User } from 'lucide-react';
 import { ORGANIZATION, formattedAddress, BOARD_MEMBERS_BIO } from '../config/organization';
 import { listWorkgroups, listPublicBoardMembers } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
-import { PageHeader, EmptyState, Spinner, ErrorBlock, DetailRow } from '../components/ui';
+import { PageHeader, EmptyState, Spinner, ErrorBlock, DetailRow, FormattedText } from '../components/ui';
 
 const getMemberBio = (member) => {
   if (member.bio) return member.bio;
@@ -207,12 +207,16 @@ export const AboutPage = () => {
                     </p>
                   )}
 
-                  {group.description && <p className="mt-3 text-sm text-ink-600">{group.description}</p>}
+                  {group.description && (
+                    <div className="mt-3 text-sm text-ink-600">
+                      <FormattedText>{group.description}</FormattedText>
+                    </div>
+                  )}
 
                   {group.latest_updates && (
-                    <p className="mt-3 border-t border-sand-300 pt-3 text-sm text-ink-500">
-                      {group.latest_updates}
-                    </p>
+                    <div className="mt-3 border-t border-sand-300 pt-3 text-sm text-ink-500">
+                      <FormattedText>{group.latest_updates}</FormattedText>
+                    </div>
                   )}
                 </article>
               ))}

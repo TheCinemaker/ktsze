@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ArrowRight } from 'lucide-react';
 import { JoinWorkgroupButton } from './JoinWorkgroupButton';
+import { FormattedText } from '../ui';
 
 /**
  * Munkacsoport csempe. A csatlakozás gomb közvetlenül itt van, hogy ne kelljen
@@ -38,10 +39,16 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
         </p>
       )}
 
-      {workgroup.description && <p className="mt-3 flex-1 text-sm text-ink-600">{workgroup.description}</p>}
+      {workgroup.description && (
+        <div className="mt-3 flex-1 text-sm text-ink-600">
+          <FormattedText>{workgroup.description}</FormattedText>
+        </div>
+      )}
 
       {workgroup.latest_updates && (
-        <p className="mt-3 border-t border-sand-300 pt-3 text-sm text-ink-500">{workgroup.latest_updates}</p>
+        <div className="mt-3 border-t border-sand-300 pt-3 text-sm text-ink-500">
+          <FormattedText>{workgroup.latest_updates}</FormattedText>
+        </div>
       )}
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-sand-300 pt-4">

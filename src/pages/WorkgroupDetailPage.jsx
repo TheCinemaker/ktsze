@@ -5,7 +5,7 @@ import { ArrowLeft, Users, Flower2 } from 'lucide-react';
 import { getWorkgroupBySlug, getWorkgroupStats, listMyWorkgroupMemberships } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
 import { useAuth } from '../context/AuthContext';
-import { PageHeader, EmptyState, LoadingBlock, ErrorBlock } from '../components/ui';
+import { PageHeader, EmptyState, LoadingBlock, ErrorBlock, FormattedText } from '../components/ui';
 import { JoinWorkgroupButton } from '../components/workgroups/JoinWorkgroupButton';
 
 export const WorkgroupDetailPage = () => {
@@ -66,7 +66,7 @@ export const WorkgroupDetailPage = () => {
         <PageHeader
           eyebrow="Munkacsoport"
           title={workgroup.name}
-          description={workgroup.description || undefined}
+          description={workgroup.description ? <FormattedText>{workgroup.description}</FormattedText> : undefined}
           actions={
             <JoinWorkgroupButton workgroup={workgroup} membership={membership} onChanged={reloadAll} />
           }
@@ -88,7 +88,7 @@ export const WorkgroupDetailPage = () => {
                 {workgroup.latest_updates.split(/\n{2,}/).map((paragraph, index) => (
                   // eslint-disable-next-line react/no-array-index-key
                   <p key={index} className={index > 0 ? 'mt-4' : undefined}>
-                    {paragraph}
+                    <FormattedText>{paragraph}</FormattedText>
                   </p>
                 ))}
               </div>

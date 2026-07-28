@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { coverUrl, formatDate } from '../../lib/format';
+import { FormattedText } from '../ui';
 
 export const NewsCard = ({ item }) => {
   const cover = coverUrl(item.cover_path);
@@ -29,7 +30,11 @@ export const NewsCard = ({ item }) => {
           </Link>
         </h3>
 
-        {item.excerpt && <p className="mt-2 text-sm text-ink-600">{item.excerpt}</p>}
+        {item.excerpt && (
+          <div className="mt-2 text-sm text-ink-600">
+            <FormattedText>{item.excerpt}</FormattedText>
+          </div>
+        )}
 
         <Link
           to={`/hirek/${item.slug}`}
