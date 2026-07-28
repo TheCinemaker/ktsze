@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, ArrowRight, Heart } from 'lucide-react';
+import { Users, ArrowRight, Heart, Sparkles } from 'lucide-react';
 import { JoinWorkgroupButton } from './JoinWorkgroupButton';
 import { DonationModal } from './DonationModal';
 import { FormattedText } from '../ui';
