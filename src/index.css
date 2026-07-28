@@ -1,8 +1,263 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Lora:wght@400;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ==========================================================================
+   @property — regisztrált egyéni tulajdonságok
+
+   Enélkül a CSS a custom propertyket értelmezetlen karakterláncként kezeli,
+   és NEM tudja őket animálni. A típus megadásával a --angle és a --mx/--my
+   valódi, interpolálható értékké válik: ettől tud a szegélycsillanás
+   folyamatosan forogni, a fényfolt pedig lágyan követni a kurzort.
+   ========================================================================== */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@property --mx {
+  syntax: '<percentage>';
+  initial-value: 50%;
+  inherits: true;
+}
+@property --my {
+  syntax: '<percentage>';
+  initial-value: 0%;
+  inherits: true;
+}
+
+/* ==========================================================================
+   Színtokenek — OKLCH, "L C H" formában
+
+   Az érték szándékosan a függvényen KÍVÜL van tárolva, hogy a Tailwind
+   rátehesse az alfa-csatornát: oklch(var(--wine-600) / 0.4).
+
+   Világos téma: "Porcelán" — meleg elefántcsont, tintafekete szöveg.
+   ========================================================================== */
+:root {
+  color-scheme: light;
+
+  --paper: 1 0 0;
+  --scrim: 0.22 0.026 42;
+
+  --sand-50: 0.991 0.004 84;
+  --sand-100: 0.977 0.008 82; /* oldal háttere */
+  --sand-200: 0.958 0.013 80;
+  --sand-300: 0.93 0.017 78;
+  --sand-400: 0.893 0.021 76;
+  --sand-500: 0.812 0.04 72;
+  --sand-600: 0.7 0.055 68;
+  --sand-700: 0.58 0.06 64;
+  --sand-800: 0.45 0.055 60;
+
+  --ink-200: 0.79 0.008 66;
+  --ink-300: 0.7 0.012 62;
+  --ink-400: 0.625 0.015 58;
+  --ink-500: 0.548 0.018 54;
+  --ink-600: 0.472 0.021 50;
+  --ink-700: 0.392 0.023 47;
+  --ink-800: 0.312 0.025 44;
+  --ink-900: 0.222 0.026 42;
+
+  --wine-50: 0.973 0.011 14;
+  --wine-100: 0.943 0.024 14;
+  --wine-200: 0.882 0.052 13;
+  --wine-300: 0.79 0.09 13;
+  --wine-400: 0.64 0.14 13;
+  --wine-500: 0.51 0.155 12;
+  --wine-600: 0.438 0.158 11;
+  --wine-700: 0.368 0.14 11;
+  --wine-800: 0.305 0.118 12;
+  --wine-900: 0.248 0.095 12;
+  --wine-950: 0.178 0.066 13;
+
+  --gold-50: 0.985 0.014 88;
+  --gold-100: 0.96 0.032 87;
+  --gold-200: 0.918 0.058 86;
+  --gold-300: 0.868 0.086 84;
+  --gold-400: 0.812 0.11 82;
+  --gold-500: 0.752 0.124 79;
+  --gold-600: 0.672 0.12 72;
+  --gold-700: 0.56 0.1 68;
+  --gold-800: 0.452 0.082 66;
+  --gold-900: 0.352 0.062 64;
+  --gold-950: 0.26 0.045 62;
+
+  --jade-50: 0.975 0.014 168;
+  --jade-100: 0.944 0.032 167;
+  --jade-200: 0.888 0.06 166;
+  --jade-300: 0.822 0.086 164;
+  --jade-400: 0.745 0.108 163;
+  --jade-500: 0.672 0.115 161;
+  --jade-600: 0.58 0.105 160;
+  --jade-700: 0.482 0.088 160;
+  --jade-800: 0.385 0.07 161;
+  --jade-900: 0.3 0.055 162;
+  --jade-950: 0.22 0.04 163;
+
+  --positive-50: 0.965 0.02 155;
+  --positive-100: 0.935 0.038 155;
+  --positive-300: 0.84 0.07 155;
+  --positive-500: 0.64 0.13 155;
+  --positive-600: 0.545 0.115 155;
+  --positive-700: 0.45 0.095 155;
+
+  --caution-50: 0.972 0.024 92;
+  --caution-100: 0.945 0.045 90;
+  --caution-300: 0.88 0.07 90;
+  --caution-500: 0.7 0.115 82;
+  --caution-600: 0.588 0.105 78;
+  --caution-700: 0.48 0.085 76;
+
+  /* --- Éjszakai készlet ---------------------------------------------------
+     Ezeket a [data-theme='dark'] blokk SZÁNDÉKOSAN nem írja felül. A hero, a
+     lábléc és a záró sáv mindkét témában sötét marad, tehát az ott lévő
+     szövegnek is mindkét témában világosnak kell maradnia. Ha invertálódnának,
+     sötét témában sötét szöveg ülne sötét felületen.
+     ---------------------------------------------------------------------- */
+  --noir-700: 0.255 0.052 22;
+  --noir-800: 0.205 0.045 20;
+  --noir-900: 0.158 0.036 19;
+  --noir-950: 0.115 0.026 18;
+
+  --ivory-100: 0.972 0.006 82;
+  --ivory-200: 0.922 0.011 80;
+  --ivory-300: 0.855 0.016 76;
+  --ivory-400: 0.762 0.022 72;
+  --ivory-500: 0.662 0.027 68;
+  --ivory-600: 0.558 0.031 64;
+
+  --champagne-300: 0.882 0.088 86;
+  --champagne-400: 0.822 0.112 84;
+  --champagne-500: 0.758 0.126 80;
+
+  --mint-400: 0.802 0.112 165;
+  --mint-500: 0.728 0.122 163;
+
+  --blush-400: 0.742 0.138 20;
+
+  /* Elsődleges gomb: külön tokenpár, hogy a kontraszt témától függetlenül
+     mindig helyes legyen (sötétben világosabb alap + sötét szöveg). */
+  --brand-solid: 0.438 0.158 11;
+  --brand-solid-fg: 0.99 0.004 80;
+  --jade-solid: 0.545 0.108 160;
+  --jade-solid-fg: 0.99 0.004 80;
+
+  /* Árnyékok — a szín témafüggő, a geometria nem. */
+  --shadow-c: 0.222 0.026 42;
+  --edge: inset 0 1px 0 0 oklch(1 0 0 / 0.7);
+  --sh-card: 0 1px 2px oklch(var(--shadow-c) / 0.05), 0 3px 10px -3px oklch(var(--shadow-c) / 0.09);
+  --sh-lift: 0 2px 4px oklch(var(--shadow-c) / 0.05), 0 14px 32px -10px oklch(var(--shadow-c) / 0.16);
+  --sh-float: 0 4px 8px oklch(var(--shadow-c) / 0.06), 0 28px 60px -18px oklch(var(--shadow-c) / 0.22);
+  --sh-overlay: 0 40px 90px -22px oklch(var(--shadow-c) / 0.32);
+  --sh-glow: 0 0 0 1px oklch(var(--wine-600) / 0.14), 0 12px 40px -10px oklch(var(--wine-600) / 0.35);
+  --sh-glow-gold: 0 0 0 1px oklch(var(--gold-500) / 0.28), 0 14px 44px -10px oklch(var(--gold-500) / 0.45);
+
+  --grain-opacity: 0.035;
+}
+
+/* --------------------------------------------------------------------------
+   Sötét téma: "Éjféli pince"
+
+   Nem szürke, hanem meleg, szilvás grafit — a bor és a kőszegi vár kövének
+   színhőmérséklete. A sand- és ink-skála irányt vált: a sand innentől
+   sötétből világosodik (háttér → felület → vonal), az ink pedig
+   halványszürkéből fut a törtfehérig. Ettől lesz a teljes, korábban meg sem
+   érintett kódbázis egy csapásra sötét témás.
+   -------------------------------------------------------------------------- */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --paper: 0.218 0.014 26;
+  --scrim: 0.07 0.012 24;
+
+  --sand-50: 0.185 0.013 28;
+  --sand-100: 0.152 0.011 27; /* oldal háttere */
+  --sand-200: 0.243 0.016 27;
+  --sand-300: 0.292 0.018 26;
+  --sand-400: 0.345 0.02 25;
+  --sand-500: 0.46 0.035 50;
+  --sand-600: 0.58 0.05 62;
+  --sand-700: 0.7 0.055 68;
+  --sand-800: 0.8 0.05 72;
+
+  --ink-200: 0.42 0.014 52;
+  --ink-300: 0.52 0.014 56;
+  --ink-400: 0.6 0.014 60;
+  --ink-500: 0.692 0.014 63;
+  --ink-600: 0.786 0.013 66;
+  --ink-700: 0.85 0.012 68;
+  --ink-800: 0.908 0.01 70;
+  --ink-900: 0.968 0.008 74;
+
+  --wine-50: 0.248 0.042 16;
+  --wine-100: 0.292 0.058 15;
+  --wine-200: 0.372 0.088 14;
+  --wine-300: 0.472 0.118 14;
+  --wine-400: 0.6 0.15 14;
+  --wine-500: 0.685 0.163 16;
+  --wine-600: 0.742 0.148 20; /* akcentus szöveg és link */
+  --wine-700: 0.812 0.11 26;
+  --wine-800: 0.874 0.075 34;
+  --wine-900: 0.93 0.045 44;
+  --wine-950: 0.968 0.024 56;
+
+  --gold-50: 0.24 0.032 78;
+  --gold-100: 0.285 0.048 78;
+  --gold-200: 0.365 0.07 79;
+  --gold-300: 0.475 0.09 80;
+  --gold-400: 0.63 0.11 82;
+  --gold-500: 0.795 0.125 84;
+  --gold-600: 0.855 0.11 86;
+  --gold-700: 0.9 0.085 88;
+  --gold-800: 0.938 0.058 89;
+  --gold-900: 0.965 0.035 90;
+  --gold-950: 0.985 0.018 91;
+
+  --jade-50: 0.235 0.032 165;
+  --jade-100: 0.278 0.048 164;
+  --jade-200: 0.355 0.068 163;
+  --jade-300: 0.46 0.088 162;
+  --jade-400: 0.615 0.108 162;
+  --jade-500: 0.775 0.128 163;
+  --jade-600: 0.835 0.115 164;
+  --jade-700: 0.888 0.088 165;
+  --jade-800: 0.93 0.06 166;
+  --jade-900: 0.96 0.036 167;
+  --jade-950: 0.982 0.018 168;
+
+  --positive-50: 0.245 0.038 155;
+  --positive-100: 0.3 0.055 155;
+  --positive-300: 0.44 0.08 155;
+  --positive-500: 0.72 0.13 155;
+  --positive-600: 0.815 0.115 155;
+  --positive-700: 0.9 0.075 156;
+
+  --caution-50: 0.25 0.038 85;
+  --caution-100: 0.305 0.055 84;
+  --caution-300: 0.45 0.08 82;
+  --caution-500: 0.76 0.12 84;
+  --caution-600: 0.85 0.105 86;
+  --caution-700: 0.92 0.07 88;
+
+  --brand-solid: 0.665 0.172 17;
+  --brand-solid-fg: 0.155 0.028 20;
+  --jade-solid: 0.732 0.128 162;
+  --jade-solid-fg: 0.145 0.03 165;
+
+  --shadow-c: 0 0 0;
+  --edge: inset 0 1px 0 0 oklch(1 0 0 / 0.07);
+  --sh-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 4px 14px -4px oklch(0 0 0 / 0.5);
+  --sh-lift: 0 2px 6px oklch(0 0 0 / 0.45), 0 18px 40px -12px oklch(0 0 0 / 0.7);
+  --sh-float: 0 6px 12px oklch(0 0 0 / 0.5), 0 32px 70px -20px oklch(0 0 0 / 0.8);
+  --sh-overlay: 0 48px 100px -24px oklch(0 0 0 / 0.85);
+  --sh-glow: 0 0 0 1px oklch(var(--wine-500) / 0.3), 0 14px 46px -10px oklch(var(--wine-500) / 0.4);
+  --sh-glow-gold: 0 0 0 1px oklch(var(--gold-500) / 0.35), 0 16px 50px -10px oklch(var(--gold-500) / 0.34);
+
+  --grain-opacity: 0.05;
+}
 
 /* ==========================================================================
    Alapok
@@ -17,17 +272,24 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    /* A lebegő navigációs sziget alá horgonyozott ugrások ne csússzanak be alá. */
+    scroll-padding-top: 7rem;
   }
 
   body {
     margin: 0;
-    background-color: theme('colors.sand.100');
-    color: theme('colors.ink.900');
+    background-color: oklch(var(--sand-100));
+    color: oklch(var(--ink-900));
     font-family: theme('fontFamily.sans');
     font-size: 1rem;
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv11', 'ss01';
+    font-variant-numeric: tabular-nums;
+    /* Témaváltáskor a teljes felület átúszik, nem villan. */
+    transition: background-color 0.5s theme('transitionTimingFunction.lux'),
+      color 0.5s theme('transitionTimingFunction.lux');
   }
 
   h1,
@@ -36,8 +298,11 @@
   h4 {
     font-family: theme('fontFamily.display');
     font-weight: 600;
-    color: theme('colors.ink.900');
+    color: oklch(var(--ink-900));
     text-wrap: balance;
+    /* Fraunces változó tengelyei: optikai méret + enyhe "wonk". */
+    font-variation-settings: 'SOFT' 12, 'WONK' 1;
+    font-optical-sizing: auto;
   }
 
   p {
@@ -47,21 +312,16 @@
   /* Fókuszjelzés az EGÉSZ alkalmazásban, egy helyen definiálva.
      Csak billentyűzetes navigációnál látszik, kattintásnál nem. */
   :focus-visible {
-    outline: 2px solid theme('colors.wine.600');
-    outline-offset: 2px;
-    border-radius: 0.25rem;
+    outline: 2px solid oklch(var(--wine-600));
+    outline-offset: 3px;
+    border-radius: 0.35rem;
   }
 
-  /* Alapból nincs böngésző-outline, de a :focus-visible fentebb visszaadja. */
   :focus:not(:focus-visible) {
     outline: none;
   }
 
-  button {
-    font: inherit;
-    color: inherit;
-  }
-
+  button,
   input,
   select,
   textarea {
@@ -70,24 +330,28 @@
   }
 
   ::selection {
-    background-color: theme('colors.wine.600');
-    color: white;
+    background-color: oklch(var(--wine-600) / 0.9);
+    color: oklch(var(--brand-solid-fg));
   }
 
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 11px;
+    height: 11px;
   }
   ::-webkit-scrollbar-track {
-    background: theme('colors.sand.100');
+    background: oklch(var(--sand-100));
   }
   ::-webkit-scrollbar-thumb {
-    background: theme('colors.sand.300');
-    border-radius: 5px;
-    border: 2px solid theme('colors.sand.100');
+    background: oklch(var(--sand-400));
+    border-radius: 99px;
+    border: 3px solid oklch(var(--sand-100));
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: theme('colors.sand.500');
+    background: oklch(var(--wine-500) / 0.6);
+  }
+
+  img {
+    max-width: 100%;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -107,59 +371,108 @@
 /* ==========================================================================
    Komponensosztályok
 
-   Szándékosan kevés variáns van. A korábbi verzió minden gombot csupa
-   nagybetűs, félkövér, ritkított szöveggel írt ki — ez zajos volt. Itt a
-   gombok normál kis-nagybetűsek, a hangsúlyt a szerif címsorok adják.
+   Ezek hordozzák az egész oldal karakterét. Mivel a meglévő ~50 komponens
+   ezeket az osztályokat használja (.btn-primary, .card, .input, .badge),
+   az itteni átírás minden képernyőre egyszerre hat.
    ========================================================================== */
 @layer components {
-  /* --- Gombok --- */
+  /* --- Gombok ---------------------------------------------------------- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5
-           text-sm font-medium transition-colors duration-150
-           disabled:opacity-55 disabled:cursor-not-allowed select-none
-           border cursor-pointer;
+    @apply relative inline-flex select-none cursor-pointer items-center justify-center gap-2
+           rounded-xl border px-4 py-2.5 text-sm font-medium
+           transition-[transform,background-color,border-color,color,box-shadow] duration-300 ease-lux
+           active:scale-[0.975] disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-primary {
-    @apply btn bg-wine-600 text-white border-wine-600
-           hover:bg-wine-700 hover:border-wine-700;
+    @apply btn border-transparent shadow-card hover:shadow-glow;
+    background-color: oklch(var(--brand-solid));
+    color: oklch(var(--brand-solid-fg));
+  }
+  .btn-primary:hover {
+    background-color: oklch(var(--brand-solid) / 0.88);
+  }
+
+  /* Megerősítő/pénzügyi művelet (támogatás, fizetés). Saját tokenpárt kap,
+     mert a zöld alap világosodik sötét témában — a szövegének vele kell
+     sötétednie, különben olvashatatlanná válik. */
+  .btn-jade {
+    @apply btn border-transparent shadow-card;
+    background-color: oklch(var(--jade-solid));
+    color: oklch(var(--jade-solid-fg));
+  }
+  .btn-jade:hover {
+    background-color: oklch(var(--jade-solid) / 0.88);
+    box-shadow: 0 0 0 1px oklch(var(--jade-solid) / 0.25), 0 12px 40px -10px oklch(var(--jade-solid) / 0.45);
   }
 
   .btn-secondary {
-    @apply btn bg-white text-ink-900 border-sand-400
-           hover:bg-sand-200 hover:border-sand-500;
+    @apply btn border-sand-400 bg-paper text-ink-900
+           hover:-translate-y-px hover:border-sand-500 hover:shadow-lift;
   }
 
   .btn-ghost {
-    @apply btn bg-transparent text-wine-600 border-transparent
-           hover:bg-wine-50;
+    @apply btn border-transparent bg-transparent text-wine-600 hover:bg-wine-50;
   }
 
   .btn-danger {
-    @apply btn bg-transparent text-wine-600 border-wine-300
-           hover:bg-wine-50 hover:border-wine-600;
+    @apply btn border-wine-300 bg-transparent text-wine-600 hover:border-wine-600 hover:bg-wine-50;
+  }
+
+  /* Arany CTA: a hero és a kiemelt konverziós pontok gombja. A szövegszíne
+     `noir`, ami sötét témában is sötét marad — így mindig olvasható. */
+  .btn-gold {
+    @apply btn border-transparent font-semibold text-noir-950 shadow-glow-gold
+           hover:-translate-y-0.5;
+    background-image: linear-gradient(
+      135deg,
+      oklch(var(--gold-300)) 0%,
+      oklch(var(--gold-500)) 45%,
+      oklch(var(--gold-400)) 100%
+    );
   }
 
   .btn-sm {
-    @apply px-3 py-1.5 text-xs;
+    @apply rounded-lg px-3 py-1.5 text-xs;
+  }
+  .btn-lg {
+    @apply rounded-2xl px-7 py-3.5 text-base;
   }
 
-  /* --- Felületek --- */
+  /* --- Felületek ------------------------------------------------------- */
   .card {
-    @apply bg-white border border-sand-400 rounded-xl shadow-card;
+    @apply rounded-2xl border border-sand-300 bg-paper;
+    box-shadow: var(--sh-card), var(--edge);
   }
 
   .card-hover {
-    @apply card transition-shadow duration-200 hover:shadow-lift;
+    @apply card transition-[transform,box-shadow,border-color] duration-500 ease-lux;
+  }
+  .card-hover:hover {
+    @apply -translate-y-1 border-sand-400;
+    box-shadow: var(--sh-lift), var(--edge);
   }
 
   .surface {
-    @apply bg-sand-200 border border-sand-400 rounded-xl;
+    @apply rounded-2xl border border-sand-300 bg-sand-200;
   }
 
-  /* --- Űrlapelemek --- */
+  /* Üveg: valódi háttérelmosás + telítettségnövelés. A saturate az, ami a
+     mögötte lévő színeket életben tartja, e nélkül a blur szürkére mossa. */
+  .glass {
+    @apply rounded-2xl border border-paper/10 bg-paper/70;
+    backdrop-filter: blur(20px) saturate(1.7);
+    -webkit-backdrop-filter: blur(20px) saturate(1.7);
+    box-shadow: var(--sh-card), var(--edge);
+  }
+
+  .glass-card {
+    @apply glass;
+  }
+
+  /* --- Űrlapelemek ----------------------------------------------------- */
   .label {
-    @apply block text-sm font-medium text-ink-800 mb-1.5;
+    @apply mb-1.5 block text-sm font-medium text-ink-800;
   }
 
   .hint {
@@ -167,104 +480,350 @@
   }
 
   .input {
-    @apply w-full rounded-lg border border-sand-400 bg-white px-3 py-2.5
+    @apply w-full rounded-xl border border-sand-400 bg-paper px-3.5 py-2.5
            text-base text-ink-900 placeholder:text-ink-400
-           transition-colors duration-150
+           transition-[border-color,box-shadow,background-color] duration-200
            hover:border-sand-500
-           focus:border-wine-600 focus:ring-2 focus:ring-wine-100
-           disabled:bg-sand-100 disabled:text-ink-500;
+           focus:border-wine-500 focus:outline-none focus:ring-4 focus:ring-wine-500/15
+           disabled:bg-sand-200 disabled:text-ink-500;
   }
 
   .input-invalid {
     @apply border-wine-500 focus:border-wine-600;
   }
 
-  /* --- Jelvények: itt megengedett a 13px, mert nem futó szöveg --- */
+  /* --- Jelvények ------------------------------------------------------- */
   .badge {
-    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5
-           text-xs font-medium;
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium;
   }
-  .badge-neutral  { @apply badge bg-sand-200 text-ink-600     border-sand-400; }
-  .badge-wine     { @apply badge bg-wine-100 text-wine-600    border-wine-300; }
-  .badge-positive { @apply badge bg-positive-50 text-positive-600 border-positive-300; }
-  .badge-caution  { @apply badge bg-caution-50  text-caution-600  border-caution-300; }
+  .badge-neutral {
+    @apply badge border-sand-400 bg-sand-200 text-ink-600;
+  }
+  .badge-wine {
+    @apply badge border-wine-300/60 bg-wine-100 text-wine-700;
+  }
+  .badge-gold {
+    @apply badge border-gold-400/50 bg-gold-100 text-gold-800;
+  }
+  .badge-positive {
+    @apply badge border-positive-300 bg-positive-50 text-positive-600;
+  }
+  .badge-caution {
+    @apply badge border-caution-300 bg-caution-50 text-caution-600;
+  }
 
-  /* --- Szekciók --- */
+  /* --- Szekciók -------------------------------------------------------- */
   .section {
-    @apply py-14 sm:py-20;
+    @apply py-16 sm:py-24;
   }
 
   .container-page {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-page px-5 sm:px-8 lg:px-12;
   }
 
   .eyebrow {
-    @apply inline-block text-xs font-semibold uppercase tracking-[0.14em] text-wine-600;
+    @apply inline-flex items-center gap-2 font-mono text-2xs font-medium uppercase
+           tracking-[0.22em] text-wine-600;
   }
 
-  /* --- Fülsáv: mobilon vízszintesen csúsztatható, nem csordul túl --- */
+  /* Vékony arany elválasztó, középen kifutó — a "hairline" részlet, ami a
+     nyomdai luxuskiadványokból jön. */
+  .rule-gold {
+    @apply h-px w-full border-0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(var(--gold-500) / 0.55) 22%,
+      oklch(var(--gold-500) / 0.55) 78%,
+      transparent
+    );
+  }
+
+  /* --- Fülsáv ---------------------------------------------------------- */
   .tabbar {
-    @apply flex gap-1 overflow-x-auto border-b border-sand-400
-           [scrollbar-width:none] [-ms-overflow-style:none];
+    @apply flex gap-1 overflow-x-auto border-b border-sand-300
+           [-ms-overflow-style:none] [scrollbar-width:none];
   }
   .tabbar::-webkit-scrollbar {
     display: none;
   }
 
   .tab {
-    @apply shrink-0 inline-flex items-center gap-2 whitespace-nowrap
-           border-b-2 border-transparent px-4 py-3 text-sm font-medium
-           text-ink-600 transition-colors cursor-pointer
-           hover:text-ink-900;
+    @apply inline-flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap
+           border-b-2 border-transparent px-4 py-3 text-sm font-medium text-ink-500
+           transition-colors hover:text-ink-900;
   }
 
   .tab-active {
-    @apply border-wine-600 text-wine-600;
+    @apply border-wine-500 text-wine-600;
   }
 
-  /* --- Olvasható szövegtörzs --- */
+  /* --- Szöveg ---------------------------------------------------------- */
   .prose-body {
     @apply max-w-prose text-base leading-relaxed text-ink-600;
   }
-
   .prose-body p + p {
     @apply mt-4;
   }
 
-  /* Csak képernyőolvasónak */
   .sr-only-focusable:not(:focus):not(:focus-within) {
     @apply sr-only;
   }
 
-  /* --- Luxury Glassmorphism & Custom Scrollbar --- */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(108, 29, 48, 0.2);
-    border-radius: 9999px;
+    background: oklch(var(--wine-500) / 0.28);
+    border-radius: 99px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(108, 29, 48, 0.4);
+    background: oklch(var(--wine-500) / 0.55);
+  }
+}
+
+/* ==========================================================================
+   Segédosztályok — a "luxus" réteg
+   ========================================================================== */
+@layer utilities {
+  /* --- Anyag ----------------------------------------------------------- */
+
+  /* Filmszemcse. Sávosodás ellen és a sík színfelület "olcsó" hatása ellen.
+     Mindig a legfelső, nem interaktív réteg. */
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: theme('backgroundImage.grain');
+    opacity: var(--grain-opacity);
+    mix-blend-mode: overlay;
+    z-index: 40;
   }
 
-  .glass-card {
-    @apply bg-white/80 backdrop-blur-xl border border-sand-300/80 shadow-md hover:shadow-xl transition-all duration-300;
+  /* Aurora: lassan sodródó, erősen elmosott színfoltok. Nem kép, nem videó —
+     három div, GPU-n. */
+  .aurora {
+    position: absolute;
+    inset: -30%;
+    pointer-events: none;
+    filter: blur(90px);
+    opacity: 0.85;
   }
 
-  .glass-hero {
-    @apply relative overflow-hidden bg-gradient-to-br from-wine-950 via-wine-900 to-amber-950 text-white border border-wine-500/30 shadow-2xl backdrop-blur-2xl;
+  /* Mély éjszakai felület (hero, footer) — a noir tokenekre épül, ezért
+     világos témában is sötét marad. Ez a kontraszt adja a "kirakat" hatást. */
+  .surface-noir {
+    background-image: radial-gradient(
+        120% 120% at 12% 0%,
+        oklch(var(--wine-900)) 0%,
+        transparent 55%
+      ),
+      radial-gradient(100% 100% at 100% 100%, oklch(var(--gold-950) / 0.9) 0%, transparent 60%),
+      linear-gradient(160deg, oklch(var(--noir-900)) 0%, oklch(var(--noir-950)) 100%);
+    color: oklch(0.97 0.006 80);
+  }
+  [data-theme='dark'] .surface-noir {
+    background-image: radial-gradient(120% 120% at 12% 0%, oklch(0.24 0.09 14) 0%, transparent 55%),
+      radial-gradient(100% 100% at 100% 100%, oklch(0.2 0.05 78) 0%, transparent 60%),
+      linear-gradient(160deg, oklch(0.135 0.028 20) 0%, oklch(0.095 0.018 22) 100%);
   }
 
-  .glow-gold {
-    box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.35);
+  /* --- Fény ------------------------------------------------------------ */
+
+  /* Kurzort követő fényfolt. A --mx/--my értéket JS írja (lásd lib/motion.js),
+     de az alapérték nélküle is használható marad. */
+  .spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.45s theme('transitionTimingFunction.lux');
+    background: radial-gradient(
+      26rem 26rem at var(--mx) var(--my),
+      oklch(var(--gold-500) / 0.16),
+      transparent 60%
+    );
+  }
+  .spotlight:hover::before {
+    opacity: 1;
   }
 
-  .glow-wine {
-    box-shadow: 0 0 25px -5px rgba(108, 29, 48, 0.4);
+  /* Forgó arany szegélycsillanás. Kétrétegű háttér + mask: a belső felület
+     kitakarja a színátmenet közepét, csak a szegély marad látható. */
+  .sheen-border {
+    position: relative;
+  }
+  .sheen-border::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--angle),
+      transparent 0deg,
+      oklch(var(--gold-500) / 0.85) 40deg,
+      transparent 110deg,
+      transparent 240deg,
+      oklch(var(--wine-500) / 0.7) 300deg,
+      transparent 360deg
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: sheen 6s linear infinite;
+  }
+
+  /* Fényvillanás egy elemen áthaladva (töltő állapotok, "élő" jelzők). */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.28), transparent);
+    animation: shimmer 2.6s ease-in-out infinite;
+  }
+
+  /* --- Tipográfia ------------------------------------------------------ */
+  .text-gold-foil {
+    background-image: linear-gradient(
+      100deg,
+      oklch(var(--gold-700)) 0%,
+      oklch(var(--gold-400)) 28%,
+      oklch(var(--gold-600)) 52%,
+      oklch(var(--gold-300)) 76%,
+      oklch(var(--gold-600)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-ivory-fade {
+    background-image: linear-gradient(
+      170deg,
+      oklch(0.99 0.004 85) 0%,
+      oklch(0.92 0.02 78) 55%,
+      oklch(var(--gold-400) / 0.85) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* --- Mozgás ---------------------------------------------------------- */
+
+  /* Görgetéshez kötött megjelenés — JS és IntersectionObserver NÉLKÜL.
+     Ha a böngésző nem tudja (Safari <26), az elem egyszerűen ott van:
+     ez a progresszív ráépítés helyes iránya, nem fordítva. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal {
+        animation: reveal-up linear both;
+        animation-timeline: view();
+        animation-range: entry 8% cover 30%;
+      }
+      /*
+        Lépcsőzés egy rácson belül.
+
+        Görgetéshez kötött animációnál az animation-delay értelmezhetetlen —
+        nincs idő, csak görgetési pozíció. A késleltetés helyett tehát az
+        egyes elemek ÉRKEZÉSI TARTOMÁNYÁT toljuk el: a rács második eleme
+        valamivel beljebb kezd megjelenni, mint az első. Egy sorban lévő
+        kártyák így is egymás után futnak be, pontosan a görgetés ütemére.
+      */
+      .reveal-stagger > * {
+        animation: reveal-up linear both;
+        animation-timeline: view();
+        animation-range: entry 4% cover 24%;
+      }
+      .reveal-stagger > *:nth-child(3n + 2) {
+        animation-range: entry 4% cover 32%;
+      }
+      .reveal-stagger > *:nth-child(3n + 3) {
+        animation-range: entry 4% cover 40%;
+      }
+    }
+  }
+
+  /* Olvasási haladásjelző a fejlécen — szintén tiszta CSS. */
+  @supports (animation-timeline: scroll()) {
+    .scroll-progress {
+      transform-origin: 0 50%;
+      animation: scaleX linear;
+      animation-timeline: scroll(root block);
+    }
+  }
+  @keyframes scaleX {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 46s linear infinite;
+  }
+  .marquee-mask {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee-mask:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  /* 3D-billenés kártyákon (JS állítja a --rx/--ry értéket). */
+  .tilt {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transform-style: preserve-3d;
+    transition: transform 0.5s theme('transitionTimingFunction.lux');
+  }
+
+  .balance {
+    text-wrap: balance;
+  }
+}
+
+/* ==========================================================================
+   View Transitions
+
+   A témaváltás körkörös feltárulással történik (a kapcsoló gombjából
+   indulva) — lásd useTheme. Az alapértelmezett keresztúsztatást kikapcsoljuk,
+   mert a clip-path animációt a JS teszi rá az ::view-transition-new-re.
+   ========================================================================== */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

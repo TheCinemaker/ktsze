@@ -49,7 +49,10 @@ export default function App() {
       <AuthCallback />
       <Navbar />
 
-      <main id="main" className="flex-1">
+      {/* A fejléc lebeg (fixed), ezért a tartalomnak magának kell helyet hagynia.
+          Ahol a hero szándékosan a navigáció ALÁ fut be, ott a lap egy
+          -mt-[4.75rem] értékkel visszahúzza magát (lásd HomePage). */}
+      <main id="main" className="flex-1 pt-[4.75rem]">
         <Routes>
           {/* Publikus */}
           <Route path="/" element={<HomePage />} />

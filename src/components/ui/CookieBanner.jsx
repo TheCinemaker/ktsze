@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Cookie } from 'lucide-react';
+import { Cookie } from 'lucide-react';
 
 export const CookieBanner = () => {
   const [accepted, setAccepted] = useState(true);
@@ -20,32 +20,35 @@ export const CookieBanner = () => {
   if (accepted) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-md z-40 animate-slide-up">
-      <div className="surface p-5 bg-ink-900 text-sand-100 rounded-2xl shadow-overlay border border-sand-700/30 space-y-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-wine-600 text-white">
+    <div
+      role="region"
+      aria-label="Süti tájékoztató"
+      className="fixed bottom-4 left-4 right-4 z-40 animate-slide-up sm:left-6 sm:right-auto sm:max-w-md"
+    >
+      {/* Éjszakai felület: a sáv így egyértelműen a tartalom FÖLÖTT lebeg,
+          nem pedig annak részeként olvasódik. */}
+      <div className="surface-noir grain relative isolate space-y-4 overflow-hidden rounded-3xl border border-white/10 p-5 shadow-overlay">
+        <div className="flex items-start gap-3.5">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-champagne-500/25 bg-champagne-500/[0.12] text-champagne-400">
             <Cookie className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div className="space-y-1">
-            <h3 className="font-display text-sm font-bold text-white">Sütik &amp; Adatvédelem</h3>
-            <p className="text-xs text-sand-300 leading-relaxed">
-              Az oldal kizárólag technikai szempontból elengedhetetlen sütiket (bejelentkezési munkamenet) használ. Reklám- vagy nyomkövető sütiket nem alkalmazunk.
+          </span>
+          <div className="space-y-1.5">
+            <h2 className="font-display text-base text-ivory-100">Sütik és adatvédelem</h2>
+            <p className="text-xs leading-relaxed text-ivory-400">
+              Az oldal kizárólag technikai szempontból elengedhetetlen sütiket (bejelentkezési
+              munkamenet, téma beállítás) használ. Reklám- vagy nyomkövető sütiket nem alkalmazunk.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2 border-t border-sand-800">
+        <div className="flex items-center justify-end gap-4 border-t border-white/10 pt-3.5">
           <Link
             to="/adatvedelem"
-            className="text-xs text-sand-300 underline underline-offset-2 hover:text-white transition-colors"
+            className="text-xs text-ivory-400 underline decoration-champagne-500/40 underline-offset-4 transition-colors hover:text-champagne-400"
           >
             Tájékoztató
           </Link>
-          <button
-            type="button"
-            onClick={handleAccept}
-            className="btn-primary btn-sm py-1.5 px-4 text-xs font-semibold"
-          >
+          <button type="button" onClick={handleAccept} className="btn-gold btn-sm">
             Rendben, elfogadom
           </button>
         </div>

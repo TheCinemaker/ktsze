@@ -89,7 +89,7 @@ const NewsModal = ({ item, open, onClose, onSaved }) => {
             Mégsem
           </button>
           <button type="button" className="btn-primary" onClick={handleSave} disabled={pending}>
-            {pending ? <Spinner label="Mentés…" className="text-white" /> : 'Mentés'}
+            {pending ? <Spinner label="Mentés…" className="text-current" /> : 'Mentés'}
           </button>
         </>
       }
@@ -235,7 +235,7 @@ export const NewsEditor = () => {
           }
         />
       ) : (
-        <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-white">
+        <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-paper">
           {items.map((item) => (
             <li key={item.id} className="flex flex-wrap items-start justify-between gap-4 p-4 sm:p-5">
               <div className="min-w-0 flex-1">

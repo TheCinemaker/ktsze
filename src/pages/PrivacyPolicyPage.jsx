@@ -130,21 +130,21 @@ export const PrivacyPolicyPage = () => {
               Az Egyesület a Platform biztonságos üzemeltetéséhez az alábbi minősített adatfeldolgozókat veszi igénybe. Minden partner megfelel a GDPR szigorú követelményeinek:
             </p>
             <div className="space-y-3 pt-2">
-              <div className="p-4 rounded-xl border border-sand-300 bg-white">
+              <div className="p-4 rounded-xl border border-sand-300 bg-paper">
                 <h3 className="font-bold text-ink-900 text-sm">1. Supabase Inc. (Adatbázis, Autentikáció &amp; Felhő Tárhely)</h3>
                 <p className="text-xs text-ink-600 mt-1">
                   Szolgáltatás: Felhőalapú PostgreSQL adatbázis, jelszó-hashing és zárt dokumentumtároló (EU Frankfurt régió / SOC2 Type 2 tanúsítvány).
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl border border-sand-300 bg-white">
+              <div className="p-4 rounded-xl border border-sand-300 bg-paper">
                 <h3 className="font-bold text-ink-900 text-sm">2. Netlify Inc. (Weboldal tárhely &amp; CDN hálózat)</h3>
                 <p className="text-xs text-ink-600 mt-1">
                   Szolgáltatás: Globális biztonságos webszerver hálózat, HTTPS SSL titkosítás.
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl border border-sand-300 bg-white">
+              <div className="p-4 rounded-xl border border-sand-300 bg-paper">
                 <h3 className="font-bold text-ink-900 text-sm">3. SA Software &amp; Network Solutions (Informatikai Rendszergazda)</h3>
                 <p className="text-xs text-ink-600 mt-1">
                   Képviselő: Avar Szilveszter | Szolgáltatás: Rendszerfejlesztés, technikai karbantartás és üzemeltetési SLA felügyelet.

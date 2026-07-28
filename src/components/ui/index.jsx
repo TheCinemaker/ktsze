@@ -26,12 +26,12 @@ export const LoadingBlock = ({ label = 'Betöltés…' }) => (
 );
 
 export const ErrorBlock = ({ message, onRetry }) => (
-  <div className="card border-wine-300 bg-wine-50 p-5" role="alert">
-    <div className="flex items-start gap-3">
-      <AlertTriangle className="w-5 h-5 text-wine-600 shrink-0 mt-0.5" aria-hidden="true" />
-      <div className="flex-1 min-w-0 space-y-2">
+  <div className="card border-wine-300/60 bg-wine-50 p-6" role="alert">
+    <div className="flex items-start gap-3.5">
+      <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-wine-600" aria-hidden="true" />
+      <div className="min-w-0 flex-1 space-y-2">
         <h3 className="font-display text-lg text-ink-900">Nem sikerült betölteni</h3>
-        <p className="text-sm text-ink-600 break-words">{message}</p>
+        <p className="break-words text-sm text-ink-600">{message}</p>
         {onRetry && (
           <button type="button" onClick={onRetry} className="btn-secondary btn-sm">
             Újrapróbálom
@@ -47,11 +47,23 @@ export const ErrorBlock = ({ message, onRetry }) => (
  * NEM kitalált példatartalmat.
  */
 export const EmptyState = ({ icon: Icon = Inbox, title, description, action }) => (
-  <div className="rounded-xl border border-dashed border-sand-400 bg-sand-50 px-6 py-12 text-center">
-    <Icon className="mx-auto mb-3 h-7 w-7 text-sand-500" aria-hidden="true" />
-    <h3 className="font-display text-lg text-ink-900">{title}</h3>
-    {description && <p className="mx-auto mt-1.5 max-w-md text-sm text-ink-600">{description}</p>}
-    {action && <div className="mt-5 flex justify-center">{action}</div>}
+  <div className="relative overflow-hidden rounded-3xl border border-dashed border-sand-400 bg-sand-50 px-6 py-16 text-center">
+    {/* Halvány sugaras derengés: az üres állapot is legyen szándékos felület,
+        ne pedig „elfelejtett" doboz. */}
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_0%,oklch(var(--gold-500)/0.07),transparent_70%)]"
+    />
+    <div className="relative">
+      <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl border border-sand-300 bg-sand-100 text-sand-600">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <h3 className="font-display text-xl text-ink-900">{title}</h3>
+      {description && (
+        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-500">{description}</p>
+      )}
+      {action && <div className="mt-6 flex justify-center">{action}</div>}
+    </div>
   </div>
 );
 
@@ -228,7 +240,7 @@ export const Modal = ({ open, onClose, title, description, children, footer, siz
         type="button"
         aria-label="Bezárás"
         onClick={onClose}
-        className="fixed inset-0 h-full w-full cursor-default border-0 bg-ink-900/45 backdrop-blur-sm"
+        className="fixed inset-0 h-full w-full cursor-default border-0 bg-scrim/55 backdrop-blur-md"
         tabIndex={-1}
       />
 
@@ -241,29 +253,34 @@ export const Modal = ({ open, onClose, title, description, children, footer, siz
           aria-labelledby={titleId}
           tabIndex={-1}
           onKeyDown={handleKeyDown}
-          className={`card w-full ${widths[size]} animate-slide-up shadow-overlay`}
+          className={`card w-full ${widths[size]} animate-slide-up overflow-hidden rounded-3xl shadow-overlay`}
         >
-          <div className="flex items-start justify-between gap-4 border-b border-sand-400 px-5 py-4">
+          {/* Arany hajszálvonal a panel tetején — a párbeszédpanel is „tárgy",
+              nem csak egy lebegő doboz. */}
+          <div aria-hidden="true" className="rule-gold" />
+
+          <div className="flex items-start justify-between gap-4 border-b border-sand-300 px-6 py-5">
             <div className="min-w-0">
               <h2 id={titleId} className="font-display text-xl text-ink-900">
                 {title}
               </h2>
-              {description && <p className="mt-1 text-sm text-ink-600">{description}</p>}
+              {description && <p className="mt-1 text-sm text-ink-500">{description}</p>}
             </div>
             <button
               type="button"
               onClick={onClose}
               aria-label="Bezárás"
-              className="-m-1 shrink-0 cursor-pointer rounded border-0 bg-transparent p-1 text-ink-400 transition-colors hover:text-wine-600"
+              className="-m-1 grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full border-0
+                         bg-transparent text-ink-400 transition-colors hover:bg-sand-200 hover:text-wine-600"
             >
-              <X className="h-5 w-5" aria-hidden="true" />
+              <X className="h-[1.05rem] w-[1.05rem]" aria-hidden="true" />
             </button>
           </div>
 
-          <div className="px-5 py-5">{children}</div>
+          <div className="px-6 py-6">{children}</div>
 
           {footer && (
-            <div className="flex flex-wrap justify-end gap-2 border-t border-sand-400 bg-sand-50 px-5 py-4">
+            <div className="flex flex-wrap justify-end gap-2 border-t border-sand-300 bg-sand-50 px-6 py-4">
               {footer}
             </div>
           )}
@@ -286,7 +303,7 @@ export const ConfirmDialog = ({ open, onClose, onConfirm, title, message, confir
           Mégsem
         </button>
         <button type="button" className="btn-primary" onClick={onConfirm} disabled={pending}>
-          {pending ? <Spinner label="Folyamatban…" className="text-white" /> : confirmLabel}
+          {pending ? <Spinner label="Folyamatban…" className="text-current" /> : confirmLabel}
         </button>
       </>
     }
@@ -301,18 +318,57 @@ export const ConfirmDialog = ({ open, onClose, onConfirm, title, message, confir
 
 export const PageHeader = ({ eyebrow, title, description, actions, centered = false }) => (
   <div
-    className={`space-y-3 ${centered ? 'mx-auto max-w-3xl text-center' : 'flex flex-col gap-4 md:flex-row md:items-end md:justify-between'}`}
+    className={
+      centered
+        ? 'mx-auto max-w-3xl text-center'
+        : 'flex flex-col gap-6 md:flex-row md:items-end md:justify-between'
+    }
   >
-    <div className="space-y-2.5">
-      {eyebrow && <div className="eyebrow">{eyebrow}</div>}
-      <h1 className="font-display text-3xl text-ink-900 sm:text-4xl">{title}</h1>
+    <div className="min-w-0">
+      {eyebrow && (
+        <div className={`eyebrow ${centered ? 'justify-center' : ''}`}>
+          <span className="h-px w-6 bg-gold-500/60" />
+          {eyebrow}
+        </div>
+      )}
+      <h1 className="mt-4 font-display text-4xl leading-[1.06] text-ink-900">{title}</h1>
       {description && (
-        <p className={`text-base text-ink-600 ${centered ? 'mx-auto max-w-prose' : 'max-w-prose'}`}>
+        <p
+          className={`mt-4 text-base leading-relaxed text-ink-500 ${centered ? 'mx-auto max-w-prose' : 'max-w-prose'}`}
+        >
           {description}
         </p>
       )}
     </div>
-    {actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}
+    {actions && (
+      <div className={`flex shrink-0 flex-wrap gap-2 ${centered ? 'mt-6 justify-center' : ''}`}>
+        {actions}
+      </div>
+    )}
+  </div>
+);
+
+/**
+ * Szekciócím a nyilvános oldalakon.
+ *
+ * A sorszám (01, 02, …) nem dekoráció: végigviszi a szemet a lapon, és
+ * megmutatja, hogy a szakaszok egy szerkesztett sorrend részei, nem
+ * egymás alá dobált dobozok.
+ */
+export const SectionHeading = ({ index, eyebrow, title, description, action }) => (
+  <div className="reveal flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+    <div className="min-w-0">
+      <div className="eyebrow">
+        {index && <span className="font-mono text-gold-600">{index}</span>}
+        <span className="h-px w-6 bg-gold-500/60" />
+        {eyebrow}
+      </div>
+      <h2 className="mt-4 font-display text-4xl leading-[1.06] text-ink-900">{title}</h2>
+      {description && (
+        <p className="mt-4 max-w-prose text-base leading-relaxed text-ink-500">{description}</p>
+      )}
+    </div>
+    {action && <div className="flex shrink-0 flex-wrap gap-2">{action}</div>}
   </div>
 );
 

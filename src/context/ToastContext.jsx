@@ -108,7 +108,7 @@ const ToastViewport = ({ toasts, dismiss }) => (
         <div
           key={t.id}
           role={t.variant === 'error' ? 'alert' : 'status'}
-          className={`pointer-events-auto flex items-stretch overflow-hidden rounded-xl border bg-white shadow-overlay animate-slide-up ${variant.border}`}
+          className={`pointer-events-auto flex items-stretch overflow-hidden rounded-xl border bg-paper shadow-overlay animate-slide-up ${variant.border}`}
         >
           <div className={`w-1 shrink-0 ${variant.accent}`} aria-hidden="true" />
 

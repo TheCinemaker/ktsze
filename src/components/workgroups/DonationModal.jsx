@@ -68,7 +68,7 @@ export const DonationModal = ({ open, onClose, workgroup, onSuccess, defaultDono
     >
       {successResult ? (
         <div className="py-6 text-center space-y-4 animate-slide-up">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-inner">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-jade-100 text-jade-600 shadow-inner">
             <CheckCircle2 className="h-10 w-10" />
           </div>
           <div className="space-y-1">
@@ -112,7 +112,7 @@ export const DonationModal = ({ open, onClose, workgroup, onSuccess, defaultDono
                   className={`py-2.5 px-3 rounded-xl border text-sm font-bold transition-all ${
                     !customAmount && amount === val
                       ? 'border-wine-600 bg-wine-50 text-wine-800 shadow-sm ring-2 ring-wine-200'
-                      : 'border-sand-300 bg-white text-ink-700 hover:border-wine-400'
+                      : 'border-sand-300 bg-paper text-ink-700 hover:border-wine-400'
                   }`}
                 >
                   {formatHuf(val)}
@@ -176,10 +176,10 @@ export const DonationModal = ({ open, onClose, workgroup, onSuccess, defaultDono
             <button
               type="submit"
               disabled={pending}
-              className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg"
+              className="btn-jade btn-lg w-full shadow-lg"
             >
               {pending ? (
-                <Spinner label="Barion Sandbox csatlakozás…" className="text-white" />
+                <Spinner label="Barion Sandbox csatlakozás…" className="text-current" />
               ) : (
                 <>
                   <CreditCard className="h-5 w-5" />
@@ -188,7 +188,7 @@ export const DonationModal = ({ open, onClose, workgroup, onSuccess, defaultDono
               )}
             </button>
             <p className="mt-2 text-center text-[11px] text-ink-500 flex items-center justify-center gap-1">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+              <ShieldCheck className="h-3.5 w-3.5 text-jade-600" />
               Biztonságos Barion Smart Gateway tesztkörnyezet (Apple Pay &amp; Bankkártya)
             </p>
           </div>

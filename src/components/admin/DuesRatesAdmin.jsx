@@ -62,7 +62,7 @@ const RateModal = ({ open, onClose, onSaved }) => {
             Mégsem
           </button>
           <button type="button" className="btn-primary" onClick={handleSave} disabled={pending}>
-            {pending ? <Spinner label="Mentés…" className="text-white" /> : 'Mentés'}
+            {pending ? <Spinner label="Mentés…" className="text-current" /> : 'Mentés'}
           </button>
         </>
       }
@@ -150,7 +150,7 @@ export const DuesRatesAdmin = () => {
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-sand-400 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-sand-400 bg-paper">
           <table className="w-full min-w-[36rem] border-collapse text-sm">
             <caption className="sr-only">Tagdíjtételek</caption>
             <thead className="bg-sand-50">

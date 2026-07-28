@@ -47,7 +47,7 @@ export const MyWorkgroups = () => {
 
   return (
     <div className="space-y-5">
-      <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-white">
+      <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-paper">
         {memberships.map((membership) => {
           const group = membership.workgroups;
           const status = STATUS[membership.status] || STATUS.pending;

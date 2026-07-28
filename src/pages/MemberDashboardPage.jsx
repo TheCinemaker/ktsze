@@ -49,7 +49,7 @@ export const MemberDashboardPage = () => {
           </p>
 
           {profileError && (
-            <p className="mt-3 rounded-lg border border-sand-400 bg-white p-3 font-mono text-xs text-ink-800">
+            <p className="mt-3 rounded-lg border border-sand-400 bg-paper p-3 font-mono text-xs text-ink-800">
               {profileError}
             </p>
           )}

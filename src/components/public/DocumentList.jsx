@@ -41,7 +41,7 @@ export const DocumentList = ({ documents, showAccessLevel = false, emptyState })
   };
 
   return (
-    <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-white">
+    <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-paper">
       {documents.map((doc) => {
         const size = formatFileSize(doc.file_size);
         const hasFile = Boolean(doc.storage_path || doc.drive_url);

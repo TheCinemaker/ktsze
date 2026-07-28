@@ -104,7 +104,7 @@ const UploadModal = ({ open, onClose, onSaved }) => {
             Mégsem
           </button>
           <button type="button" className="btn-primary" onClick={handleSave} disabled={pending}>
-            {pending ? <Spinner label="Feltöltés…" className="text-white" /> : 'Feltöltés'}
+            {pending ? <Spinner label="Feltöltés…" className="text-current" /> : 'Feltöltés'}
           </button>
         </>
       }
@@ -210,7 +210,7 @@ export const DocumentAdmin = () => {
           }
         />
       ) : (
-        <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-white">
+        <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-paper">
           {documents.map((doc) => (
             <li key={doc.id} className="flex flex-wrap items-start justify-between gap-4 p-4 sm:p-5">
               <div className="min-w-0 flex-1">

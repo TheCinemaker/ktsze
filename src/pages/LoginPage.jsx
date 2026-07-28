@@ -99,7 +99,7 @@ const LoginForm = ({ onSwitch }) => {
       />
 
       <button type="submit" disabled={pending} className="btn-primary w-full">
-        {pending ? <Spinner label="Belépés…" className="text-white" /> : (
+        {pending ? <Spinner label="Belépés…" className="text-current" /> : (
           <>
             <LogIn className="h-4 w-4" aria-hidden="true" />
             Belépés
@@ -261,7 +261,7 @@ const RegisterForm = ({ onSwitch, onNeedsConfirmation }) => {
       </p>
 
       <button type="submit" disabled={pending} className="btn-primary w-full">
-        {pending ? <Spinner label="Fiók létrehozása…" className="text-white" /> : (
+        {pending ? <Spinner label="Fiók létrehozása…" className="text-current" /> : (
           <>
             <UserPlus className="h-4 w-4" aria-hidden="true" />
             Fiók létrehozása
@@ -340,7 +340,7 @@ const SetNewPasswordForm = () => {
       />
 
       <button type="submit" disabled={pending} className="btn-primary w-full">
-        {pending ? <Spinner label="Mentés…" className="text-white" /> : (
+        {pending ? <Spinner label="Mentés…" className="text-current" /> : (
           <>
             <KeyRound className="h-4 w-4" aria-hidden="true" />
             Új jelszó mentése
@@ -422,7 +422,7 @@ export const LoginPage = () => {
                   type="button"
                   onClick={() => setMode('login')}
                   aria-current={mode === 'login'}
-                  className={`tab flex-1 justify-center ${mode === 'login' ? 'tab-active bg-white' : ''}`}
+                  className={`tab flex-1 justify-center ${mode === 'login' ? 'tab-active bg-paper' : ''}`}
                 >
                   <LogIn className="h-4 w-4" aria-hidden="true" />
                   Belépés
@@ -431,7 +431,7 @@ export const LoginPage = () => {
                   type="button"
                   onClick={() => setMode('register')}
                   aria-current={mode === 'register'}
-                  className={`tab flex-1 justify-center ${mode === 'register' ? 'tab-active bg-white' : ''}`}
+                  className={`tab flex-1 justify-center ${mode === 'register' ? 'tab-active bg-paper' : ''}`}
                 >
                   <UserPlus className="h-4 w-4" aria-hidden="true" />
                   Regisztráció

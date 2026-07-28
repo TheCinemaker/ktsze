@@ -46,7 +46,7 @@ const WorkgroupModal = ({ workgroup, open, onClose, onSaved }) => {
             Mégsem
           </button>
           <button type="button" className="btn-primary" onClick={handleSave} disabled={pending}>
-            {pending ? <Spinner label="Mentés…" className="text-white" /> : 'Mentés'}
+            {pending ? <Spinner label="Mentés…" className="text-current" /> : 'Mentés'}
           </button>
         </>
       }

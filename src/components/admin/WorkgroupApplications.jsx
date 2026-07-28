@@ -58,7 +58,7 @@ const RejectModal = ({ membership, open, onClose, onDone }) => {
               }
             }}
           >
-            {pending ? <Spinner label="Mentés…" className="text-white" /> : 'Elutasítom'}
+            {pending ? <Spinner label="Mentés…" className="text-current" /> : 'Elutasítom'}
           </button>
         </>
       }
@@ -179,7 +179,7 @@ export const WorkgroupApplications = () => {
           }
         />
       ) : (
-        <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-white">
+        <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-paper">
           {visible.map((m) => {
             const badge = STATUS_BADGE[m.status] || STATUS_BADGE.pending;
             const person = m.profiles;

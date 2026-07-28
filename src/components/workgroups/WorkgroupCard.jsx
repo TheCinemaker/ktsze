@@ -1,15 +1,102 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, ArrowRight, Heart, Sparkles } from 'lucide-react';
+import { Users, ArrowUpRight, Heart, Sparkles } from 'lucide-react';
 import { JoinWorkgroupButton } from './JoinWorkgroupButton';
 import { DonationModal } from './DonationModal';
 import { FormattedText } from '../ui';
 import { getWorkgroupDonationStats, fetchWorkgroupDonationStats } from '../../lib/barion';
 import { formatHuf } from '../../lib/format';
 import { supabase } from '../../lib/supabaseClient';
+import { useSpotlight } from '../../lib/motion';
+
+/* ---------------------------------------------------------------------------
+   Támogatottsági mérő
+
+   A százalék a sáv FÖLÖTT áll, nagy, tabuláris számként — a haladás így egy
+   pillantásra leolvasható, nem kell a sáv hosszát szemmel becsülni. A vékony
+   sáv csak megerősíti, amit a szám már elmondott.
+   --------------------------------------------------------------------------- */
+const DonationMeter = ({ stats, goal, onDonate }) => {
+  const complete = stats.percentage >= 100;
+
+  return (
+    <div
+      className={`shrink-0 space-y-3 rounded-2xl border p-4 transition-colors duration-500 ${
+        complete ? 'border-jade-400/50 bg-jade-50' : 'border-sand-300 bg-sand-50'
+      }`}
+    >
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.16em] text-ink-400">
+            <Heart
+              className={`h-3 w-3 ${complete ? 'fill-jade-500 text-jade-500' : 'fill-wine-500 text-wine-500'}`}
+              aria-hidden="true"
+            />
+            Támogatás
+          </div>
+          <div className="mt-1 truncate font-mono text-xs text-ink-600">
+            {formatHuf(stats.currentAmount)}
+            <span className="text-ink-300"> / </span>
+            {formatHuf(stats.targetAmount)}
+          </div>
+        </div>
+
+        <div
+          className={`shrink-0 font-display text-2xl font-semibold tabular-nums ${
+            complete ? 'text-jade-600' : 'text-wine-600'
+          }`}
+        >
+          {stats.percentage}
+          <span className="text-base text-ink-300">%</span>
+        </div>
+      </div>
+
+      <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-sand-300">
+        <div
+          className={`h-full rounded-full transition-[width] duration-1000 ease-lux ${
+            complete
+              ? 'bg-gradient-to-r from-jade-600 to-jade-400'
+              : 'bg-gradient-to-r from-wine-600 via-wine-500 to-gold-500'
+          }`}
+          style={{ width: `${Math.min(stats.percentage, 100)}%` }}
+        />
+      </div>
+
+      {complete && (
+        <div className="flex items-center gap-2 rounded-xl bg-jade-500/15 px-3 py-1.5 text-xs font-medium text-jade-700">
+          <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span className="truncate">A cél teljesítve, köszönjük a támogatást!</span>
+        </div>
+      )}
+
+      {goal && (
+        <p className="custom-scrollbar max-h-10 overflow-y-auto pr-1 text-xs leading-snug text-ink-500">
+          <span className="font-medium text-ink-700">Cél:</span> {goal}
+        </p>
+      )}
+
+      <div className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={onDonate}
+          className={`btn btn-sm rounded-full border-transparent font-medium transition-all duration-300 ${
+            complete
+              ? 'bg-jade-500/15 text-jade-700 hover:bg-jade-500/25'
+              : 'bg-wine-500/12 text-wine-600 hover:bg-wine-500/25'
+          }`}
+        >
+          <Heart className="h-3 w-3 fill-current" aria-hidden="true" />
+          {complete ? 'További támogatás' : 'Támogatom'}
+        </button>
+        <span className="font-mono text-2xs uppercase tracking-[0.14em] text-ink-300">Barion</span>
+      </div>
+    </div>
+  );
+};
 
 export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
   const [donationOpen, setDonationOpen] = useState(false);
+  const spotlightRef = useSpotlight();
   const isCrowdfundingEnabled = Boolean(workgroup.enable_crowdfunding);
   const [donationStats, setDonationStats] = useState(() =>
     isCrowdfundingEnabled ? getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000) : null
@@ -21,9 +108,9 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
     setDonationStats(fresh);
   }, [workgroup.id, workgroup.target_amount, isCrowdfundingEnabled]);
 
-  // Realtime Supabase Adatbázis Feliratkozás (Élő frissítés!)
+  // Realtime Supabase feliratkozás — a támogatottság magától frissül.
   useEffect(() => {
-    if (!isCrowdfundingEnabled) return;
+    if (!isCrowdfundingEnabled) return undefined;
     reloadDonationStats();
 
     const channel = supabase
@@ -36,9 +123,7 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
           table: 'workgroup_donations',
           filter: `workgroup_id=eq.${workgroup.id}`
         },
-        () => {
-          reloadDonationStats();
-        }
+        () => reloadDonationStats()
       )
       .subscribe();
 
@@ -55,114 +140,81 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
   };
 
   return (
-    <article className="card-hover flex flex-col justify-between p-6 h-[540px] rounded-2xl border border-sand-300 bg-white shadow-sm transition-all overflow-hidden">
-      {/* 1. Fejléc és Leírás Zóna (rugalmas magasságú, ha hosszú akkor görgethető) */}
-      <div className="flex-1 flex flex-col min-h-0 space-y-2 overflow-hidden">
-        <div className="flex items-start justify-between gap-3 shrink-0">
-          <div className="rounded-lg bg-wine-50 p-2">
-            <Users className="h-5 w-5 text-wine-600" aria-hidden="true" />
-          </div>
+    <article
+      ref={spotlightRef}
+      className="card-hover spotlight group relative flex h-[560px] flex-col overflow-hidden p-6"
+    >
+      {/* A kártya „megvilágított" felső éle — halk derengés, ami mélységet ad. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(70%_100%_at_50%_0%,oklch(var(--wine-500)/0.07),transparent_75%)]"
+      />
+
+      {/* 1. Fejléc és leírás */}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <div className="flex shrink-0 items-start justify-between gap-3">
+          <span
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-sand-300 bg-sand-100
+                       text-wine-600 transition-colors duration-500 group-hover:border-gold-400/50 group-hover:bg-wine-50"
+          >
+            <Users className="h-5 w-5" aria-hidden="true" />
+          </span>
+
           {memberCount > 0 && (
-            <span className="badge-neutral shrink-0">
-              {memberCount} {memberCount === 1 ? 'tag' : 'tag'}
+            <span className="badge-neutral shrink-0 font-mono text-2xs tracking-[0.12em]">
+              {memberCount} tag
             </span>
           )}
         </div>
 
-        <div className="shrink-0">
-          <h3 className="font-display text-lg sm:text-xl text-ink-900 line-clamp-1">
-            <Link to={`/munkacsoportok/${workgroup.slug}`} className="rounded transition-colors hover:text-wine-600">
+        <div className="mt-4 shrink-0">
+          <h3 className="line-clamp-1 font-display text-xl leading-snug text-ink-900">
+            <Link
+              to={`/munkacsoportok/${workgroup.slug}`}
+              className="transition-colors hover:text-wine-600"
+            >
               {workgroup.name}
             </Link>
           </h3>
 
           {workgroup.leader_name && (
-            <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-wine-600">
-              Vezető: {workgroup.leader_name}
+            <p className="mt-1.5 font-mono text-2xs uppercase tracking-[0.16em] text-wine-600">
+              Vezető · {workgroup.leader_name}
             </p>
           )}
         </div>
 
-        {/* Görgethető Leírás Szövegdoboz */}
+        <div aria-hidden="true" className="rule-gold my-4 shrink-0 opacity-60" />
+
         {workgroup.description ? (
-          <div className="flex-1 overflow-y-auto pr-1 text-sm text-ink-600 leading-relaxed custom-scrollbar">
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto pr-2 text-sm leading-relaxed text-ink-500">
             <FormattedText>{workgroup.description}</FormattedText>
           </div>
         ) : (
-          <div className="flex-1 text-xs italic text-ink-400">Nincs leírás megadva.</div>
+          <div className="min-h-0 flex-1 text-sm italic text-ink-300">Nincs leírás megadva.</div>
         )}
       </div>
 
-      {/* 2. Barion Közösségi Finanszírozási Zóna (Fix elrendezésű csempe) */}
-      {isCrowdfundingEnabled && donationStats ? (
-        <div className={`shrink-0 my-3 p-3.5 rounded-xl border space-y-2 transition-all ${
-          donationStats.percentage >= 100
-            ? 'bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-200'
-            : 'bg-sand-100 border-sand-300'
-        }`}>
-          <div className="flex items-center justify-between text-xs font-medium text-ink-700">
-            <span className="flex items-center gap-1 text-wine-700 font-bold">
-              <Heart className="h-3.5 w-3.5 fill-wine-600 text-wine-600" />
-              Projekt támogatás:
-            </span>
-            <span className={`font-mono font-bold ${donationStats.percentage >= 100 ? 'text-emerald-800' : 'text-ink-900'}`}>
-              {formatHuf(donationStats.currentAmount)} / {formatHuf(donationStats.targetAmount)} ({donationStats.percentage}%)
-            </span>
-          </div>
-
-          {/* Siker Jelzés ha elértük a 100%-ot! */}
-          {donationStats.percentage >= 100 && (
-            <div className="flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow-sm">
-              <Sparkles className="h-3.5 w-3.5 animate-pulse shrink-0" />
-              <span className="truncate">🎉 A cél teljesítve, köszönjük a támogatást!</span>
-            </div>
-          )}
-
-          {/* Mire fordítjuk az összeget — max 2 soros görgethető leírás */}
-          {workgroup.campaign_goal && (
-            <p className="text-[11px] font-medium text-ink-700 leading-snug max-h-10 overflow-y-auto pr-1 custom-scrollbar">
-              <strong>Cél:</strong> {workgroup.campaign_goal}
-            </p>
-          )}
-
-          <div className="h-2.5 w-full rounded-full bg-sand-300 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                donationStats.percentage >= 100
-                  ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 shadow-md'
-                  : 'bg-gradient-to-r from-wine-600 to-emerald-500'
-              }`}
-              style={{ width: `${donationStats.percentage}%` }}
-            />
-          </div>
-
-          <div className="pt-0.5 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => setDonationOpen(true)}
-              className={`btn-secondary btn-sm py-1 px-2.5 text-xs font-bold flex items-center gap-1 ${
-                donationStats.percentage >= 100
-                  ? 'text-emerald-800 border-emerald-400 bg-white hover:bg-emerald-100'
-                  : 'text-emerald-700 border-emerald-300 hover:bg-emerald-50'
-              }`}
-            >
-              <Heart className="h-3 w-3 text-emerald-600 fill-emerald-600" />
-              {donationStats.percentage >= 100 ? 'További támogatás' : 'Támogatom'}
-            </button>
-            <span className="text-[10px] text-ink-500">Barion Sandbox</span>
-          </div>
+      {/* 2. Közösségi finanszírozás */}
+      {isCrowdfundingEnabled && donationStats && (
+        <div className="relative mt-4">
+          <DonationMeter
+            stats={donationStats}
+            goal={workgroup.campaign_goal}
+            onDonate={() => setDonationOpen(true)}
+          />
         </div>
-      ) : null}
+      )}
 
-      {/* 3. Görgethető Hírek / Frissítések Zóna */}
+      {/* 3. Frissítések */}
       {workgroup.latest_updates && (
-        <div className="shrink-0 max-h-16 overflow-y-auto pr-1 custom-scrollbar border-t border-sand-300 pt-2 text-xs text-ink-500">
+        <div className="custom-scrollbar relative mt-4 max-h-14 shrink-0 overflow-y-auto border-t border-sand-300 pt-3 text-xs leading-relaxed text-ink-400">
           <FormattedText>{workgroup.latest_updates}</FormattedText>
         </div>
       )}
 
-      {/* 4. Alsó Akciók Zóna */}
-      <div className="shrink-0 border-t border-sand-300 pt-3 flex items-center justify-between gap-3">
+      {/* 4. Akciók */}
+      <div className="relative mt-4 flex shrink-0 items-center justify-between gap-3 border-t border-sand-300 pt-4">
         <JoinWorkgroupButton
           workgroup={workgroup}
           membership={membership}
@@ -172,10 +224,13 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
 
         <Link
           to={`/munkacsoportok/${workgroup.slug}`}
-          className="inline-flex items-center gap-1 rounded text-xs font-bold text-wine-600 hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-wine-600 transition-colors hover:text-wine-500"
         >
           Részletek
-          <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          <ArrowUpRight
+            className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
         </Link>
       </div>
 

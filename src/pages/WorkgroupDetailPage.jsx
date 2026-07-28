@@ -113,7 +113,7 @@ export const WorkgroupDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setDonationOpen(true)}
-                  className="btn-primary py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2"
+                  className="btn-jade"
                 >
                   <Heart className="h-4 w-4 fill-white" />
                   Támogatom a projektet
@@ -160,26 +160,26 @@ export const WorkgroupDetailPage = () => {
           {/* Barion Közösségi Finanszírozás Kártya — csak ha be van kapcsolva */}
           {isCrowdfundingEnabled && donationStats && (
             <div className={`surface p-5 border-l-4 space-y-4 ${
-              donationStats.percentage >= 100 ? 'border-l-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-300' : 'border-l-emerald-500'
+              donationStats.percentage >= 100 ? 'border-l-jade-600 bg-jade-50/40 ring-1 ring-jade-300' : 'border-l-jade-500'
             }`}>
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-base font-bold text-ink-900 flex items-center gap-1.5">
-                  <Sparkles className="h-4 w-4 text-emerald-600" />
+                  <Sparkles className="h-4 w-4 text-jade-600" />
                   Közösségi Finanszírozás
                 </h2>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-jade-700 bg-jade-100 px-2 py-0.5 rounded-md">
                   Barion Sandbox
                 </span>
               </div>
 
               {/* 100% SIKERES GYŰJTÉS BANNER */}
               {donationStats.percentage >= 100 && (
-                <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white space-y-1 shadow-md animate-fade-in">
+                <div className="p-3 rounded-xl bg-gradient-to-r from-jade-600 to-jade-500 text-white space-y-1 shadow-md animate-fade-in">
                   <div className="flex items-center gap-1.5 font-bold text-sm">
                     <Sparkles className="h-4 w-4 animate-bounce shrink-0" />
                     <span>🎉 A cél teljesítve, köszönjük a támogatást!</span>
                   </div>
-                  <p className="text-xs text-emerald-100 leading-snug">
+                  <p className="text-xs text-jade-100 leading-snug">
                     A kitűzött célösszeget elértük! Köszönjük a közösség összefogását és minden támogatónknak!
                   </p>
                 </div>
@@ -198,14 +198,14 @@ export const WorkgroupDetailPage = () => {
                 </div>
                 <div className="flex justify-between text-xs font-medium text-ink-700">
                   <span>Összegyűlt:</span>
-                  <span className="font-bold text-emerald-700">{formatHuf(donationStats.currentAmount)} ({donationStats.percentage}%)</span>
+                  <span className="font-bold text-jade-700">{formatHuf(donationStats.currentAmount)} ({donationStats.percentage}%)</span>
                 </div>
                 <div className="h-3 w-full rounded-full bg-sand-200 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       donationStats.percentage >= 100
-                        ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400'
-                        : 'bg-gradient-to-r from-wine-600 via-emerald-500 to-emerald-400'
+                        ? 'bg-gradient-to-r from-jade-600 via-jade-500 to-jade-400'
+                        : 'bg-gradient-to-r from-wine-600 via-jade-500 to-jade-400'
                     }`}
                     style={{ width: `${donationStats.percentage}%` }}
                   />
@@ -215,7 +215,7 @@ export const WorkgroupDetailPage = () => {
               <button
                 type="button"
                 onClick={() => setDonationOpen(true)}
-                className="btn-primary w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md"
+                className="btn-jade w-full shadow-md"
               >
                 <Heart className="h-4 w-4 fill-white" />
                 {donationStats.percentage >= 100 ? 'További támogatás küldése' : 'Támogatom ezt a projektet'}
@@ -228,7 +228,7 @@ export const WorkgroupDetailPage = () => {
                     {donationStats.recentDonations.map((item) => (
                       <li key={item.id} className="flex justify-between items-center py-1 border-b border-sand-200 last:border-0">
                         <span className="font-medium text-ink-800">{item.donorName}</span>
-                        <span className="font-bold text-emerald-700">{formatHuf(item.amount)}</span>
+                        <span className="font-bold text-jade-700">{formatHuf(item.amount)}</span>
                       </li>
                     ))}
                   </ul>

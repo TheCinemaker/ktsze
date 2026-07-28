@@ -99,7 +99,7 @@ const EditMemberModal = ({ member, open, onClose, onSaved }) => {
             Mégsem
           </button>
           <button type="button" className="btn-primary" onClick={handleSave} disabled={pending}>
-            {pending ? <Spinner label="Mentés…" className="text-white" /> : 'Mentés'}
+            {pending ? <Spinner label="Mentés…" className="text-current" /> : 'Mentés'}
           </button>
         </>
       }
@@ -229,7 +229,7 @@ const DuesModal = ({ member, dues, open, onClose, onSaved }) => {
             Mégsem
           </button>
           <button type="button" className="btn-primary" onClick={handleSave} disabled={pending}>
-            {pending ? <Spinner label="Mentés…" className="text-white" /> : 'Mentés'}
+            {pending ? <Spinner label="Mentés…" className="text-current" /> : 'Mentés'}
           </button>
         </>
       }
@@ -391,7 +391,7 @@ export const MemberManagement = () => {
       ) : filtered.length === 0 ? (
         <EmptyState icon={Search} title="Nincs találat" description="Próbálj más keresőszót." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-sand-400 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-sand-400 bg-paper">
           <table className="w-full min-w-[64rem] border-collapse text-sm">
             <caption className="sr-only">Tagnyilvántartás</caption>
             <thead className="bg-sand-50">

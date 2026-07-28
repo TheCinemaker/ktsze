@@ -154,7 +154,7 @@ export const ProfileForm = () => {
 
       <button type="submit" disabled={pending} className="btn-primary">
         {pending ? (
-          <Spinner label="Mentés…" className="text-white" />
+          <Spinner label="Mentés…" className="text-current" />
         ) : (
           <>
             <Save className="h-4 w-4" aria-hidden="true" />

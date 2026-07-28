@@ -169,7 +169,7 @@ const DuesRow = ({ dues, onUploaded }) => {
               className="btn-primary btn-sm"
             >
               {uploading ? (
-                <Spinner label="Feltöltés…" className="text-white" />
+                <Spinner label="Feltöltés…" className="text-current" />
               ) : (
                 <>
                   <Upload className="h-4 w-4" aria-hidden="true" />
@@ -207,7 +207,7 @@ export const MembershipDues = () => {
               description="A tagdíjat az elnökség írja ki a belső felületen. Amint megtörtént, itt fog megjelenni, és ide tudod feltölteni az átutalási igazolást."
             />
           ) : (
-            <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-white">
+            <ul className="divide-y divide-sand-300 overflow-hidden rounded-xl border border-sand-400 bg-paper">
               {dues.map((item) => (
                 <DuesRow key={item.id} dues={item} onUploaded={reload} />
               ))}

@@ -86,7 +86,7 @@ export const AboutPage = () => {
               {boardMembers.map((member) => (
                 <article
                   key={member.id}
-                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white group"
+                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-paper group"
                 >
                   {/* Portré kép / Helykitöltő header */}
                   <div className="relative h-72 w-full bg-sand-200 overflow-hidden flex items-center justify-center border-b border-sand-300">
@@ -104,7 +104,7 @@ export const AboutPage = () => {
                         <span className="text-xs font-medium text-ink-500">Portré feltöltésre vár</span>
                       </div>
                     )}
-                    <div className="absolute top-3 right-3 rounded-full bg-wine-700/90 text-white p-1.5 shadow">
+                    <div className="absolute top-3 right-3 rounded-full bg-wine-600 text-paper p-1.5 shadow">
                       <Award className="h-4 w-4" aria-hidden="true" />
                     </div>
                   </div>

@@ -177,7 +177,7 @@ export const JoinWorkgroupButton = ({ workgroup, membership, onChanged, size = '
               Mégsem
             </button>
             <button type="button" className="btn-primary" onClick={handleJoin} disabled={pending}>
-              {pending ? <Spinner label="Küldés…" className="text-white" /> : 'Jelentkezés elküldése'}
+              {pending ? <Spinner label="Küldés…" className="text-current" /> : 'Jelentkezés elküldése'}
             </button>
           </>
         }
