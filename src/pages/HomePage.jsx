@@ -1,3 +1,4 @@
+// Netlify dev20 branch build trigger
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Newspaper, FileText, Users, Sparkles, Compass, ShieldCheck, Heart } from 'lucide-react';
