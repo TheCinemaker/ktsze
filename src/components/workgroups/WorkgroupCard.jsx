@@ -51,7 +51,7 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
       )}
 
       {/* Barion Közösségi Finanszírozási Haladási Sáv */}
-      <div className="mt-4 p-3 rounded-xl bg-sand-100 border border-sand-300 space-y-2">
+      <div className="mt-4 p-3.5 rounded-xl bg-sand-100 border border-sand-300 space-y-2">
         <div className="flex items-center justify-between text-xs font-medium text-ink-700">
           <span className="flex items-center gap-1 text-wine-700 font-bold">
             <Heart className="h-3.5 w-3.5 fill-wine-600 text-wine-600" />
@@ -61,6 +61,11 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
             {formatHuf(donationStats.currentAmount)} / {formatHuf(donationStats.targetAmount)} ({donationStats.percentage}%)
           </span>
         </div>
+
+        {/* Mire fordítjuk az összeget */}
+        <p className="text-[11px] font-medium text-ink-700 leading-snug">
+          <strong>Cél:</strong> {workgroup.campaign_goal || (workgroup.name.includes('Virág') ? '20 db új virágtartó kaspó kihelyezése és növényesítése a belvárosban.' : '15 db időjárásálló QR-kódos digitális tanösvény tábla az Óház-kilátóhoz.')}
+        </p>
 
         <div className="h-2 w-full rounded-full bg-sand-300 overflow-hidden">
           <div

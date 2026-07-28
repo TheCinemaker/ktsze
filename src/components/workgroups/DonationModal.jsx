@@ -93,6 +93,12 @@ export const DonationModal = ({ open, onClose, workgroup, onSuccess, defaultDono
         </div>
       ) : (
         <form onSubmit={handlePay} className="space-y-6">
+          {/* Támogatás célja */}
+          <div className="p-3 rounded-xl bg-sand-100 border border-sand-300 text-xs text-ink-800">
+            <span className="font-bold text-wine-800">A támogatás célja:</span>{' '}
+            {workgroup.campaign_goal || (workgroup.name.includes('Virág') ? '20 db új virágtartó kaspó kihelyezése és növényesítése a belvárosban.' : '15 db időjárásálló QR-kódos digitális tanösvény tábla az Óház-kilátóhoz.')}
+          </div>
+
           {/* Előre beállított adomány összegek */}
           <div>
             <label className="label">Válassz támogatási összeget:</label>

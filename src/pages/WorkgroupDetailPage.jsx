@@ -134,7 +134,11 @@ export const WorkgroupDetailPage = () => {
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between text-xs font-medium text-ink-700">
+              <p className="text-xs font-medium text-ink-800 bg-sand-100 p-2.5 rounded-lg border border-sand-300">
+                <strong>A támogatás célja:</strong> {workgroup.campaign_goal || (workgroup.name.includes('Virág') ? '20 db új virágtartó kaspó kihelyezése és növényesítése a belvárosban.' : '15 db időjárásálló QR-kódos digitális tanösvény tábla az Óház-kilátóhoz.')}
+              </p>
+
+              <div className="flex justify-between text-xs font-medium text-ink-700 pt-1">
                 <span>Célösszeg:</span>
                 <span className="font-bold text-ink-900">{formatHuf(donationStats.targetAmount)}</span>
               </div>

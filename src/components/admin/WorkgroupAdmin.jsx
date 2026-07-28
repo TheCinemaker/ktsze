@@ -78,6 +78,14 @@ const WorkgroupModal = ({ workgroup, open, onClose, onSaved }) => {
         />
 
         <TextArea
+          label="Mire fordítjuk az összeget? (Támogatás célja)"
+          value={form.campaign_goal || ''}
+          onChange={set('campaign_goal')}
+          rows={2}
+          hint="Pontos leírás a támogatóknak (pl. 20 db új virágtartó kaspó beszerzése a belvárosban)."
+        />
+
+        <TextArea
           label="Friss információk"
           value={form.latest_updates || ''}
           onChange={set('latest_updates')}
