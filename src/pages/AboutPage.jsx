@@ -6,6 +6,7 @@ import { ORGANIZATION, formattedAddress, BOARD_MEMBERS_BIO } from '../config/org
 import { listWorkgroups, listPublicBoardMembers } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
 import { PageHeader, EmptyState, Spinner, ErrorBlock, DetailRow, FormattedText } from '../components/ui';
+import { SEO } from '../components/ui/SEO';
 
 const getMemberBio = (member) => {
   if (member.bio) return member.bio;
@@ -55,6 +56,10 @@ export const AboutPage = () => {
 
   return (
     <div className="container-page py-12 sm:py-16">
+      <SEO
+        title="Egyesületünkről &amp; Vezetőség"
+        description="Ismerje meg a Kőszegi Turisztikai Szövetség Egyesület elnökségét, tisztségviselőit, hivatalos adatait és szakmai munkacsoportjait."
+      />
       <PageHeader eyebrow="Egyesületünkről" title={ORGANIZATION.legalName} description={ORGANIZATION.mission} />
 
       {/* Elnökség & Vezetőség */}

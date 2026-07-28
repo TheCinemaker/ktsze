@@ -5,6 +5,7 @@ import { ArrowLeft, Newspaper } from 'lucide-react';
 import { supabase, unwrap } from '../lib/supabaseClient';
 import { useAsyncData } from '../lib/useAsyncData';
 import { LoadingBlock, ErrorBlock, EmptyState, FormattedText } from '../components/ui';
+import { SEO } from '../components/ui/SEO';
 import { coverUrl, formatDate } from '../lib/format';
 
 const fetchBySlug = (slug) => async () =>
@@ -46,6 +47,7 @@ export const NewsDetailPage = () => {
 
   return (
     <article className="container-page py-12 sm:py-16">
+      <SEO title={item.title} description={item.excerpt || item.title} />
       <Link to="/hirek" className="btn-ghost btn-sm -ml-3">
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Vissza a hírekhez

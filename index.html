@@ -4,20 +4,72 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- A /vite.svg helyett az egyesületi embléma -->
+    <!-- Favicon & Embléma -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-    <title>Kőszegi Turisztikai Szövetség Egyesület</title>
+    <!-- SEO Alapvető Meta Címkék -->
+    <title>Kőszegi Turisztikai Szövetség Egyesület | Hivatalos Turisztikai Portál</title>
     <meta
       name="description"
-      content="A Kőszegi Turisztikai Szövetség Egyesület hivatalos tájékoztató oldala, valamint a tagok és az elnökség zárt munkafelülete."
+      content="A Kőszegi Turisztikai Szövetség Egyesület hivatalos szakmai és tájékoztató portálja. Kőszeg szálláshelyeinek, vendéglátóinak, borászatainak összefogása, okosturisztikai hírek, munkacsoportok és a Digitális Kőszeg program."
     />
-
+    <meta
+      name="keywords"
+      content="Kőszeg, Kőszegi Turisztikai Szövetség, turizmus Kőszeg, Kőszeg szállás, Kőszeg étterem, Kőszegi bor, Digitális Kőszeg, Jurisics vár, Kőszegi látnivalók, turisztikai egyesület"
+    />
+    <meta name="author" content="SA Software &amp; Network Solutions" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="theme-color" content="#FAF6F0" />
-    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://ktsze.hu/" />
 
-    <!-- A body className= (React-attribútum) sima HTML-ben nem működött;
-         a háttérszínt a src/index.css állítja be. -->
+    <!-- Open Graph (Facebook / Messenger / Social Media Megosztási Meta Címkék) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Kőszegi Turisztikai Szövetség Egyesület" />
+    <meta property="og:title" content="Kőszegi Turisztikai Szövetség Egyesület | Hivatalos Portál" />
+    <meta
+      property="og:description"
+      content="Kőszeg turisztikai szereplőinek szakmai szövetsége és digitális információs felülete. Hírek, munkacsoportok és a Digitális Kőszeg program."
+    />
+    <meta property="og:image" content="https://ktsze.hu/avar_szilveszter.jpg" />
+    <meta property="og:url" content="https://ktsze.hu/" />
+    <meta property="og:locale" content="hu_HU" />
+
+    <!-- Twitter Card Meta Címkék -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Kőszegi Turisztikai Szövetség Egyesület" />
+    <meta
+      name="twitter:description"
+      content="Kőszegi szálláshelyek, vendéglátók és kulturális szolgáltatók szakmai szövetsége."
+    />
+    <meta name="twitter:image" content="https://ktsze.hu/avar_szilveszter.jpg" />
+
+    <!-- Geo & Helymeghatározási Meta Címkék (Local SEO Kőszeg) -->
+    <meta name="geo.region" content="HU-VA" />
+    <meta name="geo.placename" content="Kőszeg" />
+    <meta name="geo.position" content="47.3892;16.5411" />
+    <meta name="ICBM" content="47.3892, 16.5411" />
+
+    <!-- Schema.org JSON-LD Strukturált Adat a Google Keresőnek -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "NGO",
+        "name": "Kőszegi Turisztikai Szövetség Egyesület",
+        "alternateName": "Kőszegi Turisztikai Szövetség",
+        "url": "https://ktsze.hu",
+        "logo": "https://ktsze.hu/favicon.svg",
+        "image": "https://ktsze.hu/avar_szilveszter.jpg",
+        "description": "Kőszeg turisztikai szereplőinek, szálláshelyeinek, vendéglátóinak és borászatainak szakmai szövetsége.",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Kőszeg",
+          "addressRegion": "Vas megye",
+          "addressCountry": "HU"
+        },
+        "areaServed": "Kőszeg",
+        "knowsAbout": ["Turizmus", "Vendéglátás", "Borturizmus", "Digitális Kőszeg", "Kultúra"]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

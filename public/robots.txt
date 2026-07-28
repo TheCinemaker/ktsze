@@ -1,0 +1,9 @@
+# Robots.txt for Kőszegi Turisztikai Szövetség Egyesület
+User-agent: *
+Allow: /
+Disallow: /tagi
+Disallow: /elnokseg
+Disallow: /diagnosztika
+
+# Search Engine Sitemap
+Sitemap: https://ktsze.hu/sitemap.xml
