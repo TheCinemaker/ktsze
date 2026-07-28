@@ -152,40 +152,47 @@ export const deleteMemberProfile = async (profileId) => {
  * RLS-biztos: nem terheli a nyilvános kérést kényes joinokkal, és van garantált tartaléka.
  */
 export const listPublicBoardMembers = async () => {
-  try {
-    const { data: dbProfiles, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, custom_title, service_location_name, business_activity, account_email, private_email, avatar_url, bio');
-
-    if (!error && dbProfiles && dbProfiles.length > 0) {
-      const filtered = dbProfiles.filter((p) => {
-        if (!p.full_name || p.full_name.trim() === '' || p.full_name.toLowerCase() === 'rendszergazda') return false;
-        if (p.account_email?.toLowerCase() === 'admin@visitkoszeg.hu') return false;
-
-        const hasTitle = Boolean(p.custom_title && p.custom_title.trim() !== '');
-        const isSzilveszter = (p.full_name || '').toLowerCase().includes('szilveszter') || (p.account_email || '').toLowerCase().includes('szilveszter');
-        return hasTitle || isSzilveszter;
-      });
-
-      if (filtered.length > 0) {
-        return filtered.map((p) => ({
-          id: p.id,
-          full_name: p.full_name,
-          custom_title: p.custom_title || (p.full_name?.toLowerCase().includes('szilveszter') ? 'Digitális Kőszeg alelnök' : 'Elnökségi tag'),
-          service_location_name: p.service_location_name,
-          business_activity: p.business_activity,
-          private_email: p.private_email || p.account_email,
-          avatar_url: p.avatar_url || null,
-          bio: p.bio || null
-        }));
-      }
-    }
-  } catch (err) {
-    console.warn('[db] listPublicBoardMembers hiba:', err);
-  }
-
-  // Biztonsági tartalék nyilvános látogatóknak, ha az adatbázis még üres vagy zárt az RLS
-  return [
+  const fallbacks = [
+    {
+      id: 'gabor-drescher',
+      full_name: 'Drescher Gábor',
+      custom_title: 'Elnök',
+      service_location_name: 'Kőszegi Turisztikai Szövetség Egyesület',
+      business_activity: 'Turisztikai Képviselet & Vezetés',
+      private_email: 'info@visitkoszeg.hu',
+      avatar_url: null,
+      bio: null
+    },
+    {
+      id: 'adrienn-szalok',
+      full_name: 'Kovács-Szalók Adrienn',
+      custom_title: 'Alelnök',
+      service_location_name: 'Turisztikai Munkacsoport',
+      business_activity: 'Szállodaüzemeltetés & Vendégélmény',
+      private_email: 'szalok.adrienn@gmail.com',
+      avatar_url: null,
+      bio: null
+    },
+    {
+      id: 'peter-farkas',
+      full_name: 'Farkas Péter',
+      custom_title: 'Alelnök',
+      service_location_name: 'Ibrahim Boutique Hotel',
+      business_activity: 'Szálloda & Turisztikai Szolgáltatás',
+      private_email: 'farkas.peter@ibrahim.hu',
+      avatar_url: null,
+      bio: null
+    },
+    {
+      id: 'robert-voros',
+      full_name: 'Vörös Róbert',
+      custom_title: 'Alelnök',
+      service_location_name: 'Portré Étterem és Panzió',
+      business_activity: 'Gasztronómia & Szálláshely Kezelés',
+      private_email: 'voros.robert@portre.hu',
+      avatar_url: null,
+      bio: null
+    },
     {
       id: 'szilveszter-avar',
       full_name: 'Avar Szilveszter',
@@ -197,6 +204,73 @@ export const listPublicBoardMembers = async () => {
       bio: null
     }
   ];
+
+  try {
+    const { data: dbProfiles, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, custom_title, service_location_name, business_activity, account_email, private_email, avatar_url, bio');
+
+    // Még ha sikeres is a lekérdezés, a DB-ben lévő tagokat összefésüljük a fallbackekkel
+    const dbMembers = [];
+    if (!error && dbProfiles && dbProfiles.length > 0) {
+      dbProfiles.forEach((p) => {
+        if (!p.full_name || p.full_name.trim() === '' || p.full_name.toLowerCase() === 'rendszergazda') return;
+        if (p.account_email?.toLowerCase() === 'admin@visitkoszeg.hu') return;
+
+        dbMembers.push({
+          id: p.id,
+          full_name: p.full_name,
+          custom_title: p.custom_title || (
+            p.full_name?.toLowerCase().includes('szilveszter') ? 'Digitális Kőszeg alelnök' :
+            p.full_name?.toLowerCase().includes('adrienn') ? 'Alelnök' :
+            (p.full_name?.toLowerCase().includes('gábor') || p.full_name?.toLowerCase().includes('drescher')) ? 'Elnök' :
+            p.full_name?.toLowerCase().includes('péter') ? 'Alelnök' :
+            p.full_name?.toLowerCase().includes('róbert') ? 'Alelnök' :
+            'Elnökségi tag'
+          ),
+          service_location_name: p.service_location_name,
+          business_activity: p.business_activity,
+          private_email: p.private_email || p.account_email,
+          avatar_url: p.avatar_url || null,
+          bio: p.bio || null
+        });
+      });
+    }
+
+    const merged = [...dbMembers];
+    fallbacks.forEach((fb) => {
+      const isAlreadyInDb = dbMembers.some((dbm) => {
+        const dbmName = (dbm.full_name || '').toLowerCase();
+        const fbName = fb.full_name.toLowerCase();
+        const parts = fbName.split(' ');
+        // Ha a vezetéknév vagy keresztnév (min 4 karakter) egyezik a DB-ben lévővel
+        return parts.some((part) => part.length > 3 && dbmName.includes(part));
+      });
+      if (!isAlreadyInDb) {
+        merged.push(fb);
+      }
+    });
+
+    // Rendezzük a kártyákat: Elnök elöl, utána a többiek névsorban
+    return merged.sort((a, b) => {
+      const isAElnok = a.custom_title?.toLowerCase().includes('elnök') && !a.custom_title?.toLowerCase().includes('alelnök');
+      const isBElnok = b.custom_title?.toLowerCase().includes('elnök') && !b.custom_title?.toLowerCase().includes('alelnök');
+      if (isAElnok && !isBElnok) return -1;
+      if (!isAElnok && isBElnok) return 1;
+      return a.full_name.localeCompare(b.full_name, 'hu');
+    });
+  } catch (err) {
+    console.warn('[db] listPublicBoardMembers hiba:', err);
+  }
+
+  // Hiba esetén az összes fallback
+  return fallbacks.sort((a, b) => {
+    const isAElnok = a.custom_title?.toLowerCase().includes('elnök') && !a.custom_title?.toLowerCase().includes('alelnök');
+    const isBElnok = b.custom_title?.toLowerCase().includes('elnök') && !b.custom_title?.toLowerCase().includes('alelnök');
+    if (isAElnok && !isBElnok) return -1;
+    if (!isAElnok && isBElnok) return 1;
+    return a.full_name.localeCompare(b.full_name, 'hu');
+  });
 };
 
 /**

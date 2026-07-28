@@ -136,20 +136,16 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
             />
           </div>
 
-          <div className="pt-0.5 flex items-center justify-between">
+          <div className="pt-0.5 flex flex-wrap items-center justify-between gap-2">
             <button
               type="button"
-              onClick={() => setDonationOpen(true)}
-              className={`btn-secondary btn-sm py-1 px-2.5 text-xs font-bold flex items-center gap-1 ${
-                donationStats.percentage >= 100
-                  ? 'text-emerald-800 border-emerald-400 bg-white hover:bg-emerald-100'
-                  : 'text-emerald-700 border-emerald-300 hover:bg-emerald-50'
-              }`}
+              disabled
+              className="btn-secondary btn-sm py-1 px-2.5 text-xs font-bold flex items-center gap-1 opacity-60 cursor-not-allowed border-sand-400 bg-sand-200 text-ink-500"
             >
-              <Heart className="h-3 w-3 text-emerald-600 fill-emerald-600" />
-              {donationStats.percentage >= 100 ? 'További támogatás' : 'Támogatom'}
+              <Heart className="h-3 w-3 text-ink-400 fill-ink-400" />
+              Hamarosan
             </button>
-            <span className="text-[10px] text-ink-500">Barion Sandbox</span>
+            <span className="text-[10px] text-ink-500 italic">Fejlesztés alatt</span>
           </div>
         </div>
       ) : null}

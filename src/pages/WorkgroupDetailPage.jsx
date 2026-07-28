@@ -214,12 +214,15 @@ export const WorkgroupDetailPage = () => {
 
               <button
                 type="button"
-                onClick={() => setDonationOpen(true)}
-                className="btn-primary w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md"
+                disabled
+                className="btn-primary w-full py-2.5 bg-sand-300 text-ink-500 font-bold flex items-center justify-center gap-2 cursor-not-allowed opacity-75 border border-sand-400"
               >
-                <Heart className="h-4 w-4 fill-white" />
-                {donationStats.percentage >= 100 ? 'További támogatás küldése' : 'Támogatom ezt a projektet'}
+                <Heart className="h-4 w-4 fill-ink-400 text-ink-400" />
+                Adományozás hamarosan
               </button>
+              <p className="text-[11px] text-ink-500 text-center italic">
+                A funkció az egyesületi bankszámla megnyitása után válik elérhetővé.
+              </p>
 
               {donationStats.recentDonations.length > 0 && (
                 <div className="pt-3 border-t border-sand-300 space-y-2">

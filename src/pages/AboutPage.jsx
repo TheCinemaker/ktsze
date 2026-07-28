@@ -8,38 +8,63 @@ import { useAsyncData } from '../lib/useAsyncData';
 import { PageHeader, EmptyState, Spinner, ErrorBlock, DetailRow, FormattedText } from '../components/ui';
 import { SEO } from '../components/ui/SEO';
 
-const getMemberBio = (member) => {
-  if (member.bio) return member.bio;
+const getMemberKey = (member) => {
   const nameLower = (member.full_name || '').toLowerCase();
   const emailLower = (member.private_email || '').toLowerCase();
 
   if (nameLower.includes('szilveszter') || emailLower.includes('szilveszter')) {
-    return BOARD_MEMBERS_BIO.szilveszter?.bio;
+    return 'szilveszter';
   }
-  if (member.custom_title?.toLowerCase().includes('elnök')) {
-    return BOARD_MEMBERS_BIO.elnok?.bio;
+  if (nameLower.includes('adrienn') || nameLower.includes('szalók') || emailLower.includes('adrienn')) {
+    return 'adrienn';
+  }
+  if (nameLower.includes('róbert') || nameLower.includes('vörös') || emailLower.includes('robert')) {
+    return 'robert';
+  }
+  if (nameLower.includes('péter') || nameLower.includes('farkas') || emailLower.includes('peter')) {
+    return 'peter';
+  }
+  if (member.custom_title?.toLowerCase().includes('elnök') || nameLower.includes('gábor') || nameLower.includes('drescher')) {
+    return 'elnok';
+  }
+  return null;
+};
+
+const getMemberBio = (member) => {
+  if (member.bio) return member.bio;
+  const key = getMemberKey(member);
+  if (key && BOARD_MEMBERS_BIO[key]?.bio) {
+    return BOARD_MEMBERS_BIO[key].bio;
   }
   return 'Az egyesület elnökségi tagja, aki aktív szerepet vállal Kőszeg turisztikai és szakmai fejlődésének támogatásában.';
 };
 
 const getMemberPhoto = (member) => {
   if (member.avatar_url) return member.avatar_url;
-  const nameLower = (member.full_name || '').toLowerCase();
-  const emailLower = (member.private_email || '').toLowerCase();
-
-  if (nameLower.includes('szilveszter') || emailLower.includes('szilveszter')) {
-    return BOARD_MEMBERS_BIO.szilveszter?.photoUrl;
+  const key = getMemberKey(member);
+  if (key && BOARD_MEMBERS_BIO[key]?.photoUrl) {
+    return BOARD_MEMBERS_BIO[key].photoUrl;
   }
   return null;
 };
 
 const getMemberMotto = (member) => {
   if (member.motto) return member.motto;
-  const nameLower = (member.full_name || '').toLowerCase();
-  const emailLower = (member.private_email || '').toLowerCase();
+  const key = getMemberKey(member);
+  if (key && BOARD_MEMBERS_BIO[key]?.motto) {
+    return BOARD_MEMBERS_BIO[key].motto;
+  }
+  return null;
+};
 
-  if (nameLower.includes('szilveszter') || emailLower.includes('szilveszter')) {
-    return BOARD_MEMBERS_BIO.szilveszter?.motto;
+const getMemberPhone = (member) => {
+  if (member.phone) return { phone: member.phone, formatted: member.phone };
+  const key = getMemberKey(member);
+  if (key && BOARD_MEMBERS_BIO[key]?.phone) {
+    return {
+      phone: BOARD_MEMBERS_BIO[key].phone,
+      formatted: BOARD_MEMBERS_BIO[key].phoneFormatted || BOARD_MEMBERS_BIO[key].phone
+    };
   }
   return null;
 };
@@ -86,7 +111,7 @@ export const AboutPage = () => {
               {boardMembers.map((member) => (
                 <article
                   key={member.id}
-                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white group"
+                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white group h-[660px]"
                 >
                   {/* Portré kép / Helykitöltő header */}
                   <div className="relative h-72 w-full bg-sand-200 overflow-hidden flex items-center justify-center border-b border-sand-300">
@@ -130,7 +155,7 @@ export const AboutPage = () => {
                         </blockquote>
                       )}
 
-                      <div className="text-xs leading-relaxed text-ink-600 pt-2 border-t border-sand-200">
+                      <div className="text-xs leading-relaxed text-ink-600 pt-2 border-t border-sand-200 h-32 overflow-y-auto pr-1 custom-scrollbar">
                         <FormattedText>{getMemberBio(member)}</FormattedText>
                       </div>
                     </div>
@@ -150,15 +175,14 @@ export const AboutPage = () => {
                         </div>
                       )}
 
-                      {(member.phone || BOARD_MEMBERS_BIO.szilveszter?.phoneFormatted) &&
-                        (member.full_name?.toLowerCase().includes('szilveszter') || member.private_email?.includes('szilveszter')) && (
+                      {getMemberPhone(member) && (
                         <div>
                           <a
-                            href={`tel:${BOARD_MEMBERS_BIO.szilveszter.phone}`}
+                            href={`tel:${getMemberPhone(member).phone}`}
                             className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
                           >
                             <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            {BOARD_MEMBERS_BIO.szilveszter.phoneFormatted}
+                            {getMemberPhone(member).formatted}
                           </a>
                         </div>
                       )}
