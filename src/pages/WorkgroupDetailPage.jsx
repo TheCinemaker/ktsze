@@ -159,7 +159,9 @@ export const WorkgroupDetailPage = () => {
         <aside className="space-y-5">
           {/* Barion Közösségi Finanszírozás Kártya — csak ha be van kapcsolva */}
           {isCrowdfundingEnabled && donationStats && (
-            <div className="surface p-5 border-l-4 border-l-emerald-500 space-y-4">
+            <div className={`surface p-5 border-l-4 space-y-4 ${
+              donationStats.percentage >= 100 ? 'border-l-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-300' : 'border-l-emerald-500'
+            }`}>
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-base font-bold text-ink-900 flex items-center gap-1.5">
                   <Sparkles className="h-4 w-4 text-emerald-600" />
@@ -169,6 +171,19 @@ export const WorkgroupDetailPage = () => {
                   Barion Sandbox
                 </span>
               </div>
+
+              {/* 100% SIKERES GYŰJTÉS BANNER */}
+              {donationStats.percentage >= 100 && (
+                <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white space-y-1 shadow-md animate-fade-in">
+                  <div className="flex items-center gap-1.5 font-bold text-sm">
+                    <Sparkles className="h-4 w-4 animate-bounce" />
+                    <span>🎉 SIKERES GYŰJTÉS!</span>
+                  </div>
+                  <p className="text-xs text-emerald-100 leading-snug">
+                    A kitűzött célösszeget elértük! Köszönjük a közösség összefogását és minden támogatónknak!
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 {workgroup.campaign_goal && (
@@ -187,7 +202,11 @@ export const WorkgroupDetailPage = () => {
                 </div>
                 <div className="h-3 w-full rounded-full bg-sand-200 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-wine-600 via-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      donationStats.percentage >= 100
+                        ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400'
+                        : 'bg-gradient-to-r from-wine-600 via-emerald-500 to-emerald-400'
+                    }`}
                     style={{ width: `${donationStats.percentage}%` }}
                   />
                 </div>
@@ -199,7 +218,7 @@ export const WorkgroupDetailPage = () => {
                 className="btn-primary w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md"
               >
                 <Heart className="h-4 w-4 fill-white" />
-                Támogatom ezt a projektet
+                {donationStats.percentage >= 100 ? 'További támogatás küldése' : 'Támogatom ezt a projektet'}
               </button>
 
               {donationStats.recentDonations.length > 0 && (

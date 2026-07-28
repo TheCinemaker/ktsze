@@ -87,16 +87,28 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
 
       {/* Barion Közösségi Finanszírozási Haladási Sáv — csak ha be van kapcsolva az adminon */}
       {isCrowdfundingEnabled && donationStats && (
-        <div className="mt-4 p-3.5 rounded-xl bg-sand-100 border border-sand-300 space-y-2">
+        <div className={`mt-4 p-3.5 rounded-xl border space-y-2 transition-all ${
+          donationStats.percentage >= 100
+            ? 'bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-200'
+            : 'bg-sand-100 border-sand-300'
+        }`}>
           <div className="flex items-center justify-between text-xs font-medium text-ink-700">
             <span className="flex items-center gap-1 text-wine-700 font-bold">
               <Heart className="h-3.5 w-3.5 fill-wine-600 text-wine-600" />
               Projekt támogatás:
             </span>
-            <span className="font-mono text-ink-900 font-bold">
+            <span className={`font-mono font-bold ${donationStats.percentage >= 100 ? 'text-emerald-800' : 'text-ink-900'}`}>
               {formatHuf(donationStats.currentAmount)} / {formatHuf(donationStats.targetAmount)} ({donationStats.percentage}%)
             </span>
           </div>
+
+          {/* Siker Jelzés ha elértük a 100%-ot! */}
+          {donationStats.percentage >= 100 && (
+            <div className="flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow-sm">
+              <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+              <span>🎉 Cél teljesülve! Köszönjük a támogatásokat!</span>
+            </div>
+          )}
 
           {/* Mire fordítjuk az összeget */}
           {workgroup.campaign_goal && (
@@ -105,9 +117,13 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
             </p>
           )}
 
-          <div className="h-2 w-full rounded-full bg-sand-300 overflow-hidden">
+          <div className="h-2.5 w-full rounded-full bg-sand-300 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-wine-600 to-emerald-500 rounded-full transition-all duration-500"
+              className={`h-full rounded-full transition-all duration-500 ${
+                donationStats.percentage >= 100
+                  ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 shadow-md'
+                  : 'bg-gradient-to-r from-wine-600 to-emerald-500'
+              }`}
               style={{ width: `${donationStats.percentage}%` }}
             />
           </div>
@@ -116,10 +132,14 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
             <button
               type="button"
               onClick={() => setDonationOpen(true)}
-              className="btn-secondary btn-sm py-1 px-2.5 text-xs font-bold text-emerald-700 border-emerald-300 hover:bg-emerald-50 flex items-center gap-1"
+              className={`btn-secondary btn-sm py-1 px-2.5 text-xs font-bold flex items-center gap-1 ${
+                donationStats.percentage >= 100
+                  ? 'text-emerald-800 border-emerald-400 bg-white hover:bg-emerald-100'
+                  : 'text-emerald-700 border-emerald-300 hover:bg-emerald-50'
+              }`}
             >
               <Heart className="h-3 w-3 text-emerald-600 fill-emerald-600" />
-              Támogatom
+              {donationStats.percentage >= 100 ? 'További támogatás' : 'Támogatom'}
             </button>
             <span className="text-[10px] text-ink-500">Barion Sandbox</span>
           </div>
