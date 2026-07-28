@@ -1,67 +1,234 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Newspaper, FileText, Users } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Newspaper, FileText, Users, Sparkles, Flower2 } from 'lucide-react';
 
 import { ORGANIZATION } from '../config/organization';
-import { listPublishedNews, listWorkgroups } from '../lib/db';
+import { listPublishedNews, listWorkgroups, getWorkgroupStats } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
-import { EmptyState, Spinner, ErrorBlock, FormattedText } from '../components/ui';
+import { EmptyState, ErrorBlock } from '../components/ui';
+import { Aurora, GridField, Reveal, TiltCard, AnimatedNumber, SkeletonCard } from '../components/ui/effects';
 import { NewsCard } from '../components/public/NewsCard';
 
 /*
   Ez az oldal SEMMILYEN kitalált adatot nem tartalmaz.
 
-  A korábbi verzióból eltávolítva:
-    - "15+ éves szakmai múlt", "40+ tagvállalkozás", "100% közhasznú működés"
-      (mind találgatás volt, miközben a tagnyilvántartó nullán állt)
-    - "Kőszegi Turisztikai Stratégia 2026–2030" mint létező dokumentum
-    - külső Unsplash fotó, ami nem is Kőszeget ábrázolta
-
-  Amit itt látsz, az mind az adatbázisból jön. Ha nincs benne adat, üres
-  állapot jelenik meg — nem példatartalom.
+  Minden szám, hír és munkacsoport az adatbázisból jön. Ha nincs benne adat,
+  üres állapot jelenik meg — soha nem példatartalom, és soha nem kitalált
+  statisztika. A számlálók a tényleges rekordokat mutatják.
 */
 
-const HeroSection = () => (
-  <section className="border-b border-sand-400 bg-sand-100">
-    <div className="container-page py-16 sm:py-20">
-      <div className="max-w-3xl space-y-4">
-        <p className="eyebrow">{ORGANIZATION.tagline}</p>
+/* -----------------------------------------------------------------------------
+   Hero — nagy szerif tipográfia, sodródó fény, finom rácsháló
+----------------------------------------------------------------------------- */
+const Hero = ({ groupCount, memberCount, newsCount }) => (
+  <section className="relative isolate overflow-hidden">
+    <Aurora />
+    <GridField />
 
-        <h1 className="font-display text-4xl text-ink-900 sm:text-5xl">{ORGANIZATION.legalName}</h1>
+    <div className="container-page relative py-24 sm:py-32 lg:py-40">
+      <div className="max-w-4xl">
+        <Reveal>
+          <span className="eyebrow">{ORGANIZATION.tagline}</span>
+        </Reveal>
 
-        <p className="prose-body text-lg">{ORGANIZATION.mission}</p>
+        <Reveal delay={1}>
+          <h1 className="display-hero mt-7 text-5xl sm:text-6xl lg:text-7xl">
+            Kőszeg
+            <span className="block text-gold-sheen">turisztikai</span>
+            <span className="block italic">összefogása</span>
+          </h1>
+        </Reveal>
+
+        <Reveal delay={2}>
+          <p className="prose-body mt-8 text-lg">{ORGANIZATION.mission}</p>
+        </Reveal>
+
+        <Reveal delay={3}>
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Link to="/munkacsoportok" viewTransition className="btn-primary btn-lg btn-sheen">
+              Csatlakozom egy munkacsoporthoz
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <Link to="/hirek" viewTransition className="btn-secondary btn-lg">
+              Hírek és programok
+            </Link>
+          </div>
+        </Reveal>
+      </div>
+
+      {/* Élő számlálók — kizárólag valós rekordszámok */}
+      {(groupCount > 0 || memberCount > 0 || newsCount > 0) && (
+        <Reveal delay={3}>
+          <dl className="mt-20 grid max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-sand-400 sm:grid-cols-3">
+            {[
+              { label: 'Aktív munkacsoport', value: groupCount },
+              { label: 'Csoporttagság', value: memberCount },
+              { label: 'Közzétett hír', value: newsCount }
+            ]
+              .filter((stat) => stat.value > 0)
+              .map((stat) => (
+                <div
+                  key={stat.label}
+                  className="px-6 py-7"
+                  style={{ backgroundColor: 'oklch(var(--s-50) / 0.5)' }}
+                >
+                  <dd className="font-display text-4xl text-ink-900">
+                    <AnimatedNumber value={stat.value} />
+                  </dd>
+                  <dt className="mt-1.5 text-2xs font-semibold uppercase tracking-[0.14em] text-ink-500">
+                    {stat.label}
+                  </dt>
+                </div>
+              ))}
+          </dl>
+        </Reveal>
+      )}
+    </div>
+
+    {/* Lezáró hajszálvonal */}
+    <div
+      aria-hidden="true"
+      className="absolute inset-x-0 bottom-0 h-px"
+      style={{
+        background:
+          'linear-gradient(90deg, transparent, oklch(var(--g-500) / 0.4) 30%, oklch(var(--w-500) / 0.35) 70%, transparent)'
+      }}
+    />
+  </section>
+);
+
+/* -----------------------------------------------------------------------------
+   Bento rács — eltérő méretű csempék, mint egy szerkesztőségi címlap
+----------------------------------------------------------------------------- */
+const BentoLinks = ({ groupCount }) => (
+  <section className="section">
+    <div className="container-page">
+      <div className="grid gap-4 md:grid-cols-6 lg:grid-cols-12">
+        {/* Nagy csempe: munkacsoportok */}
+        <Reveal className="md:col-span-6 lg:col-span-7">
+          <TiltCard className="h-full" max={4}>
+            <Link
+              to="/munkacsoportok"
+              viewTransition
+              className="card-aura group relative flex h-full flex-col justify-between overflow-hidden p-8 sm:p-10"
+            >
+              <div
+                aria-hidden="true"
+                className="absolute -right-16 -top-16 h-56 w-56 rounded-full blur-3xl transition-opacity duration-700 group-hover:opacity-100"
+                style={{ background: 'radial-gradient(circle, oklch(var(--w-500) / 0.22), transparent 70%)' }}
+              />
+
+              <div className="relative">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl border border-gold-500/40 bg-wine-600/10">
+                  <Users className="h-5 w-5 text-wine-600" aria-hidden="true" />
+                </span>
+
+                <h2 className="mt-7 font-display text-3xl text-ink-900 sm:text-4xl">
+                  Munkacsoportok
+                </h2>
+                <p className="prose-body mt-4 max-w-md">
+                  Az egyesület munkája munkacsoportokban zajlik — városszépítés, digitalizáció,
+                  rendezvények. Bárki jelentkezhet, aki részt vállalna.
+                </p>
+              </div>
+
+              <div className="relative mt-10 flex items-center justify-between">
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-wine-600">
+                  Csatlakozás
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform duration-500 ease-spring group-hover:translate-x-1"
+                    aria-hidden="true"
+                  />
+                </span>
+                {groupCount > 0 && (
+                  <span className="badge-gold">
+                    <Sparkles className="h-3 w-3" aria-hidden="true" />
+                    {groupCount} aktív csoport
+                  </span>
+                )}
+              </div>
+            </Link>
+          </TiltCard>
+        </Reveal>
+
+        {/* Két kisebb csempe egymás alatt */}
+        <div className="grid gap-4 md:col-span-6 lg:col-span-5">
+          {[
+            {
+              to: '/hirek',
+              icon: Newspaper,
+              title: 'Hírek és programok',
+              text: 'Közlemények, felhívások, készülő események.'
+            },
+            {
+              to: '/tagsag',
+              icon: FileText,
+              title: 'Tagság és dokumentumok',
+              text: 'Tagdíjak, csatlakozás menete, nyilvános iratok.'
+            }
+          ].map((item, index) => (
+            <Reveal key={item.to} delay={index + 1}>
+              <Link
+                to={item.to}
+                viewTransition
+                className="card-hover spotlight group flex items-start gap-5 p-7"
+              >
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-sand-400 bg-sand-200/60 transition-colors duration-500 group-hover:border-gold-500">
+                  <item.icon className="h-5 w-5 text-wine-600" aria-hidden="true" />
+                </span>
+
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-3">
+                    <span className="font-display text-xl text-ink-900">{item.title}</span>
+                    <ArrowUpRight
+                      className="h-4 w-4 shrink-0 text-ink-400 transition-all duration-500 ease-spring group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-wine-600"
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span className="mt-2 block text-sm text-ink-600">{item.text}</span>
+                </span>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
       </div>
     </div>
   </section>
 );
 
-const LatestNews = () => {
-  const { data: news, loading, error, reload } = useAsyncData(listPublishedNews);
-  const items = (news || []).slice(0, 3);
+/* -----------------------------------------------------------------------------
+   Legutóbbi hírek
+----------------------------------------------------------------------------- */
+const LatestNews = ({ news }) => {
+  const items = (news.data || []).slice(0, 3);
 
   return (
-    <section className="section bg-sand-50">
-      <div className="container-page space-y-8">
-        <div>
-          <div className="flex flex-wrap items-end justify-between gap-4 pb-4">
-            <div>
-              <p className="eyebrow">Friss tartalom</p>
-              <h2 className="mt-1 font-display text-3xl text-ink-900">Legutóbbi hírek</h2>
-            </div>
-            {items.length > 0 && (
-              <Link to="/hirek" className="btn-secondary btn-sm">
-                Összes hír
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </Link>
-            )}
+    <section className="section relative border-t border-sand-400">
+      <div className="container-page space-y-12">
+        <Reveal className="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <span className="eyebrow">Friss tartalom</span>
+            <h2 className="mt-4 font-display text-3xl text-ink-900 sm:text-4xl">Legutóbbi hírek</h2>
           </div>
-          <hr className="border-sand-400" />
-        </div>
+          {items.length > 0 && (
+            <Link to="/hirek" viewTransition className="btn-secondary btn-sm">
+              Összes hír
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
+          )}
+        </Reveal>
 
-        {loading && <Spinner />}
-        {error && <ErrorBlock message={error} onRetry={reload} />}
+        {news.loading && (
+          <div className="grid gap-6 md:grid-cols-3">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        )}
 
-        {!loading && !error && items.length === 0 && (
+        {news.error && <ErrorBlock message={news.error} onRetry={news.reload} />}
+
+        {!news.loading && !news.error && items.length === 0 && (
           <EmptyState
             icon={Newspaper}
             title="Még nincs közzétett hír"
@@ -70,9 +237,11 @@ const LatestNews = () => {
         )}
 
         {items.length > 0 && (
-          <div className="grid gap-5 md:grid-cols-3">
-            {items.map((item) => (
-              <NewsCard key={item.id} item={item} />
+          <div className="grid gap-6 md:grid-cols-3">
+            {items.map((item, index) => (
+              <Reveal key={item.id} delay={index + 1}>
+                <NewsCard item={item} />
+              </Reveal>
             ))}
           </div>
         )}
@@ -81,133 +250,139 @@ const LatestNews = () => {
   );
 };
 
-const Workgroups = () => {
-  const { data: groups, loading } = useAsyncData(listWorkgroups);
-  const active = (groups || []).filter((g) => g.is_active);
+/* -----------------------------------------------------------------------------
+   Munkacsoportok előnézete
+----------------------------------------------------------------------------- */
+const WorkgroupPreview = ({ groups, stats }) => {
+  const active = (groups.data || []).filter((g) => g.is_active).slice(0, 3);
+  if (groups.loading || active.length === 0) return null;
 
   return (
-    <section className="section bg-sand-100">
-      <div className="container-page space-y-8">
-        <div>
-          <div className="flex flex-wrap items-end justify-between gap-4 pb-4">
-            <div>
-              <p className="eyebrow">Szakmai munka</p>
-              <h2 className="mt-1 font-display text-3xl text-ink-900">Munkacsoportok</h2>
-              <p className="mt-2 max-w-prose text-base text-ink-600">
-                Az egyesület munkája munkacsoportokban zajlik, és bárki jelentkezhet, aki részt vállalna.
-              </p>
-            </div>
-            <Link to="/munkacsoportok" className="btn-primary btn-sm">
-              Csatlakozás
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </Link>
+    <section className="section relative border-t border-sand-400">
+      <div className="container-page space-y-12">
+        <Reveal className="flex flex-wrap items-end justify-between gap-6">
+          <div className="max-w-xl">
+            <span className="eyebrow">Szakmai munka</span>
+            <h2 className="mt-4 font-display text-3xl text-ink-900 sm:text-4xl">
+              Ahol a munka valójában zajlik
+            </h2>
+            <p className="prose-body mt-4">
+              Minden csoportnak saját vezetője, feladatköre és jelentkezési lehetősége van.
+            </p>
           </div>
-          <hr className="border-sand-400" />
-        </div>
+          <Link to="/munkacsoportok" viewTransition className="btn-primary btn-sm btn-sheen">
+            Összes munkacsoport
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
+        </Reveal>
 
-        {loading && <Spinner />}
+        <div className="grid gap-6 md:grid-cols-3">
+          {active.map((group, index) => (
+            <Reveal key={group.id} delay={index + 1}>
+              <Link
+                to={`/munkacsoportok/${group.slug}`}
+                viewTransition
+                className="card-hover spotlight group flex h-full flex-col p-7"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl border border-sand-400 bg-wine-600/8 transition-colors duration-500 group-hover:border-gold-500">
+                    <Flower2 className="h-5 w-5 text-wine-600" aria-hidden="true" />
+                  </span>
+                  {(stats.data || {})[group.id]?.approved > 0 && (
+                    <span className="badge-neutral">
+                      {(stats.data || {})[group.id].approved} tag
+                    </span>
+                  )}
+                </div>
 
-        {!loading && active.length === 0 && (
-          <EmptyState
-            icon={Users}
-            title="Munkacsoportok előkészítés alatt"
-            description="Az elnökségi admin felületen hozhatók létre új egyesületi munkacsoportok."
-          />
-        )}
+                <h3 className="mt-6 font-display text-xl text-ink-900">{group.name}</h3>
 
-        {active.length > 0 && (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {active.map((group) => (
-              <article key={group.id} className="card p-6">
-                <h3 className="font-display text-lg text-ink-900">
-                  <Link
-                    to={`/munkacsoportok/${group.slug}`}
-                    className="rounded transition-colors hover:text-wine-600"
-                  >
-                    {group.name}
-                  </Link>
-                </h3>
                 {group.leader_name && (
-                  <p className="mt-1 text-xs font-medium uppercase tracking-wide text-wine-600">
+                  <p className="mt-1.5 text-2xs font-semibold uppercase tracking-[0.1em] text-wine-600">
                     Vezető: {group.leader_name}
                   </p>
                 )}
+
                 {group.description && (
-                  <div className="mt-3 text-sm text-ink-600">
-                    <FormattedText>{group.description}</FormattedText>
-                  </div>
+                  <p className="mt-4 line-clamp-4 flex-1 text-sm text-ink-600">{group.description}</p>
                 )}
-              </article>
-            ))}
-          </div>
-        )}
+
+                <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-wine-600">
+                  Részletek
+                  <ArrowRight
+                    className="h-3.5 w-3.5 transition-transform duration-500 ease-spring group-hover:translate-x-1"
+                    aria-hidden="true"
+                  />
+                </span>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
       </div>
     </section>
   );
 };
 
-const TwoTiles = () => (
-  <section className="section bg-sand-50">
+/* -----------------------------------------------------------------------------
+   Záró felhívás
+----------------------------------------------------------------------------- */
+const ClosingCall = () => (
+  <section className="section relative border-t border-sand-400">
     <div className="container-page">
-      <div>
-        <hr className="border-sand-400 mb-8" />
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Csempe 1: Tagsági formák */}
-          <Link to="/tagsag" className="card-hover group block p-8">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-wine-100 text-wine-700">
-                <Users className="h-6 w-6" aria-hidden="true" />
-              </div>
-              <div>
-                <span className="eyebrow">Egyesületi tagság</span>
-                <h2 className="font-display text-xl text-ink-900">Tagsági formák &amp; feltételek</h2>
-              </div>
-            </div>
-            <p className="mt-4 text-sm leading-relaxed text-ink-600">
-              Ismerje meg a rendes és pártoló tagság feltételeit, az éves tagdíjakat és a csatlakozás menetét.
-            </p>
-            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-wine-600">
-              Részletek és csatlakozás
-              <ArrowRight
-                className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                aria-hidden="true"
-              />
-            </span>
-          </Link>
+      <Reveal>
+        <div className="card-aura relative overflow-hidden px-8 py-16 text-center sm:px-16 sm:py-24">
+          <Aurora className="opacity-60" />
 
-          {/* Csempe 2: Nyilvános dokumentumok */}
-          <Link to="/dokumentumok" className="card-hover group block p-8">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-wine-100 text-wine-700">
-                <FileText className="h-6 w-6" aria-hidden="true" />
-              </div>
-              <div>
-                <span className="eyebrow">Dokumentumtár</span>
-                <h2 className="font-display text-xl text-ink-900">Nyilvános dokumentumok &amp; Alapszabály</h2>
-              </div>
-            </div>
-            <p className="mt-4 text-sm leading-relaxed text-ink-600">
-              Böngéssze az egyesület közzétett alapszabályát, pénzügyi beszámolóit és közgyűlési dokumentumait.
+          <div className="relative mx-auto max-w-2xl">
+            <span className="eyebrow justify-center">Csatlakozás</span>
+
+            <h2 className="mt-6 font-display text-3xl text-ink-900 sm:text-5xl">
+              Kőszegért, <span className="italic text-gold-sheen">együtt</span>
+            </h2>
+
+            <p className="prose-body mx-auto mt-6">
+              A regisztráció pár perc. Utána már jelentkezhetsz munkacsoportba, és láthatod a tagi
+              felület tartalmait.
             </p>
-            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-wine-600">
-              Dokumentumok megtekintése
-              <ArrowRight
-                className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                aria-hidden="true"
-              />
-            </span>
-          </Link>
+
+            <div className="mt-10 flex flex-wrap justify-center gap-3">
+              <Link to="/belepes" viewTransition className="btn-primary btn-lg btn-sheen">
+                Fiók létrehozása
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <Link to="/tagsag" viewTransition className="btn-secondary btn-lg">
+                Tagsági feltételek
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
+      </Reveal>
     </div>
   </section>
 );
 
-export const HomePage = () => (
-  <>
-    <HeroSection />
-    <LatestNews />
-    <Workgroups />
-    <TwoTiles />
-  </>
-);
+export const HomePage = () => {
+  const news = useAsyncData(listPublishedNews);
+  const groups = useAsyncData(listWorkgroups);
+  const stats = useAsyncData(getWorkgroupStats, [], { initialData: {} });
+
+  const activeGroups = (groups.data || []).filter((g) => g.is_active);
+  const totalMemberships = Object.values(stats.data || {}).reduce(
+    (sum, entry) => sum + (entry.approved || 0),
+    0
+  );
+
+  return (
+    <>
+      <Hero
+        groupCount={activeGroups.length}
+        memberCount={totalMemberships}
+        newsCount={(news.data || []).length}
+      />
+      <BentoLinks groupCount={activeGroups.length} />
+      <LatestNews news={news} />
+      <WorkgroupPreview groups={groups} stats={stats} />
+      <ClosingCall />
+    </>
+  );
+};

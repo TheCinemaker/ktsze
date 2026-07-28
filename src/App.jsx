@@ -8,6 +8,8 @@ import { AuthCallback } from './components/auth/AuthCallback';
 import { LoadingBlock } from './components/ui';
 import { ScrollToTopButton } from './components/ui/ScrollToTopButton';
 import { CookieBanner } from './components/ui/CookieBanner';
+import { CommandPalette } from './components/ui/CommandPalette';
+import { RouteProgress } from './components/ui/RouteProgress';
 
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
@@ -45,6 +47,7 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollToTop />
+      <RouteProgress />
       {/* Az e-mail linkekről érkező tokent feldolgozza és eltünteti a címsorból */}
       <AuthCallback />
       <Navbar />
@@ -96,6 +99,8 @@ export default function App() {
       <Footer />
       <ScrollToTopButton />
       <CookieBanner />
+      {/* Ctrl/Cmd + K — gyorsnavigáció és témaváltás */}
+      <CommandPalette />
     </div>
   );
 }

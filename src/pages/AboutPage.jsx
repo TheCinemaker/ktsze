@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Flower2, Award, Crown, Mail, User, Phone } from 'lucide-react';
+import { Users, Flower2, Award, Crown, Mail, Phone } from 'lucide-react';
 
 import { ORGANIZATION, formattedAddress, BOARD_MEMBERS_BIO } from '../config/organization';
 import { listWorkgroups, listPublicBoardMembers } from '../lib/db';

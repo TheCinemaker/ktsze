@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Flower2, Heart, CreditCard, Sparkles } from 'lucide-react';
+import { ArrowLeft, Users, Flower2, Heart, Sparkles } from 'lucide-react';
 
 import { getWorkgroupBySlug, getWorkgroupStats, listMyWorkgroupMemberships } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { PageHeader, EmptyState, LoadingBlock, ErrorBlock, FormattedText } from '../components/ui';
 import { JoinWorkgroupButton } from '../components/workgroups/JoinWorkgroupButton';
 import { DonationModal } from '../components/workgroups/DonationModal';
-import { getWorkgroupDonationStats, fetchWorkgroupDonationStats } from '../lib/barion';
+import { fetchWorkgroupDonationStats } from '../lib/barion';
 import { formatHuf } from '../lib/format';
 import { supabase } from '../lib/supabaseClient';
 
