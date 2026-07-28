@@ -246,7 +246,8 @@ export const createWorkgroup = async (input) => {
         is_active: input.is_active ?? true,
         sort_order: input.sort_order ?? 0,
         target_amount: input.target_amount ? Number(input.target_amount) : 250000,
-        campaign_goal: input.campaign_goal?.trim() || null
+        campaign_goal: input.campaign_goal?.trim() || null,
+        enable_crowdfunding: Boolean(input.enable_crowdfunding)
       })
       .select()
       .single()
@@ -260,7 +261,8 @@ export const updateWorkgroup = async (id, patch) => {
     leader_user_id: patch.leader_user_id || null,
     latest_updates: patch.latest_updates?.trim() || null,
     target_amount: patch.target_amount ? Number(patch.target_amount) : 250000,
-    campaign_goal: patch.campaign_goal?.trim() || null
+    campaign_goal: patch.campaign_goal?.trim() || null,
+    enable_crowdfunding: Boolean(patch.enable_crowdfunding)
   };
   if (patch.name) {
     payload.name = patch.name.trim();

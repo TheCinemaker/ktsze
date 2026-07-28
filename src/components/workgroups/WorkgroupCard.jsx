@@ -12,7 +12,8 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
   const [reloadKey, setReloadKey] = useState(0);
 
   const memberCount = stats?.approved ?? 0;
-  const donationStats = getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000);
+  const isCrowdfundingEnabled = Boolean(workgroup.enable_crowdfunding);
+  const donationStats = isCrowdfundingEnabled ? getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000) : null;
 
   const handleDonationSuccess = () => {
     setReloadKey((k) => k + 1);
@@ -50,42 +51,46 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
         </div>
       )}
 
-      {/* Barion Közösségi Finanszírozási Haladási Sáv */}
-      <div className="mt-4 p-3.5 rounded-xl bg-sand-100 border border-sand-300 space-y-2">
-        <div className="flex items-center justify-between text-xs font-medium text-ink-700">
-          <span className="flex items-center gap-1 text-wine-700 font-bold">
-            <Heart className="h-3.5 w-3.5 fill-wine-600 text-wine-600" />
-            Projekt támogatás:
-          </span>
-          <span className="font-mono text-ink-900 font-bold">
-            {formatHuf(donationStats.currentAmount)} / {formatHuf(donationStats.targetAmount)} ({donationStats.percentage}%)
-          </span>
-        </div>
+      {/* Barion Közösségi Finanszírozási Haladási Sáv — csak ha be van kapcsolva az adminon */}
+      {isCrowdfundingEnabled && donationStats && (
+        <div className="mt-4 p-3.5 rounded-xl bg-sand-100 border border-sand-300 space-y-2">
+          <div className="flex items-center justify-between text-xs font-medium text-ink-700">
+            <span className="flex items-center gap-1 text-wine-700 font-bold">
+              <Heart className="h-3.5 w-3.5 fill-wine-600 text-wine-600" />
+              Projekt támogatás:
+            </span>
+            <span className="font-mono text-ink-900 font-bold">
+              {formatHuf(donationStats.currentAmount)} / {formatHuf(donationStats.targetAmount)} ({donationStats.percentage}%)
+            </span>
+          </div>
 
-        {/* Mire fordítjuk az összeget */}
-        <p className="text-[11px] font-medium text-ink-700 leading-snug">
-          <strong>Cél:</strong> {workgroup.campaign_goal || (workgroup.name.includes('Virág') ? '20 db új virágtartó kaspó kihelyezése és növényesítése a belvárosban.' : '15 db időjárásálló QR-kódos digitális tanösvény tábla az Óház-kilátóhoz.')}
-        </p>
+          {/* Mire fordítjuk az összeget */}
+          {workgroup.campaign_goal && (
+            <p className="text-[11px] font-medium text-ink-700 leading-snug">
+              <strong>Cél:</strong> {workgroup.campaign_goal}
+            </p>
+          )}
 
-        <div className="h-2 w-full rounded-full bg-sand-300 overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-wine-600 to-emerald-500 rounded-full transition-all duration-500"
-            style={{ width: `${donationStats.percentage}%` }}
-          />
-        </div>
+          <div className="h-2 w-full rounded-full bg-sand-300 overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-wine-600 to-emerald-500 rounded-full transition-all duration-500"
+              style={{ width: `${donationStats.percentage}%` }}
+            />
+          </div>
 
-        <div className="pt-1 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setDonationOpen(true)}
-            className="btn-secondary btn-sm py-1 px-2.5 text-xs font-bold text-emerald-700 border-emerald-300 hover:bg-emerald-50 flex items-center gap-1"
-          >
-            <Heart className="h-3 w-3 text-emerald-600 fill-emerald-600" />
-            Támogatom
-          </button>
-          <span className="text-[10px] text-ink-500">Barion Sandbox</span>
+          <div className="pt-1 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setDonationOpen(true)}
+              className="btn-secondary btn-sm py-1 px-2.5 text-xs font-bold text-emerald-700 border-emerald-300 hover:bg-emerald-50 flex items-center gap-1"
+            >
+              <Heart className="h-3 w-3 text-emerald-600 fill-emerald-600" />
+              Támogatom
+            </button>
+            <span className="text-[10px] text-ink-500">Barion Sandbox</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {workgroup.latest_updates && (
         <div className="mt-3 border-t border-sand-300 pt-3 text-sm text-ink-500">

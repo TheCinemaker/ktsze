@@ -59,7 +59,8 @@ export const WorkgroupDetailPage = () => {
   const workgroup = group.data;
   const memberCount = (stats.data || {})[workgroup.id]?.approved ?? 0;
   const membership = (memberships.data || []).find((m) => m.workgroup_id === workgroup.id);
-  const donationStats = getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000);
+  const isCrowdfundingEnabled = Boolean(workgroup.enable_crowdfunding);
+  const donationStats = isCrowdfundingEnabled ? getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000) : null;
 
   return (
     <div className="container-page py-12 sm:py-16">
@@ -74,15 +75,17 @@ export const WorkgroupDetailPage = () => {
           title={workgroup.name}
           description={workgroup.description ? <FormattedText>{workgroup.description}</FormattedText> : undefined}
           actions={
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setDonationOpen(true)}
-                className="btn-primary py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2"
-              >
-                <Heart className="h-4 w-4 fill-white" />
-                Támogatom a projektet
-              </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {isCrowdfundingEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setDonationOpen(true)}
+                  className="btn-primary py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2"
+                >
+                  <Heart className="h-4 w-4 fill-white" />
+                  Támogatom a projektet
+                </button>
+              )}
               <JoinWorkgroupButton workgroup={workgroup} membership={membership} onChanged={reloadAll} />
             </div>
           }
@@ -121,62 +124,66 @@ export const WorkgroupDetailPage = () => {
         </div>
 
         <aside className="space-y-5">
-          {/* Barion Közösségi Finanszírozás Kártya */}
-          <div className="surface p-5 border-l-4 border-l-emerald-500 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-base font-bold text-ink-900 flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-emerald-600" />
-                Közösségi Finanszírozás
-              </h2>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
-                Barion Sandbox
-              </span>
+          {/* Barion Közösségi Finanszírozás Kártya — csak ha be van kapcsolva */}
+          {isCrowdfundingEnabled && donationStats && (
+            <div className="surface p-5 border-l-4 border-l-emerald-500 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-base font-bold text-ink-900 flex items-center gap-1.5">
+                  <Sparkles className="h-4 w-4 text-emerald-600" />
+                  Közösségi Finanszírozás
+                </h2>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                  Barion Sandbox
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {workgroup.campaign_goal && (
+                  <p className="text-xs font-medium text-ink-800 bg-sand-100 p-2.5 rounded-lg border border-sand-300">
+                    <strong>A támogatás célja:</strong> {workgroup.campaign_goal}
+                  </p>
+                )}
+
+                <div className="flex justify-between text-xs font-medium text-ink-700 pt-1">
+                  <span>Célösszeg:</span>
+                  <span className="font-bold text-ink-900">{formatHuf(donationStats.targetAmount)}</span>
+                </div>
+                <div className="flex justify-between text-xs font-medium text-ink-700">
+                  <span>Összegyűlt:</span>
+                  <span className="font-bold text-emerald-700">{formatHuf(donationStats.currentAmount)} ({donationStats.percentage}%)</span>
+                </div>
+                <div className="h-3 w-full rounded-full bg-sand-200 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-wine-600 via-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
+                    style={{ width: `${donationStats.percentage}%` }}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDonationOpen(true)}
+                className="btn-primary w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md"
+              >
+                <Heart className="h-4 w-4 fill-white" />
+                Támogatom ezt a projektet
+              </button>
+
+              {donationStats.recentDonations.length > 0 && (
+                <div className="pt-3 border-t border-sand-300 space-y-2">
+                  <h3 className="text-xs font-bold text-ink-800 uppercase tracking-wider">Legutóbbi Támogatók:</h3>
+                  <ul className="space-y-1.5 text-xs text-ink-600">
+                    {donationStats.recentDonations.map((item) => (
+                      <li key={item.id} className="flex justify-between items-center py-1 border-b border-sand-200 last:border-0">
+                        <span className="font-medium text-ink-800">{item.donorName}</span>
+                        <span className="font-bold text-emerald-700">{formatHuf(item.amount)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-ink-800 bg-sand-100 p-2.5 rounded-lg border border-sand-300">
-                <strong>A támogatás célja:</strong> {workgroup.campaign_goal || (workgroup.name.includes('Virág') ? '20 db új virágtartó kaspó kihelyezése és növényesítése a belvárosban.' : '15 db időjárásálló QR-kódos digitális tanösvény tábla az Óház-kilátóhoz.')}
-              </p>
-
-              <div className="flex justify-between text-xs font-medium text-ink-700 pt-1">
-                <span>Célösszeg:</span>
-                <span className="font-bold text-ink-900">{formatHuf(donationStats.targetAmount)}</span>
-              </div>
-              <div className="flex justify-between text-xs font-medium text-ink-700">
-                <span>Összegyűlt:</span>
-                <span className="font-bold text-emerald-700">{formatHuf(donationStats.currentAmount)} ({donationStats.percentage}%)</span>
-              </div>
-              <div className="h-3 w-full rounded-full bg-sand-200 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-wine-600 via-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
-                  style={{ width: `${donationStats.percentage}%` }}
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setDonationOpen(true)}
-              className="btn-primary w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md"
-            >
-              <Heart className="h-4 w-4 fill-white" />
-              Támogatom ezt a projektet
-            </button>
-
-            {donationStats.recentDonations.length > 0 && (
-              <div className="pt-3 border-t border-sand-300 space-y-2">
-                <h3 className="text-xs font-bold text-ink-800 uppercase tracking-wider">Legutóbbi Támogatók:</h3>
-                <ul className="space-y-1.5 text-xs text-ink-600">
-                  {donationStats.recentDonations.map((item) => (
-                    <li key={item.id} className="flex justify-between items-center py-1 border-b border-sand-200 last:border-0">
-                      <span className="font-medium text-ink-800">{item.donorName}</span>
-                      <span className="font-bold text-emerald-700">{formatHuf(item.amount)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          )}
 
           <div className="surface p-5">
             <h2 className="font-display text-base text-ink-900">A csoportról</h2>

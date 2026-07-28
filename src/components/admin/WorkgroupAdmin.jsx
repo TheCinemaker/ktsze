@@ -6,7 +6,7 @@ import { useAsyncData } from '../../lib/useAsyncData';
 import { useToast } from '../../context/ToastContext';
 import { EmptyState, LoadingBlock, ErrorBlock, Modal, ConfirmDialog, TextInput, TextArea, Checkbox, Spinner } from '../ui';
 
-const EMPTY = { name: '', description: '', leader_name: '', latest_updates: '', is_active: true, target_amount: 250000 };
+const EMPTY = { name: '', description: '', leader_name: '', latest_updates: '', is_active: true, target_amount: 250000, campaign_goal: '', enable_crowdfunding: false };
 
 const WorkgroupModal = ({ workgroup, open, onClose, onSaved }) => {
   const toast = useToast();
@@ -68,22 +68,33 @@ const WorkgroupModal = ({ workgroup, open, onClose, onSaved }) => {
           hint="Üresen hagyható, ha még nincs kijelölve."
         />
 
-        <TextInput
-          label="Közösségi Finanszírozási Célösszeg (Ft)"
-          type="number"
-          step="10000"
-          value={form.target_amount || 250000}
-          onChange={set('target_amount')}
-          hint="Az az összeg, amennyit a Barion modulon keresztül gyűjtenek (pl. 250 000 Ft)."
+        <Checkbox
+          label="Közösségi Finanszírozás (Barion Adományozás) bekapcsolása"
+          hint="Ha bekapcsolod, megjelenik a támogatási haladási sáv és a Támogatom gomb."
+          checked={Boolean(form.enable_crowdfunding)}
+          onChange={(e) => setForm((prev) => ({ ...prev, enable_crowdfunding: e.target.checked }))}
         />
 
-        <TextArea
-          label="Mire fordítjuk az összeget? (Támogatás célja)"
-          value={form.campaign_goal || ''}
-          onChange={set('campaign_goal')}
-          rows={2}
-          hint="Pontos leírás a támogatóknak (pl. 20 db új virágtartó kaspó beszerzése a belvárosban)."
-        />
+        {form.enable_crowdfunding && (
+          <div className="p-4 rounded-xl bg-sand-100 border border-sand-300 space-y-4 animate-fade-in">
+            <TextInput
+              label="Közösségi Finanszírozási Célösszeg (Ft)"
+              type="number"
+              step="10000"
+              value={form.target_amount || 250000}
+              onChange={set('target_amount')}
+              hint="Az az összeg, amennyit a Barion modulon keresztül gyűjtenek (pl. 250 000 Ft)."
+            />
+
+            <TextArea
+              label="Mire fordítjuk az összeget? (Támogatás célja)"
+              value={form.campaign_goal || ''}
+              onChange={set('campaign_goal')}
+              rows={2}
+              hint="Pontos leírás a támogatóknak (pl. 20 db új virágtartó kaspó beszerzése a belvárosban)."
+            />
+          </div>
+        )}
 
         <TextArea
           label="Friss információk"
