@@ -2,6 +2,8 @@
 //  Barion Smart Gateway — Sandbox Tesztkörnyezet & Adományozási Szimulátor
 // =============================================================================
 
+import { supabase } from './supabaseClient';
+
 export const BARION_CONFIG = {
   environment: 'SANDBOX',
   posKey: 'barion-sandbox-ktsze-pos-key-demo',
@@ -11,7 +13,7 @@ export const BARION_CONFIG = {
 
 const DONATIONS_STORAGE_KEY = 'ktsze_barion_donations_sandbox_v1';
 
-/** Beolvassa a Barion teszt adományokat a tárolóból. */
+/** Beolvassa a Barion teszt adományokat a tárolóból (localStorage tartalék). */
 export const getStoredDonations = () => {
   try {
     const raw = localStorage.getItem(DONATIONS_STORAGE_KEY);
@@ -23,16 +25,17 @@ export const getStoredDonations = () => {
 };
 
 /** Kiszámolja egy munkacsoport gyűjtési egyenlegét és legutóbbi támogatóit. */
-export const getWorkgroupDonationStats = (workgroupId, defaultTarget = 250000, defaultCurrent = 115000) => {
+export const getWorkgroupDonationStats = (workgroupId, defaultTarget = 250000, defaultCurrent = 0) => {
   const allDonations = getStoredDonations();
   const groupDonations = allDonations[workgroupId] || [];
 
   const addedTotal = groupDonations.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const totalRaised = defaultCurrent + addedTotal;
-  const percentage = Math.min(Math.round((totalRaised / defaultTarget) * 100), 100);
+  const target = Number(defaultTarget) || 250000;
+  const percentage = Math.min(Math.round((totalRaised / target) * 100), 100);
 
   return {
-    targetAmount: defaultTarget,
+    targetAmount: target,
     currentAmount: totalRaised,
     percentage,
     donationCount: groupDonations.length,
@@ -42,7 +45,7 @@ export const getWorkgroupDonationStats = (workgroupId, defaultTarget = 250000, d
 
 /**
  * Barion Sandbox Fizetés Indítása.
- * Szimulálja a Barion Smart Gateway Payment/Start folyamatát és sikeres visszatérését.
+ * Elmenti a tranzakciót a Supabase `workgroup_donations` táblába ÉS a helyi tárolóba is.
  */
 export const executeBarionDonation = async ({ workgroupId, workgroupName, amount, donorName }) => {
   const numericAmount = Number(amount);
@@ -52,18 +55,33 @@ export const executeBarionDonation = async ({ workgroupId, workgroupName, amount
 
   const commission = Math.round(numericAmount * BARION_CONFIG.commissionRate);
   const netAmount = numericAmount - commission;
+  const barionPaymentId = `BARION-TEST-${Date.now()}`;
+  const finalDonorName = donorName?.trim() || 'Névtelen Támogató';
 
-  // Szimuláljuk a Barion API válaszidőt (0.8s)
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  // 1. Mentés Supabase Adatbázisba (ha fel van állítva a 13. migrációs tábla)
+  try {
+    await supabase.from('workgroup_donations').insert({
+      workgroup_id: workgroupId,
+      donor_name: finalDonorName,
+      amount: numericAmount,
+      commission_amount: commission,
+      net_amount: netAmount,
+      barion_payment_id: barionPaymentId,
+      status: 'Succeeded'
+    });
+  } catch (err) {
+    console.warn('Supabase workgroup_donations mentés tartalékolásra váltott:', err);
+  }
 
+  // 2. Mentés Helyi Tárolóba (azonnali UI frissítéshez)
   const newDonation = {
-    id: `BARION-TEST-${Date.now()}`,
+    id: barionPaymentId,
     workgroupId,
     workgroupName,
     amount: numericAmount,
     commission,
     netAmount,
-    donorName: donorName?.trim() || 'Névtelen Támogató',
+    donorName: finalDonorName,
     createdAt: new Date().toISOString(),
     status: 'Succeeded',
     gateway: 'Barion Sandbox'
