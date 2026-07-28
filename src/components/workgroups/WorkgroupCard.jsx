@@ -105,8 +105,8 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
           {/* Siker Jelzés ha elértük a 100%-ot! */}
           {donationStats.percentage >= 100 && (
             <div className="flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow-sm">
-              <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-              <span>🎉 Cél teljesülve! Köszönjük a támogatásokat!</span>
+              <Sparkles className="h-3.5 w-3.5 animate-pulse shrink-0" />
+              <span>🎉 A cél teljesítve, köszönjük a támogatást!</span>
             </div>
           )}
 

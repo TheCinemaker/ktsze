@@ -176,8 +176,8 @@ export const WorkgroupDetailPage = () => {
               {donationStats.percentage >= 100 && (
                 <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white space-y-1 shadow-md animate-fade-in">
                   <div className="flex items-center gap-1.5 font-bold text-sm">
-                    <Sparkles className="h-4 w-4 animate-bounce" />
-                    <span>🎉 SIKERES GYŰJTÉS!</span>
+                    <Sparkles className="h-4 w-4 animate-bounce shrink-0" />
+                    <span>🎉 A cél teljesítve, köszönjük a támogatást!</span>
                   </div>
                   <p className="text-xs text-emerald-100 leading-snug">
                     A kitűzött célösszeget elértük! Köszönjük a közösség összefogását és minden támogatónknak!
