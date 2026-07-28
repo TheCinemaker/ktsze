@@ -244,7 +244,9 @@ export const createWorkgroup = async (input) => {
         leader_user_id: input.leader_user_id || null,
         latest_updates: input.latest_updates?.trim() || null,
         is_active: input.is_active ?? true,
-        sort_order: input.sort_order ?? 0
+        sort_order: input.sort_order ?? 0,
+        target_amount: input.target_amount ? Number(input.target_amount) : 250000,
+        campaign_goal: input.campaign_goal?.trim() || null
       })
       .select()
       .single()
@@ -256,7 +258,9 @@ export const updateWorkgroup = async (id, patch) => {
     description: patch.description?.trim() || null,
     leader_name: patch.leader_name?.trim() || null,
     leader_user_id: patch.leader_user_id || null,
-    latest_updates: patch.latest_updates?.trim() || null
+    latest_updates: patch.latest_updates?.trim() || null,
+    target_amount: patch.target_amount ? Number(patch.target_amount) : 250000,
+    campaign_goal: patch.campaign_goal?.trim() || null
   };
   if (patch.name) {
     payload.name = patch.name.trim();
