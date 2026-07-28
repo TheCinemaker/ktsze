@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Flower2, Award, Crown, Mail, User } from 'lucide-react';
+import { Users, Flower2, Award, Crown, Mail, User, Phone } from 'lucide-react';
 
 import { ORGANIZATION, formattedAddress, BOARD_MEMBERS_BIO } from '../config/organization';
 import { listWorkgroups, listPublicBoardMembers } from '../lib/db';
@@ -136,17 +136,33 @@ export const AboutPage = () => {
                     </div>
 
                     {/* Elérhetőség */}
-                    {member.private_email && (
-                      <div className="pt-3 border-t border-sand-200">
-                        <a
-                          href={`mailto:${member.private_email}`}
-                          className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
-                        >
-                          <Mail className="h-3.5 w-3.5" aria-hidden="true" />
-                          {member.private_email}
-                        </a>
-                      </div>
-                    )}
+                    <div className="pt-3 border-t border-sand-200 space-y-1.5">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Digitális platform &amp; Elérhetőség:</div>
+                      {member.private_email && (
+                        <div>
+                          <a
+                            href={`mailto:${member.private_email}`}
+                            className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
+                          >
+                            <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            {member.private_email}
+                          </a>
+                        </div>
+                      )}
+
+                      {(member.phone || BOARD_MEMBERS_BIO.szilveszter?.phoneFormatted) &&
+                        (member.full_name?.toLowerCase().includes('szilveszter') || member.private_email?.includes('szilveszter')) && (
+                        <div>
+                          <a
+                            href={`tel:${BOARD_MEMBERS_BIO.szilveszter.phone}`}
+                            className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
+                          >
+                            <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            {BOARD_MEMBERS_BIO.szilveszter.phoneFormatted}
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </article>
               ))}
