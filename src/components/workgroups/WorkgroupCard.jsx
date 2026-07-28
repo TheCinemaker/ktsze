@@ -55,39 +55,47 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
   };
 
   return (
-    <article className="card-hover flex flex-col p-6">
-      <div className="flex items-start justify-between gap-3">
-        <div className="rounded-lg bg-wine-50 p-2">
-          <Users className="h-5 w-5 text-wine-600" aria-hidden="true" />
+    <article className="card-hover flex flex-col justify-between p-6 h-[540px] rounded-2xl border border-sand-300 bg-white shadow-sm transition-all overflow-hidden">
+      {/* 1. Fejléc és Leírás Zóna (rugalmas magasságú, ha hosszú akkor görgethető) */}
+      <div className="flex-1 flex flex-col min-h-0 space-y-2 overflow-hidden">
+        <div className="flex items-start justify-between gap-3 shrink-0">
+          <div className="rounded-lg bg-wine-50 p-2">
+            <Users className="h-5 w-5 text-wine-600" aria-hidden="true" />
+          </div>
+          {memberCount > 0 && (
+            <span className="badge-neutral shrink-0">
+              {memberCount} {memberCount === 1 ? 'tag' : 'tag'}
+            </span>
+          )}
         </div>
-        {memberCount > 0 && (
-          <span className="badge-neutral">
-            {memberCount} {memberCount === 1 ? 'tag' : 'tag'}
-          </span>
+
+        <div className="shrink-0">
+          <h3 className="font-display text-lg sm:text-xl text-ink-900 line-clamp-1">
+            <Link to={`/munkacsoportok/${workgroup.slug}`} className="rounded transition-colors hover:text-wine-600">
+              {workgroup.name}
+            </Link>
+          </h3>
+
+          {workgroup.leader_name && (
+            <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-wine-600">
+              Vezető: {workgroup.leader_name}
+            </p>
+          )}
+        </div>
+
+        {/* Görgethető Leírás Szövegdoboz */}
+        {workgroup.description ? (
+          <div className="flex-1 overflow-y-auto pr-1 text-sm text-ink-600 leading-relaxed custom-scrollbar">
+            <FormattedText>{workgroup.description}</FormattedText>
+          </div>
+        ) : (
+          <div className="flex-1 text-xs italic text-ink-400">Nincs leírás megadva.</div>
         )}
       </div>
 
-      <h3 className="mt-4 font-display text-xl text-ink-900">
-        <Link to={`/munkacsoportok/${workgroup.slug}`} className="rounded transition-colors hover:text-wine-600">
-          {workgroup.name}
-        </Link>
-      </h3>
-
-      {workgroup.leader_name && (
-        <p className="mt-1 text-xs font-medium uppercase tracking-wide text-wine-600">
-          Vezető: {workgroup.leader_name}
-        </p>
-      )}
-
-      {workgroup.description && (
-        <div className="mt-3 flex-1 text-sm text-ink-600">
-          <FormattedText>{workgroup.description}</FormattedText>
-        </div>
-      )}
-
-      {/* Barion Közösségi Finanszírozási Haladási Sáv — csak ha be van kapcsolva az adminon */}
-      {isCrowdfundingEnabled && donationStats && (
-        <div className={`mt-4 p-3.5 rounded-xl border space-y-2 transition-all ${
+      {/* 2. Barion Közösségi Finanszírozási Zóna (Fix elrendezésű csempe) */}
+      {isCrowdfundingEnabled && donationStats ? (
+        <div className={`shrink-0 my-3 p-3.5 rounded-xl border space-y-2 transition-all ${
           donationStats.percentage >= 100
             ? 'bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-200'
             : 'bg-sand-100 border-sand-300'
@@ -106,13 +114,13 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
           {donationStats.percentage >= 100 && (
             <div className="flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow-sm">
               <Sparkles className="h-3.5 w-3.5 animate-pulse shrink-0" />
-              <span>🎉 A cél teljesítve, köszönjük a támogatást!</span>
+              <span className="truncate">🎉 A cél teljesítve, köszönjük a támogatást!</span>
             </div>
           )}
 
-          {/* Mire fordítjuk az összeget */}
+          {/* Mire fordítjuk az összeget — max 2 soros görgethető leírás */}
           {workgroup.campaign_goal && (
-            <p className="text-[11px] font-medium text-ink-700 leading-snug">
+            <p className="text-[11px] font-medium text-ink-700 leading-snug max-h-10 overflow-y-auto pr-1 custom-scrollbar">
               <strong>Cél:</strong> {workgroup.campaign_goal}
             </p>
           )}
@@ -128,7 +136,7 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
             />
           </div>
 
-          <div className="pt-1 flex items-center justify-between">
+          <div className="pt-0.5 flex items-center justify-between">
             <button
               type="button"
               onClick={() => setDonationOpen(true)}
@@ -144,15 +152,17 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
             <span className="text-[10px] text-ink-500">Barion Sandbox</span>
           </div>
         </div>
-      )}
+      ) : null}
 
+      {/* 3. Görgethető Hírek / Frissítések Zóna */}
       {workgroup.latest_updates && (
-        <div className="mt-3 border-t border-sand-300 pt-3 text-sm text-ink-500">
+        <div className="shrink-0 max-h-16 overflow-y-auto pr-1 custom-scrollbar border-t border-sand-300 pt-2 text-xs text-ink-500">
           <FormattedText>{workgroup.latest_updates}</FormattedText>
         </div>
       )}
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-sand-300 pt-4">
+      {/* 4. Alsó Akciók Zóna */}
+      <div className="shrink-0 border-t border-sand-300 pt-3 flex items-center justify-between gap-3">
         <JoinWorkgroupButton
           workgroup={workgroup}
           membership={membership}
@@ -162,7 +172,7 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
 
         <Link
           to={`/munkacsoportok/${workgroup.slug}`}
-          className="inline-flex items-center gap-1 rounded text-sm font-medium text-wine-600 hover:underline"
+          className="inline-flex items-center gap-1 rounded text-xs font-bold text-wine-600 hover:underline"
         >
           Részletek
           <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
