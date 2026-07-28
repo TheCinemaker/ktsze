@@ -74,7 +74,7 @@ export const socialLinks = () =>
  */
 export const BOARD_MEMBERS_BIO = {
   'szilveszter': {
-    bio: 'Az SA Software & Network Solutions alapítója és vezető fejlesztője. A Kőszegi Turisztikai Szövetség Egyesület alelnökeként a Digitális Kőszeg program szakmai vezetője, ahol az okosturisztikai szoftverrendszerek, a felhőalapú tagi platform és az egyesület informatikai infrastruktúrájának fejlesztését irányítja. Munkájának középpontjában az innovatív digitális megoldások, a vendégélmény-központú turizmus és a helyi vállalkozások technológiai fejlődésének támogatása áll.',
+    bio: 'Az SA Software & Network Solutions alapítója és vezető fejlesztője. A Kőszegi Turisztikai Szövetség Egyesület alelnökeként a Digitális Kőszeg program szakmai vezetője, ahol az okosturisztikai szoftverrendszerek, a felhőalapú tagi platform és az egyesület informatikai infrastruktúrájának fejlesztését irányítja. Munkájának középpontjában az innovatív digitális megoldások, a vendégélmény-központú turizmus és a helyi vállalkozások technológiai fejlődésének támogatása áll. Szerelemprojektje a https://visitkoszeg.hu.',
     motto: '„Ha valamit nem találsz a neten, azt nem is keresed igazán”',
     photoUrl: '/avar_szilveszter.jpg'
   },

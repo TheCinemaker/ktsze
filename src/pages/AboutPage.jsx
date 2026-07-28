@@ -130,9 +130,9 @@ export const AboutPage = () => {
                         </blockquote>
                       )}
 
-                      <p className="text-xs leading-relaxed text-ink-600 pt-2 border-t border-sand-200">
-                        {getMemberBio(member)}
-                      </p>
+                      <div className="text-xs leading-relaxed text-ink-600 pt-2 border-t border-sand-200">
+                        <FormattedText>{getMemberBio(member)}</FormattedText>
+                      </div>
                     </div>
 
                     {/* Elérhetőség */}
