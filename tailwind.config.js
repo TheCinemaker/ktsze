@@ -55,7 +55,8 @@ export default {
       },
       boxShadow: {
         card: '0 1px 2px rgba(44, 34, 30, 0.04), 0 1px 3px rgba(44, 34, 30, 0.06)',
-        lift: '0 4px 12px rgba(44, 34, 30, 0.08), 0 2px 4px rgba(44, 34, 30, 0.04)',
+        lift: '0 8px 24px -4px rgba(108, 29, 48, 0.12), 0 4px 12px rgba(44, 34, 30, 0.06)',
+        glow: '0 0 35px -5px rgba(245, 158, 11, 0.4)',
         overlay: '0 16px 48px rgba(44, 34, 30, 0.18)'
       },
       maxWidth: { prose: '68ch' },

@@ -1,7 +1,6 @@
-// Netlify dev20 branch build trigger
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Newspaper, FileText, Users, Sparkles, Compass, ShieldCheck, Heart } from 'lucide-react';
+import { ArrowRight, Newspaper, FileText, Users, Sparkles, Compass, ShieldCheck, Heart, Zap, Globe, Award } from 'lucide-react';
 
 import { ORGANIZATION } from '../config/organization';
 import { listPublishedNews, listWorkgroups, getWorkgroupStats, listMyWorkgroupMemberships } from '../lib/db';
@@ -12,41 +11,83 @@ import { NewsCard } from '../components/public/NewsCard';
 import { WorkgroupCard } from '../components/workgroups/WorkgroupCard';
 
 const HeroSection = () => (
-  <section className="container-page py-6 sm:py-8">
-    <div className="glass-hero rounded-3xl p-8 sm:p-14 shadow-2xl relative overflow-hidden border border-wine-700/40">
-      {/* Ragyogó Ambient Fénygömbök a Háttérben */}
-      <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-amber-500/15 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-wine-500/20 blur-3xl pointer-events-none" />
+  <section className="container-page py-6 sm:py-10">
+    {/* High-Tech Luxury Glass Banner */}
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-wine-950 via-wine-900 to-amber-950 text-white p-8 sm:p-16 border border-amber-500/30 shadow-[0_20px_50px_rgba(35,8,15,0.6)] backdrop-blur-2xl">
+      {/* Ragyogó Neongömbök & Mesh Gradiens */}
+      <div className="absolute -top-32 -right-32 h-[30rem] w-[30rem] rounded-full bg-amber-500/20 blur-[100px] pointer-events-none animate-pulse" />
+      <div className="absolute -bottom-32 -left-32 h-[30rem] w-[30rem] rounded-full bg-wine-500/30 blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-emerald-500/10 blur-[90px] pointer-events-none" />
 
-      <div className="relative z-10 max-w-3xl space-y-6">
-        <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 border border-amber-400/30 px-3.5 py-1 text-xs font-bold uppercase tracking-widest text-amber-300 backdrop-blur-md">
-          <Sparkles className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
-          <span>Smart Tourism Platform</span>
+      <div className="relative z-10 max-w-4xl space-y-8">
+        {/* Élő Rendszer Status Badge */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 border border-amber-400/40 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-amber-300 backdrop-blur-md shadow-inner">
+            <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
+            <Sparkles className="h-4 w-4 text-amber-400" />
+            <span>Digital Kőszeg Hive 2026</span>
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-md">
+            <Zap className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Realtime Supabase Sync</span>
+          </div>
         </div>
 
-        <h1 className="font-display text-4xl text-white sm:text-6xl font-bold tracking-tight leading-tight">
-          {ORGANIZATION.legalName}
-        </h1>
+        <div className="space-y-4">
+          <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-none bg-gradient-to-r from-white via-sand-100 to-amber-200 bg-clip-text text-transparent">
+            {ORGANIZATION.legalName}
+          </h1>
 
-        <p className="text-lg text-sand-200 leading-relaxed font-normal max-w-2xl">
-          {ORGANIZATION.mission}
-        </p>
+          <p className="text-lg sm:text-xl text-sand-200 leading-relaxed font-normal max-w-3xl">
+            {ORGANIZATION.mission}
+          </p>
+        </div>
 
-        <div className="pt-4 flex flex-wrap items-center gap-4">
+        {/* Cselekvési Gombok & Lebegő Kártyák */}
+        <div className="pt-2 flex flex-wrap items-center gap-4">
           <Link
             to="/munkacsoportok"
-            className="btn py-3 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-wine-950 font-bold rounded-xl shadow-lg hover:shadow-amber-500/25 transition-all flex items-center gap-2 border-0"
+            className="btn py-4 px-8 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-wine-950 font-extrabold rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-base border-0 flex items-center gap-2.5"
           >
-            <Compass className="h-4 w-4" />
-            Munkacsoportok felfedezése
+            <Compass className="h-5 w-5" />
+            Munkacsoportok Felfedezése
           </Link>
+
           <Link
             to="/egyesulet"
-            className="btn py-3 px-6 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/20 backdrop-blur-md transition-all flex items-center gap-2"
+            className="btn py-4 px-7 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl border border-white/25 backdrop-blur-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-base flex items-center gap-2"
           >
-            Egyesületről
+            Egyesületekről &amp; Vezetőség
             <ArrowRight className="h-4 w-4" />
           </Link>
+        </div>
+
+        {/* 3 Luxus Statisztikai Kártya */}
+        <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-white/15">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-1">
+            <div className="flex items-center gap-2 text-amber-400 font-bold text-xs">
+              <Award className="h-4 w-4" />
+              <span>100% Okosturizmus</span>
+            </div>
+            <p className="text-xs text-sand-300">Digitális Kőszeg szoftverarchitektúra</p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-1">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+              <Zap className="h-4 w-4" />
+              <span>Realtime Adatbázis</span>
+            </div>
+            <p className="text-xs text-sand-300">Azonnali Supabase élő szinkronizáció</p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-1">
+            <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs">
+              <Globe className="h-4 w-4" />
+              <span>Barion Crowdfunding</span>
+            </div>
+            <p className="text-xs text-sand-300">Közösségi projekt finanszírozás</p>
+          </div>
         </div>
       </div>
     </div>
@@ -58,22 +99,22 @@ const LatestNews = () => {
   const items = (news || []).slice(0, 3);
 
   return (
-    <section className="section bg-sand-50/60 relative py-8">
-      <div className="container-page space-y-6">
-        {/* Odaragasztott Glass Sticky Fejléc a Híreknél */}
-        <div className="sticky top-[68px] z-30 bg-white/85 backdrop-blur-xl py-3.5 px-5 border border-sand-300/70 rounded-2xl shadow-xs transition-all flex items-center justify-between">
+    <section className="section bg-sand-50/70 relative py-10">
+      <div className="container-page space-y-8">
+        {/* Futurisztikus Neonsávú Glass Sticky Fejléc */}
+        <div className="sticky top-[68px] z-30 bg-gradient-to-r from-wine-950/90 via-wine-900/90 to-amber-950/90 text-white backdrop-blur-2xl py-4 px-6 border border-amber-500/40 rounded-2xl shadow-[0_10px_30px_rgba(35,8,15,0.4)] transition-all flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-wine-100/80 text-wine-700">
+            <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-300">
               <Newspaper className="h-5 w-5" />
             </div>
             <div>
-              <p className="eyebrow text-[10px]">Friss hírek &amp; Események</p>
-              <h2 className="font-display text-xl sm:text-2xl text-ink-900 font-bold">Legutóbbi hírek</h2>
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-amber-400">Friss hírek &amp; Események</p>
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-white">Legutóbbi hírek</h2>
             </div>
           </div>
 
           {items.length > 0 && (
-            <Link to="/hirek" className="btn-secondary btn-sm rounded-lg font-bold">
+            <Link to="/hirek" className="btn py-2 px-4 bg-amber-500 hover:bg-amber-400 text-wine-950 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 border-0">
               Összes hír
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
@@ -122,21 +163,21 @@ const Workgroups = () => {
   };
 
   return (
-    <section className="section bg-sand-100/50 relative py-8">
-      <div className="container-page space-y-6">
-        {/* Odaragasztott Glass Sticky Fejléc a Munkacsoportoknál */}
-        <div className="sticky top-[68px] z-30 bg-white/85 backdrop-blur-xl py-3.5 px-5 border border-sand-300/70 rounded-2xl shadow-xs transition-all flex items-center justify-between">
+    <section className="section bg-sand-100/60 relative py-10">
+      <div className="container-page space-y-8">
+        {/* Futurisztikus Neonsávú Glass Sticky Fejléc */}
+        <div className="sticky top-[68px] z-30 bg-gradient-to-r from-wine-950/90 via-wine-900/90 to-amber-950/90 text-white backdrop-blur-2xl py-4 px-6 border border-emerald-500/40 rounded-2xl shadow-[0_10px_30px_rgba(35,8,15,0.4)] transition-all flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-emerald-100/80 text-emerald-700">
+            <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">
               <Users className="h-5 w-5" />
             </div>
             <div>
-              <p className="eyebrow text-[10px]">Szakmai Összefogás</p>
-              <h2 className="font-display text-xl sm:text-2xl text-ink-900 font-bold">Munkacsoportok</h2>
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Szakmai Összefogás</p>
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-white">Munkacsoportok</h2>
             </div>
           </div>
 
-          <Link to="/munkacsoportok" className="btn-primary btn-sm bg-wine-700 hover:bg-wine-800 rounded-lg font-bold">
+          <Link to="/munkacsoportok" className="btn py-2 px-4 bg-emerald-500 hover:bg-emerald-400 text-wine-950 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 border-0">
             Csatlakozás
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
