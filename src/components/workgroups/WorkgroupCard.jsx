@@ -12,7 +12,7 @@ export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
   const [reloadKey, setReloadKey] = useState(0);
 
   const memberCount = stats?.approved ?? 0;
-  const donationStats = getWorkgroupDonationStats(workgroup.id);
+  const donationStats = getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000);
 
   const handleDonationSuccess = () => {
     setReloadKey((k) => k + 1);

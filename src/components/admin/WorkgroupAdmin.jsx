@@ -6,7 +6,7 @@ import { useAsyncData } from '../../lib/useAsyncData';
 import { useToast } from '../../context/ToastContext';
 import { EmptyState, LoadingBlock, ErrorBlock, Modal, ConfirmDialog, TextInput, TextArea, Checkbox, Spinner } from '../ui';
 
-const EMPTY = { name: '', description: '', leader_name: '', latest_updates: '', is_active: true };
+const EMPTY = { name: '', description: '', leader_name: '', latest_updates: '', is_active: true, target_amount: 250000 };
 
 const WorkgroupModal = ({ workgroup, open, onClose, onSaved }) => {
   const toast = useToast();
@@ -66,6 +66,15 @@ const WorkgroupModal = ({ workgroup, open, onClose, onSaved }) => {
           value={form.leader_name || ''}
           onChange={set('leader_name')}
           hint="Üresen hagyható, ha még nincs kijelölve."
+        />
+
+        <TextInput
+          label="Közösségi Finanszírozási Célösszeg (Ft)"
+          type="number"
+          step="10000"
+          value={form.target_amount || 250000}
+          onChange={set('target_amount')}
+          hint="Az az összeg, amennyit a Barion modulon keresztül gyűjtenek (pl. 250 000 Ft)."
         />
 
         <TextArea

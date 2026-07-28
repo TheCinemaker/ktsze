@@ -59,7 +59,7 @@ export const WorkgroupDetailPage = () => {
   const workgroup = group.data;
   const memberCount = (stats.data || {})[workgroup.id]?.approved ?? 0;
   const membership = (memberships.data || []).find((m) => m.workgroup_id === workgroup.id);
-  const donationStats = getWorkgroupDonationStats(workgroup.id);
+  const donationStats = getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000);
 
   return (
     <div className="container-page py-12 sm:py-16">
