@@ -1,16 +1,21 @@
-import React, { useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Flower2 } from 'lucide-react';
+import { ArrowLeft, Users, Flower2, Heart, CreditCard, Sparkles } from 'lucide-react';
 
 import { getWorkgroupBySlug, getWorkgroupStats, listMyWorkgroupMemberships } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, EmptyState, LoadingBlock, ErrorBlock, FormattedText } from '../components/ui';
 import { JoinWorkgroupButton } from '../components/workgroups/JoinWorkgroupButton';
+import { DonationModal } from '../components/workgroups/DonationModal';
+import { getWorkgroupDonationStats } from '../lib/barion';
+import { formatHuf } from '../lib/format';
 
 export const WorkgroupDetailPage = () => {
   const { slug } = useParams();
   const { profile } = useAuth();
+  const [donationOpen, setDonationOpen] = useState(false);
+  const [donationVersion, setDonationVersion] = useState(0);
 
   const group = useAsyncData(() => getWorkgroupBySlug(slug), [slug]);
   const stats = useAsyncData(getWorkgroupStats, [], { initialData: {} });
@@ -54,6 +59,7 @@ export const WorkgroupDetailPage = () => {
   const workgroup = group.data;
   const memberCount = (stats.data || {})[workgroup.id]?.approved ?? 0;
   const membership = (memberships.data || []).find((m) => m.workgroup_id === workgroup.id);
+  const donationStats = getWorkgroupDonationStats(workgroup.id);
 
   return (
     <div className="container-page py-12 sm:py-16">
@@ -68,7 +74,17 @@ export const WorkgroupDetailPage = () => {
           title={workgroup.name}
           description={workgroup.description ? <FormattedText>{workgroup.description}</FormattedText> : undefined}
           actions={
-            <JoinWorkgroupButton workgroup={workgroup} membership={membership} onChanged={reloadAll} />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setDonationOpen(true)}
+                className="btn-primary py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2"
+              >
+                <Heart className="h-4 w-4 fill-white" />
+                Támogatom a projektet
+              </button>
+              <JoinWorkgroupButton workgroup={workgroup} membership={membership} onChanged={reloadAll} />
+            </div>
           }
         />
       </div>
@@ -105,6 +121,59 @@ export const WorkgroupDetailPage = () => {
         </div>
 
         <aside className="space-y-5">
+          {/* Barion Közösségi Finanszírozás Kártya */}
+          <div className="surface p-5 border-l-4 border-l-emerald-500 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-base font-bold text-ink-900 flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-emerald-600" />
+                Közösségi Finanszírozás
+              </h2>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                Barion Sandbox
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-medium text-ink-700">
+                <span>Célösszeg:</span>
+                <span className="font-bold text-ink-900">{formatHuf(donationStats.targetAmount)}</span>
+              </div>
+              <div className="flex justify-between text-xs font-medium text-ink-700">
+                <span>Összegyűlt:</span>
+                <span className="font-bold text-emerald-700">{formatHuf(donationStats.currentAmount)} ({donationStats.percentage}%)</span>
+              </div>
+              <div className="h-3 w-full rounded-full bg-sand-200 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-wine-600 via-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
+                  style={{ width: `${donationStats.percentage}%` }}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setDonationOpen(true)}
+              className="btn-primary w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md"
+            >
+              <Heart className="h-4 w-4 fill-white" />
+              Támogatom ezt a projektet
+            </button>
+
+            {donationStats.recentDonations.length > 0 && (
+              <div className="pt-3 border-t border-sand-300 space-y-2">
+                <h3 className="text-xs font-bold text-ink-800 uppercase tracking-wider">Legutóbbi Támogatók:</h3>
+                <ul className="space-y-1.5 text-xs text-ink-600">
+                  {donationStats.recentDonations.map((item) => (
+                    <li key={item.id} className="flex justify-between items-center py-1 border-b border-sand-200 last:border-0">
+                      <span className="font-medium text-ink-800">{item.donorName}</span>
+                      <span className="font-bold text-emerald-700">{formatHuf(item.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
           <div className="surface p-5">
             <h2 className="font-display text-base text-ink-900">A csoportról</h2>
             <dl className="mt-3 space-y-3 text-sm">
@@ -129,6 +198,13 @@ export const WorkgroupDetailPage = () => {
           </div>
         </aside>
       </div>
+
+      <DonationModal
+        open={donationOpen}
+        onClose={() => setDonationOpen(false)}
+        workgroup={workgroup}
+        onSuccess={() => setDonationVersion((v) => v + 1)}
+      />
     </div>
   );
 };
