@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Heart, CreditCard, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
-import { Modal, Spinner, TextInput } from '../ui';
+import { CreditCard, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Modal, Spinner, TextInput, Checkbox } from '../ui';
 import { formatHuf } from '../../lib/format';
 import { executeBarionDonation, BARION_CONFIG } from '../../lib/barion';
 
@@ -10,6 +10,7 @@ export const DonationModal = ({ open, onClose, workgroup, onSuccess, defaultDono
   const [amount, setAmount] = useState(2500);
   const [customAmount, setCustomAmount] = useState('');
   const [donorName, setDonorName] = useState(defaultDonorName);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [pending, setPending] = useState(false);
   const [successResult, setSuccessResult] = useState(null);
   const [error, setError] = useState(null);
@@ -40,7 +41,7 @@ export const DonationModal = ({ open, onClose, workgroup, onSuccess, defaultDono
         workgroupId: workgroup.id,
         workgroupName: workgroup.name,
         amount: selectedAmount,
-        donorName
+        donorName: isAnonymous ? 'Névtelen Támogató' : donorName
       });
 
       setSuccessResult(result);
@@ -131,13 +132,26 @@ export const DonationModal = ({ open, onClose, workgroup, onSuccess, defaultDono
             onChange={(e) => setCustomAmount(e.target.value)}
           />
 
-          {/* Támogató neve */}
-          <TextInput
-            label="Támogató neve (opcionális):"
-            placeholder="pl. Kovács István (vagy hagyd üresen ha névtelen)"
-            value={donorName}
-            onChange={(e) => setDonorName(e.target.value)}
+          {/* Névtelen támogatás kapcsoló */}
+          <Checkbox
+            label="Inkognitóban támogatom (Névtelen támogatás)"
+            hint="Ha bepipálod, a neved nem jelenik meg a nyilvános támogatói falon."
+            checked={isAnonymous}
+            onChange={(e) => {
+              setIsAnonymous(e.target.checked);
+              if (e.target.checked) setDonorName('Névtelen Támogató');
+            }}
           />
+
+          {/* Támogató neve, ha nem inkognitó */}
+          {!isAnonymous && (
+            <TextInput
+              label="Támogató neve:"
+              placeholder="pl. Kovács István"
+              value={donorName}
+              onChange={(e) => setDonorName(e.target.value)}
+            />
+          )}
 
           {/* Átlátható pénzügyi lebontás (SA Software jutalék) */}
           <div className="p-4 rounded-xl bg-sand-100 border border-sand-300 text-xs space-y-2">
