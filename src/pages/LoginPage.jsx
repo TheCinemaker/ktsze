@@ -54,7 +54,7 @@ const LoginForm = ({ onSwitch }) => {
       
       const targetFrom = location.state?.from;
       const userCanAdmin = can('admin.access') || can('board.access');
-      const safeTarget = (targetFrom && (!targetFrom.includes('/elnokseg') || userCanAdmin)) ? targetFrom : '/tagi';
+      const safeTarget = (targetFrom && (!targetFrom.includes('/elnokseg') || userCanAdmin)) ? targetFrom : '/';
       
       navigate(safeTarget, { replace: true });
     } catch (err) {
@@ -166,7 +166,7 @@ const RegisterForm = ({ onSwitch, onNeedsConfirmation }) => {
       }
 
       toast.success('A fiókod elkészült. A tagságot az elnökség hagyja jóvá.');
-      navigate('/tagi', { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -307,7 +307,7 @@ const SetNewPasswordForm = () => {
     try {
       await updatePassword(password);
       toast.success('Az új jelszavad elmentve.');
-      navigate('/tagi', { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -402,7 +402,7 @@ export const LoginPage = () => {
   if (isAuthenticated) {
     const targetFrom = location.state?.from;
     const userCanAdmin = can('admin.access') || can('board.access');
-    const safeTarget = (targetFrom && (!targetFrom.includes('/elnokseg') || userCanAdmin)) ? targetFrom : '/tagi';
+    const safeTarget = (targetFrom && (!targetFrom.includes('/elnokseg') || userCanAdmin)) ? targetFrom : '/';
     return <Navigate to={safeTarget} replace />;
   }
 

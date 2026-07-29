@@ -73,12 +73,12 @@ export const AuthCallback = () => {
 
     if (type === 'signup' || type === 'invite' || type === 'magiclink') {
       toast.success('Az e-mail címed megerősítve. Üdv a rendszerben!');
-      navigate('/tagi', { replace: true });
+      navigate('/', { replace: true });
       return;
     }
 
     // Ismeretlen típus, de van érvényes munkamenet — ne hagyjuk a főoldalon.
-    if (isAuthenticated) navigate('/tagi', { replace: true });
+    if (isAuthenticated) navigate('/', { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key, isAuthenticated]);
 
