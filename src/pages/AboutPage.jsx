@@ -146,10 +146,10 @@ export const AboutPage = () => {
               {boardMembers.map((member) => (
                 <article
                   key={member.id}
-                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white group h-[660px]"
+                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white group h-[720px]"
                 >
-                  {/* Portré kép */}
-                  <div className="relative h-72 w-full bg-sand-200 overflow-hidden flex items-center justify-center border-b border-sand-300">
+                  {/* Egységes, nagyobb portré kép */}
+                  <div className="relative h-84 sm:h-96 w-full bg-sand-200 overflow-hidden flex items-center justify-center border-b border-sand-300 shrink-0">
                     {getMemberPhoto(member) ? (
                       <img
                         src={getMemberPhoto(member)}
@@ -158,13 +158,13 @@ export const AboutPage = () => {
                       />
                     ) : (
                       <div className="flex flex-col items-center space-y-2 text-wine-800/70">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-wine-100 text-wine-800 text-2xl font-bold font-display shadow-inner">
+                        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-wine-100 text-wine-800 text-3xl font-bold font-display shadow-inner">
                           {member.full_name?.split(' ').map((n) => n[0]).join('').slice(0, 2) || 'TK'}
                         </div>
-                        <span className="text-xs font-medium text-ink-500">Portré feltöltésre vár</span>
+                        <span className="text-xs font-semibold text-ink-500">Portré feltöltésre vár</span>
                       </div>
                     )}
-                    <div className="absolute top-3 right-3 rounded-full bg-wine-700/90 text-white p-1.5 shadow">
+                    <div className="absolute top-3 right-3 rounded-full bg-wine-700/90 text-white p-2 shadow-md">
                       <Award className="h-4 w-4" aria-hidden="true" />
                     </div>
                   </div>
