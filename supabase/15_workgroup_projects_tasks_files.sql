@@ -70,6 +70,7 @@ ALTER TABLE public.project_comments ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Projektek megtekintése mindenkinek" ON public.workgroup_projects;
 DROP POLICY IF EXISTS "Projektek létrehozása bejelentkezett tagoknak" ON public.workgroup_projects;
 DROP POLICY IF EXISTS "Projektek szerkesztése tulajdonosnak vagy adminnak" ON public.workgroup_projects;
+DROP POLICY IF EXISTS "Projektek törlése elnökségi tagoknak" ON public.workgroup_projects;
 
 CREATE POLICY "Projektek megtekintése mindenkinek"
   ON public.workgroup_projects FOR SELECT USING (true);
@@ -82,7 +83,16 @@ CREATE POLICY "Projektek szerkesztése tulajdonosnak vagy adminnak"
     auth.uid() = created_by OR 
     EXISTS (
       SELECT 1 FROM public.user_roles ur 
-      WHERE ur.user_id = auth.uid() AND ur.role IN ('admin', 'president', 'vicepresident')
+      WHERE ur.user_id = auth.uid() AND ur.role IN ('admin', 'president', 'vicepresident', 'board')
+    )
+  );
+
+CREATE POLICY "Projektek törlése elnökségi tagoknak"
+  ON public.workgroup_projects FOR DELETE USING (
+    auth.uid() = created_by OR
+    EXISTS (
+      SELECT 1 FROM public.user_roles ur 
+      WHERE ur.user_id = auth.uid() AND ur.role IN ('admin', 'president', 'vicepresident', 'board')
     )
   );
 
@@ -133,7 +143,7 @@ CREATE POLICY "Munkacsoport fájlok feltöltése tagoknak"
     bucket_id = 'workgroup-files' AND auth.role() = 'authenticated'
   );
 
--- Realtime biztonságos hozzáadása (ha már benne van, nem dob hibát)
+-- Realtime biztonságos hozzáadása
 DO $$
 BEGIN
   BEGIN

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle2, Circle, Clock, MessageSquare, Paperclip, Send, Image, FileText, FolderKanban, User, Phone, Mail, UserPlus, ShieldAlert, Award, Calendar } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Clock, MessageSquare, Paperclip, Send, Image, FileText, FolderKanban, User, Phone, Mail, UserPlus, ShieldAlert, Award, Calendar, Trash2 } from 'lucide-react';
 import { 
   listProjectsByWorkgroup, 
-  createWorkgroupProject, 
+  createWorkgroupProject,
+  deleteWorkgroupProject,
   listProjectTasks, 
   createProjectTask, 
   updateTaskStatus, 
@@ -26,6 +27,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deletingProject, setDeletingProject] = useState(false);
 
   // Projekt vezetői jogosultság ellenőrzése
   const isLeaderOrBoard = Boolean(
@@ -34,6 +36,9 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
     (profile?.full_name && workgroup?.leader_name && profile.full_name.toLowerCase().includes(workgroup.leader_name.toLowerCase())) ||
     (workgroup?.leader_name && profile?.full_name && workgroup.leader_name.toLowerCase().includes(profile.full_name.toLowerCase()))
   );
+
+  // Projekt TÖRLÉSI jogosultság: KIZÁRÓLAG ELNÖKSÉGI TAG / ADMIN!
+  const canDeleteProject = Boolean(can('admin.access') || can('board.access'));
 
   // Új projekt form
   const [showNewProject, setShowNewProject] = useState(false);
@@ -71,8 +76,10 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
       setLoading(true);
       const data = await listProjectsByWorkgroup(workgroupId);
       setProjects(data);
-      if (data.length > 0 && !selectedProjectId) {
+      if (data.length > 0 && (!selectedProjectId || !data.find(p => p.id === selectedProjectId))) {
         setSelectedProjectId(data[0].id);
+      } else if (data.length === 0) {
+        setSelectedProjectId(null);
       }
     } catch (err) {
       console.error('[Projects] Hiba a projektek betöltésekor:', err);
@@ -141,6 +148,30 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
       toast.error(`A projekt létrehozása nem sikerült: ${err.message}`);
     } finally {
       setCreatingProject(false);
+    }
+  };
+
+  // PROJEKT TÖRLÉSE (KIZÁRÓLAG ELNÖKSÉGI TAG KIKÉNYSZERÍTVE)
+  const handleDeleteProject = async (proj) => {
+    if (!canDeleteProject) {
+      toast.error('Projektek törlésére kizárólag az elnökségi tagok jogosultak!');
+      return;
+    }
+
+    if (!window.confirm(`Biztosan törölni szeretnéd a(z) "${proj.title}" projektet?\n\nEz a művelet végleges, és minden hozzá tartozó feladat, külső partner és bejegyzés törlődik!`)) {
+      return;
+    }
+
+    try {
+      setDeletingProject(true);
+      await deleteWorkgroupProject(proj.id);
+      toast.success('Projekt sikeresen törölve.');
+      setSelectedProjectId(null);
+      await loadProjects();
+    } catch (err) {
+      toast.error(`A projekt törlése nem sikerült: ${err.message}`);
+    } finally {
+      setDeletingProject(false);
     }
   };
 
@@ -278,7 +309,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
         )}
       </div>
 
-      {/* Új Projekt Form Modal (Tágas beviteli mezőkkel) */}
+      {/* Új Projekt Form Modal */}
       {showNewProject && (
         <form onSubmit={handleCreateProject} className="card p-6 sm:p-8 bg-sand-50/95 space-y-5 border-wine-300 shadow-md">
           <h4 className="font-display text-xl font-bold text-wine-900">Új Projekt Kiírása</h4>
@@ -355,19 +386,35 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
           {/* Bal Oszlop: Feladatok & Külső Partnerek (7 oszlop) */}
           <div className="lg:col-span-7 space-y-6">
             <div className="card p-6 sm:p-7 bg-white space-y-6 shadow-xs">
-              <div>
-                <h4 className="font-display text-2xl font-bold text-ink-900">{selectedProject.title}</h4>
-                {selectedProject.description && (
-                  <p className="text-sm text-ink-600 mt-2 leading-relaxed">{selectedProject.description}</p>
-                )}
-                {selectedProject.profiles?.full_name && (
-                  <p className="text-xs text-wine-700 font-semibold mt-3">
-                    Kiíró: {selectedProject.profiles.full_name}
-                  </p>
+              <div className="flex items-start justify-between gap-4 border-b border-sand-200 pb-4">
+                <div>
+                  <h4 className="font-display text-2xl font-bold text-ink-900">{selectedProject.title}</h4>
+                  {selectedProject.description && (
+                    <p className="text-sm text-ink-600 mt-2 leading-relaxed">{selectedProject.description}</p>
+                  )}
+                  {selectedProject.profiles?.full_name && (
+                    <p className="text-xs text-wine-700 font-semibold mt-3">
+                      Kiíró: {selectedProject.profiles.full_name}
+                    </p>
+                  )}
+                </div>
+
+                {/* ELNÖKSÉGI PROJEKT TÖRLESE GOMB */}
+                {canDeleteProject && (
+                  <button
+                    type="button"
+                    disabled={deletingProject}
+                    onClick={() => handleDeleteProject(selectedProject)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 hover:border-rose-300 transition-all shrink-0 shadow-2xs"
+                    title="Projekt végleges törlése (Csak Elnökségi Jog)"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {deletingProject ? 'Törlés...' : 'Projekt Törlése'}
+                  </button>
                 )}
               </div>
 
-              {/* TÁGAS ÉS KÉNYELMES FELADAT KIÍRÁSA FORM */}
+              {/* FELADAT KIÍRÁSA FORM */}
               {isAuthenticated && (
                 <form onSubmit={handleAddTask} className="p-4 sm:p-5 rounded-2xl bg-sand-100/90 border border-sand-300 space-y-3">
                   <h5 className="text-xs font-bold uppercase tracking-wider text-wine-900 flex items-center gap-1.5">
@@ -458,7 +505,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                 )}
               </div>
 
-              {/* TÁGAS KÜLSŐ PARTNEREK SZEKCIÓ */}
+              {/* KÜLSŐ PARTNEREK SZEKCIÓ */}
               <div className="pt-5 border-t border-sand-300 space-y-4">
                 <div className="flex items-center justify-between">
                   <h5 className="text-xs font-bold uppercase tracking-wider text-ink-800 flex items-center gap-1.5">
@@ -477,7 +524,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                   )}
                 </div>
 
-                {/* Partner Hozzáadása Form (Tágas Mezőkkel) */}
+                {/* Partner Hozzáadása Form */}
                 {showNewContact && (
                   <form onSubmit={handleAddContact} className="p-4 sm:p-5 rounded-2xl bg-sand-100/90 border border-sand-300 space-y-3 shadow-xs">
                     <h6 className="text-xs font-bold text-wine-900">Új Külső Partner Csatolása</h6>
@@ -625,7 +672,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                 )}
               </div>
 
-              {/* Megjegyzés & Fájl Form (Tágas bevitellel) */}
+              {/* Megjegyzés & Fájl Form */}
               {isAuthenticated ? (
                 <form onSubmit={handleSendComment} className="pt-3 border-t border-sand-200 space-y-2 shrink-0">
                   {attachment && (

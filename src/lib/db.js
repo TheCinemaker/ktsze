@@ -723,6 +723,16 @@ export const createWorkgroupProject = async (input) =>
       .single()
   );
 
+export const deleteWorkgroupProject = async (projectId) => {
+  unwrap(
+    await supabase
+      .from('workgroup_projects')
+      .delete()
+      .eq('id', projectId)
+  );
+  return true;
+};
+
 export const listProjectTasks = async (projectId) =>
   unwrap(
     await supabase
