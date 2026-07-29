@@ -69,31 +69,39 @@ const getMemberPhone = (member) => {
   return null;
 };
 
-// Példa nyilvános támogató vállalkozások és tagok
+// Nyilvános partnerek és csatlakozási felhívások
 const PUBLIC_PARTNERS = [
   {
-    name: 'Jurisics Vár Művelődési Központ',
-    category: 'Kulturális & Turisztikai Szolgáltató',
-    description: 'Kőszeg történelmi szívének kulturális és közösségi központja.',
-    badge: 'Alapító Partnertag'
+    name: 'visitkoszeg.hu',
+    category: 'Digitális Turisztikai Platform & Látogatói Portál',
+    description: 'A város digitális motorja, ahol mindent megtalál az ideérkező vendég: látnivalók, szálláshelyek, borászatok és aktuális kőszegi programok egy helyen.',
+    badge: 'Kiemelt Szövetségi Partner',
+    url: 'https://visitkoszeg.hu',
+    isPrimary: true
   },
   {
-    name: 'Kőszegi Bortermelők Egyesülete',
-    category: 'Borászat & Gasztronómia',
-    description: 'A kőszegi borvidék hagyományainak és borászatainak összefogása.',
-    badge: 'Szakmai Partnertag'
+    name: 'Itt a Te Helyed!',
+    category: 'Szálláshely / Vendéglátás / Borászat',
+    description: 'Jelenjen meg vállalkozásával a Kőszegi Turisztikai Szövetség hivatalos felületén és vegyen részt a város közös turisztikai fejlesztéseiben.',
+    badge: 'Legyél Támogató Partnertag',
+    url: '/tagsag',
+    isCta: true
   },
   {
-    name: 'VisitKőszeg Turisztikai Platform',
-    category: 'Digitális Turisztikai Szolgáltatás',
-    description: 'Kőszeg okos turisztikai információs rendszere és látogatói kalauza.',
-    badge: 'Kiemelt Szövetségi Partner'
+    name: 'Csatlakozz Vállalkozásoddal!',
+    category: 'Kulturális & Szabadidős Szolgáltató',
+    description: 'Legyen része a kőszegi turisztikai összefogásnak! A szövetség tagjaként közös hangon, megerősítve jelenhet meg.',
+    badge: 'Lépj be a Szövetségbe',
+    url: '/tagsag',
+    isCta: true
   },
   {
-    name: 'Írottkő Natúrpark Egyesület',
-    category: 'Ökoturizmus & Természetvédelem',
-    description: 'A határtalan natúrparki értékek és túraútvonalak gondozója.',
-    badge: 'Szakmai Partnertag'
+    name: 'Támogasd Kőszeg Turizmusát!',
+    category: 'Pártoló & Szakmai Partnertag',
+    description: 'Dolgozzunk együtt a kőszegi turizmus jövőjén. Vegye fel velünk a kapcsolatot és csatlakozzon az egyesülethez!',
+    badge: 'Városi Összefogás',
+    url: '/kapcsolat',
+    isCta: true
   }
 ];
 
@@ -246,13 +254,51 @@ export const AboutPage = () => {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {PUBLIC_PARTNERS.map((partner) => (
-            <div key={partner.name} className="card p-6 bg-white space-y-3 border border-sand-300 hover:border-wine-300 transition-all shadow-2xs">
-              <span className="inline-block rounded-full bg-wine-50 px-3 py-1 text-[11px] font-bold text-wine-800 border border-wine-200">
-                {partner.badge}
-              </span>
-              <h3 className="font-display text-lg font-bold text-ink-900">{partner.name}</h3>
-              <p className="text-xs font-semibold text-wine-700">{partner.category}</p>
-              <p className="text-xs text-ink-600 leading-relaxed">{partner.description}</p>
+            <div
+              key={partner.name}
+              className={`card p-6 flex flex-col justify-between space-y-4 transition-all duration-300 ${
+                partner.isPrimary
+                  ? 'bg-gradient-to-b from-wine-50/90 via-white to-sand-50 border-2 border-gold-400 shadow-md ring-1 ring-gold-400/30'
+                  : 'bg-white border border-dashed border-sand-400 hover:border-wine-400 hover:shadow-md'
+              }`}
+            >
+              <div className="space-y-3">
+                <span
+                  className={`inline-block rounded-full px-3 py-1 text-[11px] font-bold border ${
+                    partner.isPrimary
+                      ? 'bg-wine-700 text-white border-wine-800'
+                      : 'bg-sand-100 text-wine-800 border-sand-300'
+                  }`}
+                >
+                  {partner.badge}
+                </span>
+
+                <h3 className="font-display text-xl font-bold text-ink-900">{partner.name}</h3>
+                <p className="text-xs font-bold text-wine-700">{partner.category}</p>
+                <p className="text-xs text-ink-600 leading-relaxed">{partner.description}</p>
+              </div>
+
+              <div className="pt-3 border-t border-sand-200">
+                {partner.isPrimary ? (
+                  <a
+                    href={partner.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-gold btn-sm w-full font-bold flex items-center justify-center gap-1.5"
+                  >
+                    visitkoszeg.hu
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </a>
+                ) : (
+                  <Link
+                    to={partner.url}
+                    className="btn-secondary btn-sm w-full text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-wine-50 hover:text-wine-700"
+                  >
+                    Csatlakozási Hely
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                )}
+              </div>
             </div>
           ))}
         </div>
