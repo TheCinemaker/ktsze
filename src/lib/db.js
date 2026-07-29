@@ -891,45 +891,28 @@ export const registerMemberByAdmin = async (input) => {
 //  Resend Hírlevél Küldő Integráció
 // -----------------------------------------------------------------------------
 
-export const sendNewsletterViaResend = async ({ apiKey, fromEmail, recipients, subject, htmlContent }) => {
-  const key = apiKey || import.meta.env.VITE_RESEND_API_KEY;
-  if (!key) {
-    throw new Error('Hiányzik a Resend API Kulcs! Add meg a felületen vagy a VITE_RESEND_API_KEY környezeti változóban.');
-  }
+export const sendNewsletterViaResend = async ({ fromEmail, recipients, subject, htmlContent }) => {
+  try {
+    const response = await fetch('/.netlify/functions/send-newsletter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fromEmail,
+        recipients,
+        subject,
+        htmlContent
+      })
+    });
 
-  const sender = fromEmail || 'Kőszegi Turisztikai Szövetség Egyesület <info@ktsze.hu>';
-
-  // A Resend API-n keresztül batch-ben vagy egyenként kiküldjük
-  const results = { total: recipients.length, success: 0, failed: 0, errors: [] };
-
-  for (const recipient of recipients) {
-    try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${key.trim()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: sender,
-          to: [recipient.email],
-          subject: subject,
-          html: htmlContent.replace(/{{NAME}}/g, recipient.name || 'Tisztelt Tagunk')
-        })
-      });
-
-      if (response.ok) {
-        results.success += 1;
-      } else {
-        const errJson = await response.json().catch(() => ({}));
-        results.failed += 1;
-        results.errors.push(`${recipient.email}: ${errJson.message || response.statusText}`);
-      }
-    } catch (err) {
-      results.failed += 1;
-      results.errors.push(`${recipient.email}: ${err.message}`);
+    if (!response.ok) {
+      const errJson = await response.json().catch(() => ({}));
+      throw new Error(errJson.error || `Szerveroldali hiba: ${response.statusText}`);
     }
-  }
 
-  return results;
+    return await response.json();
+  } catch (err) {
+    throw new Error(`A hírlevél kiküldése nem sikerült: ${err.message}`);
+  }
 };
