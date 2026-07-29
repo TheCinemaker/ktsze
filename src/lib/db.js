@@ -842,13 +842,15 @@ export const registerMemberByAdmin = async (input) => {
   const password = input.temp_password || `Koszeg${Math.floor(1000 + Math.random() * 9000)}!`;
 
   // 1. Létrehozzuk az auth usert a Supabase-ben
+  const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/belepes` : 'https://ktsze.hu/belepes';
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         full_name: input.full_name?.trim() || null
-      }
+      },
+      emailRedirectTo: redirectUrl
     }
   });
 

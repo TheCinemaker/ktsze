@@ -136,10 +136,15 @@ export const AuthProvider = ({ children }) => {
       throw new Error('A jelszó legyen legalább 8 karakter.');
     }
 
+    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/belepes` : 'https://ktsze.hu/belepes';
+
     const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
-      options: { data: profileData }
+      options: {
+        data: profileData,
+        emailRedirectTo: redirectUrl
+      }
     });
     if (error) throw new Error(describeError(error));
 
