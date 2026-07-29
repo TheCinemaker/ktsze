@@ -471,6 +471,15 @@ export const addWorkgroupMemberDirectly = async (workgroupId, profileId) =>
       .single()
   );
 
+export const listApprovedWorkgroupMembers = async (workgroupId) =>
+  unwrap(
+    await supabase
+      .from('workgroup_members')
+      .select('id, requested_at, profiles(id, full_name, account_email, private_email, phone, service_location_name, business_activity)')
+      .eq('workgroup_id', workgroupId)
+      .eq('status', 'approved')
+  ) || [];
+
 // -----------------------------------------------------------------------------
 //  Hírek és projektek
 // -----------------------------------------------------------------------------

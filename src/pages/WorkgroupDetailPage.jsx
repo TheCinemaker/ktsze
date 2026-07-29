@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Flower2, Heart, CreditCard, Sparkles } from 'lucide-react';
+import { ArrowLeft, Users, Flower2, Heart, CreditCard, Sparkles, Phone, Mail } from 'lucide-react';
 
-import { getWorkgroupBySlug, getWorkgroupStats, listMyWorkgroupMemberships } from '../lib/db';
+import { getWorkgroupBySlug, getWorkgroupStats, listMyWorkgroupMemberships, listApprovedWorkgroupMembers } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, EmptyState, LoadingBlock, ErrorBlock, FormattedText } from '../components/ui';
@@ -15,7 +15,7 @@ import { supabase } from '../lib/supabaseClient';
 
 export const WorkgroupDetailPage = () => {
   const { slug } = useParams();
-  const { profile } = useAuth();
+  const { profile, can } = useAuth();
   const [donationOpen, setDonationOpen] = useState(false);
 
   const group = useAsyncData(() => getWorkgroupBySlug(slug), [slug]);
@@ -95,6 +95,21 @@ export const WorkgroupDetailPage = () => {
 
   const memberCount = (stats.data || {})[workgroup.id]?.approved ?? 0;
   const membership = (memberships.data || []).find((m) => m.workgroup_id === workgroup.id);
+
+  const approvedMembersData = useAsyncData(
+    () => listApprovedWorkgroupMembers(workgroup?.id),
+    [workgroup?.id],
+    { enabled: Boolean(workgroup?.id), initialData: [] }
+  );
+  const approvedMembers = approvedMembersData.data || [];
+
+  const isLeader = Boolean(
+    can('admin.access') || can('board.access') ||
+    (profile?.full_name && workgroup?.leader_name &&
+      (profile.full_name.toLowerCase().includes(workgroup.leader_name.toLowerCase()) ||
+       workgroup.leader_name.toLowerCase().includes(profile.full_name.toLowerCase())))
+  );
+  const isApprovedOrLeader = Boolean(membership?.status === 'approved' || membership?.status === 'active' || isLeader);
 
   return (
     <div className="container-page py-12 sm:py-16">
@@ -246,27 +261,75 @@ export const WorkgroupDetailPage = () => {
             </div>
           )}
 
-          <div className="surface p-5 break-words">
-            <h2 className="font-display text-base font-bold text-ink-900">A csoportról</h2>
-            <dl className="mt-3 space-y-3 text-sm">
+          <div className="surface p-5 break-words space-y-4">
+            <div className="flex items-center justify-between border-b border-sand-300 pb-3">
+              <h2 className="font-display text-base font-bold text-ink-900">A csoportról</h2>
+              <span className="badge-neutral text-xs font-bold flex items-center gap-1">
+                <Users className="h-3.5 w-3.5 text-wine-700" />
+                {memberCount} tag
+              </span>
+            </div>
+
+            <dl className="space-y-3 text-sm">
               {workgroup.leader_name && (
                 <div>
                   <dt className="text-xs uppercase font-bold tracking-wide text-ink-500">Vezető</dt>
                   <dd className="mt-0.5 font-semibold text-ink-900 break-words">{workgroup.leader_name}</dd>
                 </div>
               )}
-              <div>
-                <dt className="text-xs uppercase font-bold tracking-wide text-ink-500">Létszám</dt>
-                <dd className="mt-0.5 flex items-center gap-1.5 font-medium text-ink-900">
-                  <Users className="h-4 w-4 text-wine-600 shrink-0" aria-hidden="true" />
-                  <span>{memberCount} jóváhagyott tag</span>
-                </dd>
-              </div>
             </dl>
 
-            <p className="mt-4 border-t border-sand-300 pt-3 text-xs text-ink-600 break-words leading-relaxed">
-              A tagok névsora nem nyilvános. A jelentkezésedet csak a csoport vezetője és az elnökség látja.
-            </p>
+            {/* Zárt Tagok Névsora & Elérhetőségei */}
+            {isApprovedOrLeader ? (
+              <div className="pt-3 border-t border-sand-300 space-y-3">
+                <h3 className="text-xs font-bold text-wine-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5 text-wine-700" />
+                  Csoporttagok &amp; Elérhetőségek:
+                </h3>
+
+                {approvedMembers.length === 0 ? (
+                  <p className="text-xs italic text-ink-500 py-1">Még nincsenek jóváhagyott tagok.</p>
+                ) : (
+                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+                    {approvedMembers.map((m) => {
+                      const p = m.profiles || {};
+                      const phone = p.phone;
+                      const mail = p.private_email || p.account_email;
+                      return (
+                        <div key={m.id} className="p-2.5 rounded-xl bg-white border border-sand-300 space-y-1 shadow-2xs">
+                          <div className="font-bold text-ink-900 text-xs flex items-center justify-between">
+                            <span className="truncate">{p.full_name || 'Egyesületi Tag'}</span>
+                          </div>
+                          {(p.service_location_name || p.business_activity) && (
+                            <p className="text-[11px] font-medium text-wine-700 truncate">
+                              {p.service_location_name || p.business_activity}
+                            </p>
+                          )}
+                          <div className="pt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-600">
+                            {phone && (
+                              <a href={`tel:${phone}`} className="flex items-center gap-1 font-bold text-wine-800 hover:underline">
+                                <Phone className="h-3 w-3 text-wine-600" />
+                                {phone}
+                              </a>
+                            )}
+                            {mail && (
+                              <a href={`mailto:${mail}`} className="flex items-center gap-1 text-ink-600 hover:text-wine-800 hover:underline">
+                                <Mail className="h-3 w-3 text-ink-400" />
+                                {mail}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="mt-4 border-t border-sand-300 pt-3 text-xs text-ink-600 break-words leading-relaxed">
+                A tagok elérhetőségei és kapcsolattartási adatai kizárólag a csoport bejelentkezett tagjai számára érhetők el.
+              </p>
+            )}
           </div>
         </aside>
       </div>
