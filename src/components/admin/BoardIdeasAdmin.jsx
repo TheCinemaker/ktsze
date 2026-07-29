@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lightbulb, Plus, Pin, Trash2, CheckCircle2, Clock, Sparkles, Tag, User, Calendar } from 'lucide-react';
-import { listBoardIdeas, createBoardIdea, updateBoardIdea, deleteBoardIdea } from '../../lib/db';
+import { Lightbulb, Plus, Pin, Trash2, CheckCircle2, Clock, Sparkles, Tag, User, Calendar, Rocket } from 'lucide-react';
+import { listBoardIdeas, createBoardIdea, updateBoardIdea, deleteBoardIdea, listWorkgroups, createWorkgroupProject } from '../../lib/db';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { Modal, TextInput, TextArea, Select, Spinner, ConfirmDialog } from '../ui';
@@ -17,7 +17,8 @@ const CATEGORY_OPTIONS = [
 const STATUS_LABELS = {
   idea: { label: '💡 Új Ötlet', bg: 'bg-amber-50 border-amber-300 text-amber-900' },
   in_progress: { label: '⚙️ Folyamatban', bg: 'bg-blue-50 border-blue-300 text-blue-900' },
-  completed: { label: '✅ Megvalósítva', bg: 'bg-emerald-50 border-emerald-300 text-emerald-900' }
+  completed: { label: '✅ Megvalósítva', bg: 'bg-emerald-50 border-emerald-300 text-emerald-900' },
+  converted: { label: '🚀 Munkacsoport Projekt', bg: 'bg-purple-50 border-purple-300 text-purple-900' }
 };
 
 export const BoardIdeasAdmin = () => {
@@ -32,6 +33,12 @@ export const BoardIdeasAdmin = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+
+  const [workgroups, setWorkgroups] = useState([]);
+  const [convertIdea, setConvertIdea] = useState(null);
+  const [targetWorkgroupId, setTargetWorkgroupId] = useState('');
+  const [projectTitle, setProjectTitle] = useState('');
+  const [projectDescription, setProjectDescription] = useState('');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -49,6 +56,51 @@ export const BoardIdeasAdmin = () => {
       setLoading(false);
     }
   }, [toast]);
+
+  useEffect(() => {
+    listWorkgroups().then((data) => {
+      const active = (data || []).filter((g) => g.is_active);
+      setWorkgroups(active);
+      if (active.length > 0) setTargetWorkgroupId(active[0].id);
+    });
+  }, []);
+
+  const openConvertModal = (idea) => {
+    setConvertIdea(idea);
+    setProjectTitle(idea.title);
+    setProjectDescription(idea.description || '');
+  };
+
+  const handleConvertToProject = async () => {
+    if (!targetWorkgroupId) {
+      toast.info('Kérjük, válassz egy munkacsoportot!');
+      return;
+    }
+    if (!projectTitle.trim()) {
+      toast.info('Kérjük, ad meg a projekt címét!');
+      return;
+    }
+
+    setPending(true);
+    try {
+      await createWorkgroupProject({
+        workgroup_id: targetWorkgroupId,
+        title: projectTitle,
+        description: projectDescription,
+        status: 'active',
+        created_by: profile?.id
+      });
+
+      await updateBoardIdea(convertIdea.id, { status: 'converted' });
+      toast.success('🚀 Az ötlet sikeresen átalakítva hivatalos Munkacsoport Projektté!');
+      setConvertIdea(null);
+      await loadData();
+    } catch (err) {
+      toast.error('Hiba a projekt létrehozásakor: ' + err.message);
+    } finally {
+      setPending(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -306,6 +358,27 @@ export const BoardIdeasAdmin = () => {
                     </span>
                   </div>
 
+                  {/* PROJEKTTÉ ÁTALAKÍTÓ AKCIÓ GOMB */}
+                  <div className="pt-2 border-t border-sand-200">
+                    {idea.status === 'converted' ? (
+                      <div className="flex items-center justify-between text-[11px] font-bold text-purple-800 bg-purple-50 p-2 rounded-lg border border-purple-200">
+                        <span className="flex items-center gap-1.5">
+                          <Rocket className="h-3.5 w-3.5 text-purple-600" />
+                          Munkacsoport Projektté Alakítva
+                        </span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openConvertModal(idea)}
+                        className="w-full py-1.5 px-3 rounded-lg bg-gradient-to-r from-purple-700 to-wine-800 hover:from-purple-800 hover:to-wine-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all active:scale-98"
+                      >
+                        <Rocket className="h-3.5 w-3.5 text-amber-300" />
+                        <span>Átalakítás Munkacsoport Projektté</span>
+                      </button>
+                    )}
+                  </div>
+
                   <div className="flex items-center justify-between gap-2 pt-1">
                     {/* STÁTUSZ VÁLASZTÓ GOMBOK */}
                     <div className="flex items-center gap-1">
@@ -362,6 +435,50 @@ export const BoardIdeasAdmin = () => {
           })}
         </div>
       )}
+
+      {/* PROJEKTTÉ ÁTALAKÍTÓ MODAL */}
+      <Modal
+        open={Boolean(convertIdea)}
+        onClose={() => setConvertIdea(null)}
+        title="🚀 Ötlet Átalakítása Munkacsoport Projektté"
+        description="Ezzel az akcióval az ötletből éles Munkacsoport Projekt jön létre, amit a csoport tagjai feladatokra bonthatnak!"
+        size="md"
+        footer={
+          <>
+            <button type="button" className="btn-secondary" onClick={() => setConvertIdea(null)} disabled={pending}>
+              Mégsem
+            </button>
+            <button type="button" className="btn-primary bg-purple-700 hover:bg-purple-800" onClick={handleConvertToProject} disabled={pending}>
+              {pending ? <Spinner label="Létrehozás…" className="text-white" /> : '🚀 Projekt Létrehozása'}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Select
+            label="Cél Munkacsoport"
+            required
+            value={targetWorkgroupId}
+            onChange={(e) => setTargetWorkgroupId(e.target.value)}
+            options={workgroups.map((g) => ({ value: g.id, label: g.name }))}
+            hint="Válaszd ki, melyik szakmai munkacsoport égisze alatt valósuljon meg ez a projekt!"
+          />
+
+          <TextInput
+            label="Projekt Címe"
+            required
+            value={projectTitle}
+            onChange={(e) => setProjectTitle(e.target.value)}
+          />
+
+          <TextArea
+            label="Projekt Leírása / Céljai"
+            rows={4}
+            value={projectDescription}
+            onChange={(e) => setProjectDescription(e.target.value)}
+          />
+        </div>
+      </Modal>
 
       {/* ÚJ ÖTLET MODAL */}
       <Modal
