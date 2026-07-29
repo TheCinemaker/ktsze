@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS public.project_tasks (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Biztosítjuk az esetlegesen korábban létrejött tábla frissítését
+ALTER TABLE public.project_tasks ADD COLUMN IF NOT EXISTS assignee_name TEXT;
+
 -- 3. Külső Partnerek & Kapcsolattartók (Főkertész, Polgármester, Alvállalkozó stb.)
 CREATE TABLE IF NOT EXISTS public.project_contacts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -39,6 +42,12 @@ CREATE TABLE IF NOT EXISTS public.project_contacts (
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Biztosítjuk a korábban létrejött partnerek tábla mezőit
+ALTER TABLE public.project_contacts ADD COLUMN IF NOT EXISTS role_title TEXT;
+ALTER TABLE public.project_contacts ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.project_contacts ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.project_contacts ADD COLUMN IF NOT EXISTS notes TEXT;
 
 -- 4. Megjegyzések & Fájlcsatolmányok (Realtime Activity Feed)
 CREATE TABLE IF NOT EXISTS public.project_comments (

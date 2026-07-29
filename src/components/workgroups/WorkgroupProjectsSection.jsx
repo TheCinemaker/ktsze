@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle2, Circle, Clock, MessageSquare, Paperclip, Send, Image, FileText, FolderKanban, User, Phone, Mail, UserPlus, ShieldAlert, Award } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Clock, MessageSquare, Paperclip, Send, Image, FileText, FolderKanban, User, Phone, Mail, UserPlus, ShieldAlert, Award, Calendar } from 'lucide-react';
 import { 
   listProjectsByWorkgroup, 
   createWorkgroupProject, 
@@ -27,7 +27,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Projekt vezetői jogosultság ellenőrzése (Vezető / Elnökség / Admin indíthat projekteket)
+  // Projekt vezetői jogosultság ellenőrzése
   const isLeaderOrBoard = Boolean(
     can('admin.access') ||
     can('board.access') ||
@@ -35,7 +35,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
     (workgroup?.leader_name && profile?.full_name && workgroup.leader_name.toLowerCase().includes(profile.full_name.toLowerCase()))
   );
 
-  // Új projekt modal
+  // Új projekt form
   const [showNewProject, setShowNewProject] = useState(false);
   const [projectTitle, setProjectTitle] = useState('');
   const [projectDesc, setProjectDesc] = useState('');
@@ -85,7 +85,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
     if (workgroupId) loadProjects();
   }, [workgroupId]);
 
-  // 2. Kiválasztott projekt adatai (Feladatok, Partnerek, Megjegyzések)
+  // 2. Kiválasztott projekt adatai
   const loadProjectDetails = async (projId) => {
     if (!projId) return;
     try {
@@ -252,11 +252,11 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
       {/* Fejléc */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-sand-300 pb-4">
         <div>
-          <h3 className="font-display text-xl font-bold text-ink-900 flex items-center gap-2">
-            <FolderKanban className="h-5 w-5 text-wine-600" />
+          <h3 className="font-display text-2xl font-bold text-ink-900 flex items-center gap-2.5">
+            <FolderKanban className="h-6 w-6 text-wine-600" />
             Munkacsoport Projektek &amp; Feladatok
           </h3>
-          <p className="text-xs text-ink-600 mt-0.5">
+          <p className="text-sm text-ink-600 mt-1">
             A csoportvezető által kiírt projektek, feladatlisták és külső partnerek.
           </p>
         </div>
@@ -265,55 +265,55 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
           <button
             type="button"
             onClick={() => setShowNewProject(true)}
-            className="btn-primary btn-sm rounded-xl font-bold shadow-xs"
+            className="btn-primary btn-md rounded-xl font-bold shadow-sm"
           >
-            <Plus className="h-4 w-4" />
-            Új Projekt Kiírása (Vezetői Jog)
+            <Plus className="h-5 w-5" />
+            Új Projekt Kiírása
           </button>
         ) : (
-          <span className="text-xs font-semibold text-wine-700 bg-wine-50 px-3 py-1.5 rounded-xl border border-wine-200 inline-flex items-center gap-1.5">
-            <Award className="h-3.5 w-3.5" />
+          <span className="text-xs font-semibold text-wine-700 bg-wine-50 px-3.5 py-2 rounded-xl border border-wine-200 inline-flex items-center gap-2">
+            <Award className="h-4 w-4" />
             Projektek kiírása: Munkacsoport Vezető / Elnökség
           </span>
         )}
       </div>
 
-      {/* Új Projekt Form Modal */}
+      {/* Új Projekt Form Modal (Tágas beviteli mezőkkel) */}
       {showNewProject && (
-        <form onSubmit={handleCreateProject} className="card p-6 bg-sand-50/90 space-y-4 border-wine-300">
-          <h4 className="font-display text-lg font-bold text-wine-900">Új Projekt Kiírása</h4>
+        <form onSubmit={handleCreateProject} className="card p-6 sm:p-8 bg-sand-50/95 space-y-5 border-wine-300 shadow-md">
+          <h4 className="font-display text-xl font-bold text-wine-900">Új Projekt Kiírása</h4>
           <div>
-            <label className="label">Projekt Címe *</label>
+            <label className="label text-sm font-bold text-ink-800">Projekt Címe *</label>
             <input
               type="text"
               required
               value={projectTitle}
               onChange={(e) => setProjectTitle(e.target.value)}
               placeholder="pl. VisitKőszeg Mobilapp 2026 vagy QR-kódos Információs Táblák"
-              className="input"
+              className="input py-3 px-4 text-base rounded-xl font-medium"
             />
           </div>
 
           <div>
-            <label className="label">Leírás &amp; Célkitűzés</label>
+            <label className="label text-sm font-bold text-ink-800">Leírás &amp; Célkitűzés</label>
             <textarea
-              rows={3}
+              rows={4}
               value={projectDesc}
               onChange={(e) => setProjectDesc(e.target.value)}
               placeholder="A projekt feladatának és céljának részletes leírása..."
-              className="input"
+              className="input py-3 px-4 text-base rounded-xl font-medium"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={() => setShowNewProject(false)}
-              className="btn-secondary btn-sm"
+              className="btn-secondary btn-md font-semibold"
             >
               Mégse
             </button>
-            <button type="submit" disabled={creatingProject} className="btn-primary btn-sm">
+            <button type="submit" disabled={creatingProject} className="btn-primary btn-md font-bold">
               {creatingProject ? 'Kiírás...' : 'Projekt Kiírása'}
             </button>
           </div>
@@ -331,15 +331,15 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
 
       {/* Projekt Választó Gombok */}
       {projects.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+        <div className="flex gap-2.5 overflow-x-auto pb-2 custom-scrollbar">
           {projects.map((proj) => (
             <button
               key={proj.id}
               type="button"
               onClick={() => setSelectedProjectId(proj.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border ${
+              className={`px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all border shadow-xs ${
                 selectedProjectId === proj.id
-                  ? 'bg-wine-700 text-white border-wine-700 shadow-md'
+                  ? 'bg-wine-700 text-white border-wine-700 shadow-md scale-[1.02]'
                   : 'bg-white text-ink-700 border-sand-300 hover:bg-sand-100'
               }`}
             >
@@ -354,51 +354,69 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
         <div className="grid gap-8 lg:grid-cols-12">
           {/* Bal Oszlop: Feladatok & Külső Partnerek (7 oszlop) */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="card p-6 bg-white space-y-6">
+            <div className="card p-6 sm:p-7 bg-white space-y-6 shadow-xs">
               <div>
-                <h4 className="font-display text-xl font-bold text-ink-900">{selectedProject.title}</h4>
+                <h4 className="font-display text-2xl font-bold text-ink-900">{selectedProject.title}</h4>
                 {selectedProject.description && (
-                  <p className="text-sm text-ink-600 mt-1 leading-relaxed">{selectedProject.description}</p>
+                  <p className="text-sm text-ink-600 mt-2 leading-relaxed">{selectedProject.description}</p>
                 )}
                 {selectedProject.profiles?.full_name && (
-                  <p className="text-xs text-wine-700 font-medium mt-2">
+                  <p className="text-xs text-wine-700 font-semibold mt-3">
                     Kiíró: {selectedProject.profiles.full_name}
                   </p>
                 )}
               </div>
 
-              {/* Feladat Hozzáadása */}
+              {/* TÁGAS ÉS KÉNYELMES FELADAT KIÍRÁSA FORM */}
               {isAuthenticated && (
-                <form onSubmit={handleAddTask} className="flex flex-wrap gap-2 pt-2 border-t border-sand-200">
-                  <input
-                    type="text"
-                    required
-                    value={newTaskTitle}
-                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                    placeholder="+ Új feladat kiírása..."
-                    className="input flex-1 py-1.5 text-xs"
-                  />
-                  <input
-                    type="text"
-                    value={newTaskAssignee}
-                    onChange={(e) => setNewTaskAssignee(e.target.value)}
-                    placeholder="Felelős (pl. Kovács Péter)"
-                    className="input w-44 py-1.5 text-xs"
-                  />
-                  <input
-                    type="date"
-                    value={newTaskDate}
-                    onChange={(e) => setNewTaskDate(e.target.value)}
-                    className="input w-36 py-1.5 text-xs"
-                  />
-                  <button type="submit" className="btn-primary btn-sm font-bold">
-                    Hozzáadás
-                  </button>
+                <form onSubmit={handleAddTask} className="p-4 sm:p-5 rounded-2xl bg-sand-100/90 border border-sand-300 space-y-3">
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-wine-900 flex items-center gap-1.5">
+                    <Plus className="h-4 w-4 text-wine-600" /> Új Feladat Kiírása &amp; Felelős Kijelölése
+                  </h5>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <input
+                        type="text"
+                        required
+                        value={newTaskTitle}
+                        onChange={(e) => setNewTaskTitle(e.target.value)}
+                        placeholder="Feladat megnevezése (pl. QR-kódos táblák grafikai tervezése) *"
+                        className="input py-2.5 px-3.5 text-sm rounded-xl"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="text"
+                          value={newTaskAssignee}
+                          onChange={(e) => setNewTaskAssignee(e.target.value)}
+                          placeholder="Felelős neve (pl. Kovács Péter)"
+                          className="input py-2.5 px-3.5 text-sm rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="date"
+                          value={newTaskDate}
+                          onChange={(e) => setNewTaskDate(e.target.value)}
+                          className="input py-2.5 px-3.5 text-sm rounded-xl"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-1">
+                    <button type="submit" className="btn-primary btn-sm font-bold px-5">
+                      + Feladat Hozzáadása
+                    </button>
+                  </div>
                 </form>
               )}
 
               {/* Feladatok Listája */}
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <h5 className="text-xs font-bold uppercase tracking-wider text-ink-500">Feladatlista &amp; Felelősök:</h5>
                 {tasks.length === 0 ? (
                   <p className="text-xs italic text-ink-400 py-2">Még nincsenek feladatok a projekthez.</p>
@@ -407,10 +425,10 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                     <div
                       key={t.id}
                       onClick={() => handleToggleTaskStatus(t)}
-                      className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                      className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${
                         t.status === 'done'
                           ? 'bg-emerald-50/60 border-emerald-200 text-ink-500 line-through'
-                          : 'bg-sand-50/60 border-sand-300 text-ink-900 hover:border-wine-300'
+                          : 'bg-sand-50/60 border-sand-300 text-ink-900 hover:border-wine-300 shadow-2xs'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -420,9 +438,9 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                           <Circle className="h-5 w-5 text-sand-400 shrink-0" />
                         )}
                         <div>
-                          <span className="text-sm font-medium block truncate">{t.title}</span>
+                          <span className="text-sm font-semibold block truncate">{t.title}</span>
                           {(t.assignee_name || t.assignee?.full_name) && (
-                            <span className="text-[11px] font-semibold text-wine-700 block">
+                            <span className="text-[11px] font-bold text-wine-700 block mt-0.5">
                               👤 Felelős: {t.assignee_name || t.assignee?.full_name}
                             </span>
                           )}
@@ -430,8 +448,8 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                       </div>
 
                       {t.due_date && (
-                        <div className="flex items-center gap-1 text-xs text-ink-500 shrink-0">
-                          <Clock className="h-3.5 w-3.5" />
+                        <div className="flex items-center gap-1.5 text-xs text-ink-500 shrink-0 font-medium">
+                          <Clock className="h-3.5 w-3.5 text-wine-600" />
                           <span>{t.due_date}</span>
                         </div>
                       )}
@@ -440,8 +458,8 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                 )}
               </div>
 
-              {/* Külső Partnerek / Elérhetőségek Szekció */}
-              <div className="pt-4 border-t border-sand-300 space-y-3">
+              {/* TÁGAS KÜLSŐ PARTNEREK SZEKCIÓ */}
+              <div className="pt-5 border-t border-sand-300 space-y-4">
                 <div className="flex items-center justify-between">
                   <h5 className="text-xs font-bold uppercase tracking-wider text-ink-800 flex items-center gap-1.5">
                     <UserPlus className="h-4 w-4 text-wine-600" />
@@ -459,54 +477,69 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                   )}
                 </div>
 
-                {/* Partner Hozzáadása Form */}
+                {/* Partner Hozzáadása Form (Tágas Mezőkkel) */}
                 {showNewContact && (
-                  <form onSubmit={handleAddContact} className="p-4 rounded-xl bg-sand-100/90 border border-sand-300 space-y-3">
-                    <h6 className="text-xs font-bold text-wine-900">Új Külső Partner Hozzáadása</h6>
-                    <div className="grid grid-cols-2 gap-2">
+                  <form onSubmit={handleAddContact} className="p-4 sm:p-5 rounded-2xl bg-sand-100/90 border border-sand-300 space-y-3 shadow-xs">
+                    <h6 className="text-xs font-bold text-wine-900">Új Külső Partner Csatolása</h6>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="label text-xs font-bold text-ink-700">Név *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="pl. Nagy István"
+                          value={contactName}
+                          onChange={(e) => setContactName(e.target.value)}
+                          className="input py-2 px-3 text-sm rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <label className="label text-xs font-bold text-ink-700">Titulus / Szerepkör</label>
+                        <input
+                          type="text"
+                          placeholder="pl. Főkertész vagy Polgármester"
+                          value={contactRole}
+                          onChange={(e) => setContactRole(e.target.value)}
+                          className="input py-2 px-3 text-sm rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <label className="label text-xs font-bold text-ink-700">Telefonszám</label>
+                        <input
+                          type="tel"
+                          placeholder="pl. +36701234567"
+                          value={contactPhone}
+                          onChange={(e) => setContactPhone(e.target.value)}
+                          className="input py-2 px-3 text-sm rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <label className="label text-xs font-bold text-ink-700">E-mail cím</label>
+                        <input
+                          type="email"
+                          placeholder="pl. partner@koszeg.hu"
+                          value={contactEmail}
+                          onChange={(e) => setContactEmail(e.target.value)}
+                          className="input py-2 px-3 text-sm rounded-xl"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="label text-xs font-bold text-ink-700">Megjegyzés / Részletek</label>
                       <input
                         type="text"
-                        required
-                        placeholder="Név (pl. Nagy István) *"
-                        value={contactName}
-                        onChange={(e) => setContactName(e.target.value)}
-                        className="input py-1.5 text-xs"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Titulus / Szerepkör (pl. Főkertész)"
-                        value={contactRole}
-                        onChange={(e) => setContactRole(e.target.value)}
-                        className="input py-1.5 text-xs"
-                      />
-                      <input
-                        type="tel"
-                        placeholder="Telefonszám (pl. +36701234567)"
-                        value={contactPhone}
-                        onChange={(e) => setContactPhone(e.target.value)}
-                        className="input py-1.5 text-xs"
-                      />
-                      <input
-                        type="email"
-                        placeholder="E-mail cím"
-                        value={contactEmail}
-                        onChange={(e) => setContactEmail(e.target.value)}
-                        className="input py-1.5 text-xs"
+                        placeholder="pl. Pénteki megbeszélésekre elérhető..."
+                        value={contactNotes}
+                        onChange={(e) => setContactNotes(e.target.value)}
+                        className="input py-2 px-3 text-sm rounded-xl"
                       />
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Megjegyzés / Részletek..."
-                      value={contactNotes}
-                      onChange={(e) => setContactNotes(e.target.value)}
-                      className="input py-1.5 text-xs"
-                    />
 
-                    <div className="flex justify-end gap-2 pt-1">
+                    <div className="flex justify-end gap-2 pt-2">
                       <button type="button" onClick={() => setShowNewContact(false)} className="btn-secondary btn-sm text-xs">
                         Mégse
                       </button>
-                      <button type="submit" className="btn-primary btn-sm text-xs font-bold">
+                      <button type="submit" className="btn-primary btn-sm text-xs font-bold px-4">
                         Partner Mentése
                       </button>
                     </div>
@@ -517,26 +550,26 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                 {contacts.length === 0 ? (
                   <p className="text-xs italic text-ink-400">Még nincsenek csatolt külső partnerek.</p>
                 ) : (
-                  <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     {contacts.map((c) => (
-                      <div key={c.id} className="p-3 rounded-xl bg-sand-50 border border-sand-300 space-y-1 text-xs">
-                        <div className="font-bold text-ink-900">{c.name}</div>
-                        {c.role_title && <div className="text-wine-700 font-semibold">{c.role_title}</div>}
+                      <div key={c.id} className="p-3.5 rounded-xl bg-sand-50 border border-sand-300 space-y-1.5 text-xs shadow-2xs">
+                        <div className="font-bold text-sm text-ink-900">{c.name}</div>
+                        {c.role_title && <div className="text-wine-700 font-bold">{c.role_title}</div>}
                         {c.phone && (
                           <div>
-                            <a href={`tel:${c.phone}`} className="text-wine-700 hover:underline inline-flex items-center gap-1 font-medium">
-                              <Phone className="h-3 w-3" /> {c.phone}
+                            <a href={`tel:${c.phone}`} className="text-wine-700 hover:underline inline-flex items-center gap-1 font-semibold">
+                              <Phone className="h-3.5 w-3.5" /> {c.phone}
                             </a>
                           </div>
                         )}
                         {c.email && (
                           <div>
-                            <a href={`mailto:${c.email}`} className="text-wine-700 hover:underline inline-flex items-center gap-1 font-medium">
-                              <Mail className="h-3 w-3" /> {c.email}
+                            <a href={`mailto:${c.email}`} className="text-wine-700 hover:underline inline-flex items-center gap-1 font-semibold">
+                              <Mail className="h-3.5 w-3.5" /> {c.email}
                             </a>
                           </div>
                         )}
-                        {c.notes && <p className="text-[11px] text-ink-500 pt-1 italic">{c.notes}</p>}
+                        {c.notes && <p className="text-xs text-ink-600 pt-1 italic border-t border-sand-200 mt-1">{c.notes}</p>}
                       </div>
                     ))}
                   </div>
@@ -547,9 +580,9 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
 
           {/* Jobb Oszlop: Megjegyzések & Csatolt Fájlok (5 oszlop) */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="card p-6 bg-white space-y-4 flex flex-col h-[600px]">
+            <div className="card p-6 bg-white space-y-4 flex flex-col h-[620px]">
               <h4 className="font-display text-lg font-bold text-ink-900 flex items-center gap-2 border-b border-sand-200 pb-3 shrink-0">
-                <MessageSquare className="h-4 w-4 text-wine-600" />
+                <MessageSquare className="h-4.5 w-4.5 text-wine-600" />
                 Ötletelő &amp; Fájlcsatolmányok
               </h4>
 
@@ -561,27 +594,27 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                   </p>
                 ) : (
                   comments.map((c) => (
-                    <div key={c.id} className="p-3 rounded-xl bg-sand-100/80 border border-sand-200 space-y-1 text-xs">
+                    <div key={c.id} className="p-3.5 rounded-xl bg-sand-100/80 border border-sand-200 space-y-1.5 text-xs">
                       <div className="flex items-center justify-between text-ink-500">
-                        <span className="font-bold text-wine-800">{c.user?.full_name || 'Tag'}</span>
-                        <span className="text-[10px]">{formatDate(c.created_at)}</span>
+                        <span className="font-bold text-wine-800 text-sm">{c.user?.full_name || 'Tag'}</span>
+                        <span className="text-[10px] font-medium">{formatDate(c.created_at)}</span>
                       </div>
                       <p className="text-ink-800 leading-relaxed">{c.comment_text}</p>
                       
                       {c.attachment_url && (
-                        <div className="pt-1.5">
+                        <div className="pt-2">
                           {c.attachment_url.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
-                            <a href={c.attachment_url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-lg border border-sand-300">
-                              <img src={c.attachment_url} alt="" className="h-32 w-full object-cover" />
+                            <a href={c.attachment_url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-xl border border-sand-300 shadow-2xs">
+                              <img src={c.attachment_url} alt="" className="h-36 w-full object-cover" />
                             </a>
                           ) : (
                             <a
                               href={c.attachment_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-wine-700 font-bold hover:underline"
+                              className="inline-flex items-center gap-1.5 text-wine-700 font-bold hover:underline bg-sand-200/60 px-3 py-1.5 rounded-lg"
                             >
-                              <Paperclip className="h-3.5 w-3.5" />
+                              <Paperclip className="h-4 w-4" />
                               {c.attachment_name || 'Csatolt dokumentum'}
                             </a>
                           )}
@@ -592,12 +625,12 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                 )}
               </div>
 
-              {/* Megjegyzés & Fájl Form */}
+              {/* Megjegyzés & Fájl Form (Tágas bevitellel) */}
               {isAuthenticated ? (
                 <form onSubmit={handleSendComment} className="pt-3 border-t border-sand-200 space-y-2 shrink-0">
                   {attachment && (
-                    <div className="flex items-center justify-between text-xs bg-wine-50 text-wine-800 p-2 rounded-lg border border-wine-200">
-                      <span className="truncate font-medium">📎 {attachment.name}</span>
+                    <div className="flex items-center justify-between text-xs bg-wine-50 text-wine-800 p-2.5 rounded-xl border border-wine-200">
+                      <span className="truncate font-bold">📎 {attachment.name}</span>
                       <button type="button" onClick={() => setAttachment(null)} className="text-wine-600 font-bold hover:text-wine-900">
                         ×
                       </button>
@@ -610,15 +643,15 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                       value={commentText}
                       onChange={(e) => setCommentText(e.target.value)}
                       placeholder="Írj egy megjegyzést..."
-                      className="input flex-1 py-2 text-xs"
+                      className="input flex-1 py-2.5 px-3.5 text-sm rounded-xl"
                     />
 
-                    <label className="btn-secondary btn-sm cursor-pointer shrink-0" title="Kép / Fájl csatolása">
-                      <Paperclip className="h-4 w-4 text-ink-600" />
+                    <label className="btn-secondary btn-md cursor-pointer shrink-0 rounded-xl" title="Kép / Fájl csatolása">
+                      <Paperclip className="h-5 w-5 text-ink-600" />
                       <input type="file" onChange={handleFileSelect} className="sr-only" />
                     </label>
 
-                    <button type="submit" disabled={sendingComment || uploadingFile} className="btn-primary btn-sm shrink-0">
+                    <button type="submit" disabled={sendingComment || uploadingFile} className="btn-primary btn-md shrink-0 rounded-xl px-4">
                       <Send className="h-4 w-4" />
                     </button>
                   </div>
