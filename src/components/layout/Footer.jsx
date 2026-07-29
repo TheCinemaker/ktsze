@@ -20,12 +20,15 @@ export const Footer = () => {
           </div>
 
           {/* Gyorshivatkozások & Jogi elemek */}
-          <nav aria-label="Lábléc navigáció" className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium text-ink-600">
-            <Link to="/adatvedelem" className="hover:text-wine-700 transition-colors">
-              Adatvédelem &amp; GDPR
+          <nav aria-label="Lábléc navigáció" className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold text-ink-700">
+            <Link to="/dokumentumok" className="hover:text-wine-700 transition-colors">
+              Hivatalos Dokumentumok
             </Link>
             <Link to="/kapcsolat" className="hover:text-wine-700 transition-colors">
-              Kapcsolat
+              Kapcsolat &amp; Elérhetőség
+            </Link>
+            <Link to="/adatvedelem" className="hover:text-wine-700 transition-colors">
+              Adatvédelem &amp; GDPR
             </Link>
             <Link to="/belepes" className="hover:text-wine-700 font-bold text-wine-800 transition-colors">
               Zárt Tagi Portál

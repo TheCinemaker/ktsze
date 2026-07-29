@@ -11,9 +11,7 @@ const PUBLIC_LINKS = [
   { to: '/egyesulet', label: 'Egyesületünk' },
   { to: '/munkacsoportok', label: 'Munkacsoportok' },
   { to: '/hirek', label: 'Hírek' },
-  { to: '/dokumentumok', label: 'Dokumentumok' },
-  { to: '/tagsag', label: 'Tagság' },
-  { to: '/kapcsolat', label: 'Kapcsolat' }
+  { to: '/tagsag', label: 'Tagság' }
 ];
 
 export const Navbar = () => {
