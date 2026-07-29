@@ -161,32 +161,34 @@ export const AboutPage = () => {
                     </div>
 
                     {/* Elérhetőség */}
-                    <div className="pt-3 border-t border-sand-200 space-y-1.5">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Digitális platform &amp; Elérhetőség:</div>
-                      {member.private_email && (
-                        <div>
-                          <a
-                            href={`mailto:${member.private_email}`}
-                            className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
-                          >
-                            <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            {member.private_email}
-                          </a>
-                        </div>
-                      )}
+                    {(member.private_email || getMemberPhone(member)) && (
+                      <div className="pt-3 border-t border-sand-200 space-y-1.5">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Elérhetőség:</div>
+                        {member.private_email && (
+                          <div>
+                            <a
+                              href={`mailto:${member.private_email}`}
+                              className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
+                            >
+                              <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              {member.private_email}
+                            </a>
+                          </div>
+                        )}
 
-                      {getMemberPhone(member) && (
-                        <div>
-                          <a
-                            href={`tel:${getMemberPhone(member).phone}`}
-                            className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
-                          >
-                            <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            {getMemberPhone(member).formatted}
-                          </a>
-                        </div>
-                      )}
-                    </div>
+                        {getMemberPhone(member) && (
+                          <div>
+                            <a
+                              href={`tel:${getMemberPhone(member).phone}`}
+                              className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
+                            >
+                              <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              {getMemberPhone(member).formatted}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </article>
               ))}
