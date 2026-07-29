@@ -21,8 +21,10 @@ export const ORGANIZATION = {
   tagline: 'Kőszeg turisztikai szereplőinek szakmai szövetsége',
   mission:
     'Az egyesület a kőszegi szálláshelyek, vendéglátók, borászok és kulturális ' +
-    'szolgáltatók összefogása. Ez az oldal az egyesület hivatalos tájékoztató ' +
-    'felülete, valamint a tagok és az elnökség zárt munkafelülete.',
+    'szolgáltatók szakmai összefogása. Elkötelezettek vagyunk Kőszeg egyedülálló ' +
+    'történelmi és természeti örökségének megőrzése, a város turisztikai vonzerejének ' +
+    'fenntartható fellendítése, valamint a minőségi látogatói élmények fejlesztése mellett. ' +
+    'Ez az oldal az egyesület hivatalos tájékoztató felülete, valamint a tagok és az elnökség zárt munkafelülete.',
 
   // --- Kapcsolat ---
   email: 'avar.szilveszter@gmail.com',
