@@ -113,8 +113,12 @@ const RegisterMemberModal = ({ open, onClose, onSaved }) => {
             <div><strong>Ideiglenes jelszó:</strong> <span className="text-wine-800 font-bold">{createdData.tempPassword}</span></div>
           </div>
 
+          <p className="text-xs text-emerald-800 font-semibold bg-emerald-100/70 p-2.5 rounded-xl border border-emerald-200">
+            📧 Az üdvözlő e-mailt a belépési adatokkal és az ideiglenes jelszóval automatikusan kiküldtük az új tag e-mail címére!
+          </p>
+
           <p className="text-xs text-ink-600">
-            Másold ki az alábbi gombbal a belépési adatokat, és küldd el az új tag részére e-mailben vagy SMS-ben.
+            Szükség esetén a lentebbi gombbal ki is másolhatod a belépési adatokat.
           </p>
 
           <div className="flex justify-end gap-2 pt-2">

@@ -879,11 +879,48 @@ export const registerMemberByAdmin = async (input) => {
     { onConflict: 'user_id,role' }
   );
 
+  // 4. Automatikus üdvözlő e-mail küldése az új tag részére
+  let emailSent = false;
+  try {
+    const welcomeHtml = `
+      <div style="font-family: sans-serif; line-height: 1.6; color: #1e1b26; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e0d8; border-radius: 16px; background-color: #faf7f1;">
+        <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #701a2e;">
+          <h2 style="color: #701a2e; margin: 0; font-size: 20px;">Kőszegi Turisztikai Szövetség Egyesület</h2>
+          <p style="font-size: 13px; color: #666; margin-top: 4px;">Üdvözlünk az Egyesület Tagi Portálján!</p>
+        </div>
+        <div style="padding: 24px 0; font-size: 15px; color: #2d2838;">
+          <p>Kedves <strong>${input.full_name || 'Tagunk'}</strong>!</p>
+          <p>Örömmel értesítünk, hogy az elnökség regisztrálta a fiókodat a Kőszegi Turisztikai Szövetség Egyesület zárt tagi felületén.</p>
+          <div style="background-color: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #e5e0d8; margin: 20px 0;">
+            <p style="margin: 4px 0; font-size: 14px;"><strong>🌐 Belépési oldal:</strong> <a href="https://ktsze.hu/belepes" style="color: #701a2e; font-weight: bold;">https://ktsze.hu/belepes</a></p>
+            <p style="margin: 4px 0; font-size: 14px;"><strong>✉️ Bejelentkezési e-mail:</strong> ${email}</p>
+            <p style="margin: 4px 0; font-size: 14px;"><strong>🔑 Ideiglenes jelszavad:</strong> <span style="font-family: monospace; font-size: 16px; color: #701a2e; font-weight: bold;">${password}</span></p>
+          </div>
+          <p style="font-size: 13px; color: #666;">Kérjük, az első belépést követően változtasd meg a jelszavadat a Profil beállításaidban!</p>
+        </div>
+        <div style="border-top: 1px solid #e5e0d8; pt: 16px; text-align: center; font-size: 11px; color: #888;">
+          <p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.hu" style="color: #701a2e; text-decoration: underline;">ktsze.hu</a></p>
+        </div>
+      </div>
+    `;
+
+    await sendNewsletterViaResend({
+      fromEmail: 'Kőszegi Turisztikai Szövetség <info@ktsze.hu>',
+      recipients: [{ name: input.full_name, email }],
+      subject: '[KTSZE] Üdvözlünk az Egyesületben! — Belépési adataid',
+      htmlContent: welcomeHtml
+    });
+    emailSent = true;
+  } catch (mailErr) {
+    console.warn('[RegisterMember] Üdvözlő email küldési hiba:', mailErr);
+  }
+
   return {
     userId,
     email,
     tempPassword: password,
-    fullName: input.full_name
+    fullName: input.full_name,
+    emailSent
   };
 };
 
