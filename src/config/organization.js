@@ -23,8 +23,7 @@ export const ORGANIZATION = {
     'Az egyesület a kőszegi szálláshelyek, vendéglátók, borászok és kulturális ' +
     'szolgáltatók szakmai összefogása. Elkötelezettek vagyunk Kőszeg egyedülálló ' +
     'történelmi és természeti örökségének megőrzése, a város turisztikai vonzerejének ' +
-    'fenntartható fellendítése, valamint a minőségi látogatói élmények fejlesztése mellett. ' +
-    'Ez az oldal az egyesület hivatalos tájékoztató felülete, valamint a tagok és az elnökség zárt munkafelülete.',
+    'fenntartható fellendítése, valamint a minőségi látogatói élmények fejlesztése mellett.',
 
   // --- Kapcsolat ---
   email: 'avar.szilveszter@gmail.com',
