@@ -80,7 +80,7 @@ export const NewsletterBroadcaster = () => {
             ${content}
           </div>
           <div style="border-top: 1px solid #e5e0d8; pt: 16px; text-align: center; font-size: 11px; color: #888;">
-            <p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.netlify.app" style="color: #701a2e; text-decoration: underline;">ktsze.netlify.app</a></p>
+            <p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.hu" style="color: #701a2e; text-decoration: underline;">ktsze.hu</a></p>
           </div>
         </div>
       `;
