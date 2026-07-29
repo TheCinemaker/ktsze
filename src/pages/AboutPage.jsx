@@ -154,7 +154,7 @@ export const AboutPage = () => {
                       <img
                         src={getMemberPhoto(member)}
                         alt={member.full_name}
-                        className="h-full w-full object-cover object-[center_20%] transition-transform duration-500 group-hover:scale-105"
+                        className="h-full max-h-full max-w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div className="flex flex-col items-center space-y-1.5 text-wine-800/70">
