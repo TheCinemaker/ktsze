@@ -158,7 +158,7 @@ export const WorkgroupDetailPage = () => {
 
           {/* Munkacsoport Projektek, Feladatlisták & Fájlcsatolmányok */}
           <section className="pt-6 border-t border-sand-300">
-            <WorkgroupProjectsSection workgroupId={workgroup.id} />
+            <WorkgroupProjectsSection workgroup={workgroup} />
           </section>
         </div>
 

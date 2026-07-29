@@ -696,14 +696,14 @@ export const getDuesProofUrl = async (proofPath) => {
 };
 
 // -----------------------------------------------------------------------------
-//  Munkacsoport Projektek, Feladatok & Csatolmányok
+//  Munkacsoport Projektek, Feladatok, Külső Partnerek & Csatolmányok
 // -----------------------------------------------------------------------------
 
 export const listProjectsByWorkgroup = async (workgroupId) =>
   unwrap(
     await supabase
       .from('workgroup_projects')
-      .select('*, profiles:created_by(full_name, avatar_url)')
+      .select('*, profiles:created_by(full_name)')
       .eq('workgroup_id', workgroupId)
       .order('created_at', { ascending: false })
   ) || [];
@@ -719,7 +719,7 @@ export const createWorkgroupProject = async (input) =>
         status: input.status || 'active',
         created_by: input.created_by || null
       })
-      .select('*, profiles:created_by(full_name, avatar_url)')
+      .select('*, profiles:created_by(full_name)')
       .single()
   );
 
@@ -727,7 +727,7 @@ export const listProjectTasks = async (projectId) =>
   unwrap(
     await supabase
       .from('project_tasks')
-      .select('*, assignee:assignee_id(full_name, avatar_url)')
+      .select('*, assignee:assignee_id(full_name)')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true })
   ) || [];
@@ -741,10 +741,11 @@ export const createProjectTask = async (input) =>
         title: input.title.trim(),
         status: input.status || 'todo',
         assignee_id: input.assignee_id || null,
+        assignee_name: input.assignee_name?.trim() || null,
         due_date: input.due_date || null,
         created_by: input.created_by || null
       })
-      .select('*, assignee:assignee_id(full_name, avatar_url)')
+      .select('*, assignee:assignee_id(full_name)')
       .single()
   );
 
@@ -754,7 +755,32 @@ export const updateTaskStatus = async (taskId, newStatus) =>
       .from('project_tasks')
       .update({ status: newStatus })
       .eq('id', taskId)
-      .select('*, assignee:assignee_id(full_name, avatar_url)')
+      .select('*, assignee:assignee_id(full_name)')
+      .single()
+  );
+
+export const listProjectContacts = async (projectId) =>
+  unwrap(
+    await supabase
+      .from('project_contacts')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true })
+  ) || [];
+
+export const createProjectContact = async (input) =>
+  unwrap(
+    await supabase
+      .from('project_contacts')
+      .insert({
+        project_id: input.project_id,
+        name: input.name.trim(),
+        role_title: input.role_title?.trim() || null,
+        phone: input.phone?.trim() || null,
+        email: input.email?.trim() || null,
+        notes: input.notes?.trim() || null
+      })
+      .select('*')
       .single()
   );
 
@@ -762,7 +788,7 @@ export const listProjectComments = async (projectId) =>
   unwrap(
     await supabase
       .from('project_comments')
-      .select('*, user:user_id(full_name, avatar_url)')
+      .select('*, user:user_id(full_name)')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true })
   ) || [];
@@ -778,7 +804,7 @@ export const addProjectComment = async (input) =>
         attachment_url: input.attachment_url || null,
         attachment_name: input.attachment_name || null
       })
-      .select('*, user:user_id(full_name, avatar_url)')
+      .select('*, user:user_id(full_name)')
       .single()
   );
 

@@ -1,9 +1,9 @@
 -- =============================================================================
 --  15_workgroup_projects_tasks_files.sql
---  Munkacsoport Projektek, Feladatok, Hozzászólások és Supabase Storage Fájlok
+--  Munkacsoport Projektek, Feladatok, Külső Partnerek, Hozzászólások és Storage
 -- =============================================================================
 
--- 1. Projektek tábla
+-- 1. Projektek tábla (Kizárólag a Munkacsoport Vezetője / Elnökség indíthatja)
 CREATE TABLE IF NOT EXISTS public.workgroup_projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   workgroup_id UUID NOT NULL REFERENCES public.workgroups(id) ON DELETE CASCADE,
@@ -15,19 +15,32 @@ CREATE TABLE IF NOT EXISTS public.workgroup_projects (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 2. Feladatok tábla (Checklist / Taskboard)
+-- 2. Feladatok tábla (Checklist / Taskboard: ki mit csinál)
 CREATE TABLE IF NOT EXISTS public.project_tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES public.workgroup_projects(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   status TEXT DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'done')),
   assignee_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  assignee_name TEXT,
   due_date DATE,
   created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 3. Megjegyzések & Fájlcsatolmányok (Realtime Activity Feed)
+-- 3. Külső Partnerek & Kapcsolattartók (Főkertész, Polgármester, Alvállalkozó stb.)
+CREATE TABLE IF NOT EXISTS public.project_contacts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID NOT NULL REFERENCES public.workgroup_projects(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  role_title TEXT,
+  phone TEXT,
+  email TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 4. Megjegyzések & Fájlcsatolmányok (Realtime Activity Feed)
 CREATE TABLE IF NOT EXISTS public.project_comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES public.workgroup_projects(id) ON DELETE CASCADE,
@@ -41,6 +54,7 @@ CREATE TABLE IF NOT EXISTS public.project_comments (
 -- RLS Bekapcsolása
 ALTER TABLE public.workgroup_projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_comments ENABLE ROW LEVEL SECURITY;
 
 -- Újra-futtatható RLS szabályok
@@ -73,6 +87,16 @@ CREATE POLICY "Feladatok megtekintése mindenkinek"
 CREATE POLICY "Feladatok kezelése bejelentkezett tagoknak"
   ON public.project_tasks FOR ALL USING (auth.role() = 'authenticated');
 
+-- Külső partnerek RLS
+DROP POLICY IF EXISTS "Külső partnerek megtekintése mindenkinek" ON public.project_contacts;
+DROP POLICY IF EXISTS "Külső partnerek kezelése bejelentkezett tagoknak" ON public.project_contacts;
+
+CREATE POLICY "Külső partnerek megtekintése mindenkinek"
+  ON public.project_contacts FOR SELECT USING (true);
+
+CREATE POLICY "Külső partnerek kezelése bejelentkezett tagoknak"
+  ON public.project_contacts FOR ALL USING (auth.role() = 'authenticated');
+
 -- Megjegyzések RLS
 DROP POLICY IF EXISTS "Megjegyzések megtekintése mindenkinek" ON public.project_comments;
 DROP POLICY IF EXISTS "Megjegyzések írása bejelentkezett tagoknak" ON public.project_comments;
@@ -100,6 +124,7 @@ CREATE POLICY "Munkacsoport fájlok feltöltése tagoknak"
     bucket_id = 'workgroup-files' AND auth.role() = 'authenticated'
   );
 
--- Realtime bekapcsolása a megjegyzésekre és feladatokra
+-- Realtime bekapcsolása
 ALTER PUBLICATION supabase_realtime ADD TABLE public.project_tasks;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.project_contacts;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.project_comments;
