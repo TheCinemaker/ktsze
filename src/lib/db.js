@@ -994,8 +994,101 @@ export const sendNewsletterViaResend = async ({ fromEmail, recipients, subject, 
       throw new Error(errJson.error || `Szerveroldali hiba: ${response.statusText}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    return data;
   } catch (err) {
-    throw new Error(`A hírlevél kiküldése nem sikerült: ${err.message}`);
+    console.error('[sendNewsletterViaResend] Hiba:', err);
+    throw err;
   }
+};
+
+// -----------------------------------------------------------------------------
+//  Zárt Elnökségi Ötletelő & Jegyzetfal API (Supabase + LocalStorage Fallback)
+// -----------------------------------------------------------------------------
+
+const LOCAL_IDEAS_KEY = 'ktsze_board_ideas_storage';
+
+const getLocalIdeas = () => {
+  try {
+    const raw = localStorage.getItem(LOCAL_IDEAS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveLocalIdeas = (ideas) => {
+  try {
+    localStorage.setItem(LOCAL_IDEAS_KEY, JSON.stringify(ideas));
+  } catch (err) {
+    console.warn('[LocalStorage] Nem sikerült az ötletek mentése:', err);
+  }
+};
+
+export const listBoardIdeas = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('board_ideas')
+      .select('*')
+      .order('is_pinned', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (!error && data) return data;
+  } catch (err) {
+    console.warn('[db] board_ideas tábla hiányzik, helyi tárolóra váltás:', err);
+  }
+  return getLocalIdeas();
+};
+
+export const createBoardIdea = async (input) => {
+  const newIdea = {
+    title: input.title?.trim(),
+    description: input.description?.trim() || '',
+    category: input.category || 'Általános ötlet',
+    author_name: input.author_name || 'Elnökségi Tag',
+    author_id: input.author_id || null,
+    status: 'idea',
+    is_pinned: false,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const { data, error } = await supabase.from('board_ideas').insert(newIdea).select().single();
+    if (!error && data) return data;
+  } catch (err) {
+    console.warn('[db] Helyi mentés:', err);
+  }
+
+  const local = getLocalIdeas();
+  const ideaWithId = { id: `local_${Date.now()}`, ...newIdea };
+  const updated = [ideaWithId, ...local];
+  saveLocalIdeas(updated);
+  return ideaWithId;
+};
+
+export const updateBoardIdea = async (id, patch) => {
+  try {
+    const { data, error } = await supabase.from('board_ideas').update(patch).eq('id', id).select().single();
+    if (!error && data) return data;
+  } catch (err) {
+    console.warn('[db] Helyi frissítés:', err);
+  }
+
+  const local = getLocalIdeas();
+  const updated = local.map((item) => (item.id === id ? { ...item, ...patch } : item));
+  saveLocalIdeas(updated);
+  return updated.find((i) => i.id === id);
+};
+
+export const deleteBoardIdea = async (id) => {
+  try {
+    await supabase.from('board_ideas').delete().eq('id', id);
+  } catch (err) {
+    console.warn('[db] Helyi törlés:', err);
+  }
+
+  const local = getLocalIdeas();
+  const updated = local.filter((item) => item.id !== id);
+  saveLocalIdeas(updated);
+  return true;
 };
