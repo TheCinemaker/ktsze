@@ -28,18 +28,18 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
   // HA A FELHASZNÁLÓ NINCS BEJELENTKEZVE ➔ ZÁRT KÁRTYA JELENIK MEG!
   if (!isAuthenticated) {
     return (
-      <div className="surface-noir p-8 sm:p-10 text-white border border-sand-400/30 shadow-2xl space-y-6 rounded-3xl relative overflow-hidden">
+      <div className="bg-wine-900 p-8 sm:p-10 text-white border-2 border-gold-400/40 shadow-2xl space-y-6 rounded-3xl relative overflow-hidden">
         <div className="flex items-center gap-3.5">
-          <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center text-gold-400 border border-white/15">
+          <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center text-gold-400 border border-white/20 shadow-inner">
             <Lock className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-champagne-400">Zárt Egyesületi Munkatér</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-gold-400">Zárt Egyesületi Munkatér</span>
             <h3 className="font-display text-2xl font-bold text-white mt-0.5">Munkacsoport Projektek &amp; Feladatok</h3>
           </div>
         </div>
 
-        <p className="text-sm text-sand-200 leading-relaxed max-w-2xl">
+        <p className="text-sm text-sand-100 leading-relaxed max-w-2xl font-medium">
           A munkacsoport belső kezdeményezései, projektezése, feladatlistái, külső partnerei és ötletelő megbeszélései kizárólag bejelentkezett egyesületi tagjaink számára érhetők el.
         </p>
 
@@ -48,7 +48,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
             <LogIn className="h-4 w-4" />
             Belépés a Tagi Portálra
           </Link>
-          <Link to="/tagsag" className="btn btn-md border-white/20 bg-white/10 text-white hover:bg-white/20 backdrop-blur-md font-semibold">
+          <Link to="/tagsag" className="btn-secondary btn-md text-white border-white/30 bg-white/10 hover:bg-white/20 font-bold">
             Tagság Feltételei
           </Link>
         </div>
