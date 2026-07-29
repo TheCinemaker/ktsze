@@ -44,33 +44,33 @@ const DuesTable = () => {
   const years = Object.keys(byYear).sort((a, b) => Number(b) - Number(a));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 max-w-full">
       {years.map((year) => (
-        <div key={year}>
-          <h3 className="font-display text-lg text-ink-900">{year}. évi tagdíjak</h3>
+        <div key={year} className="space-y-3">
+          <h3 className="font-display text-lg font-bold text-ink-900">{year}. évi tagdíjak</h3>
 
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[28rem] border-collapse text-sm">
+          <div className="w-full max-w-full overflow-x-auto rounded-2xl border border-sand-300 bg-white p-2 sm:p-4 custom-scrollbar">
+            <table className="w-full border-collapse text-xs sm:text-sm">
               <caption className="sr-only">{year}. évi tagdíjtételek</caption>
               <thead>
                 <tr className="border-b border-sand-400 text-left">
-                  <th scope="col" className="py-2.5 pr-4 font-medium text-ink-600">
+                  <th scope="col" className="py-2.5 pr-2 sm:pr-4 font-bold text-ink-700">
                     Kategória
                   </th>
-                  <th scope="col" className="py-2.5 pr-4 font-medium text-ink-600">
+                  <th scope="col" className="py-2.5 pr-2 sm:pr-4 font-bold text-wine-800">
                     Összeg
                   </th>
-                  <th scope="col" className="py-2.5 font-medium text-ink-600">
+                  <th scope="col" className="py-2.5 font-bold text-ink-700">
                     Megjegyzés
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {byYear[year].map((rate) => (
-                  <tr key={rate.id} className="border-b border-sand-300">
-                    <td className="py-3 pr-4 text-ink-900">{rate.label}</td>
-                    <td className="py-3 pr-4 font-medium text-wine-600">{formatHuf(rate.amount_huf)}</td>
-                    <td className="py-3 text-ink-600">{rate.note || '—'}</td>
+                  <tr key={rate.id} className="border-b border-sand-200 last:border-0">
+                    <td className="py-3 pr-2 sm:pr-4 font-bold text-ink-900 whitespace-nowrap">{rate.label}</td>
+                    <td className="py-3 pr-2 sm:pr-4 font-bold text-wine-700 whitespace-nowrap">{formatHuf(rate.amount_huf)}</td>
+                    <td className="py-3 text-ink-600 text-xs">{rate.note || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -83,15 +83,15 @@ const DuesTable = () => {
 };
 
 export const MembershipPage = () => (
-  <div className="container-page py-12 sm:py-16">
+  <div className="container-page py-12 sm:py-16 max-w-full overflow-hidden">
     <PageHeader
       eyebrow="Csatlakozás"
       title="Tagság"
       description={`Tagsági formák, tagdíjak és a csatlakozás menete a ${ORGANIZATION.shortName} Egyesületben.`}
     />
 
-    <div className="mt-12 grid gap-12 lg:grid-cols-3">
-      <div className="space-y-10 lg:col-span-2">
+    <div className="mt-10 grid gap-8 lg:grid-cols-3 max-w-full">
+      <div className="space-y-8 lg:col-span-2 min-w-0">
         <section>
           <h2 className="font-display text-2xl text-ink-900">Tagdíjak</h2>
           <div className="mt-4">

@@ -146,10 +146,10 @@ export const AboutPage = () => {
               {boardMembers.map((member) => (
                 <article
                   key={member.id}
-                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white group h-[720px]"
+                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white group h-[520px]"
                 >
-                  {/* Egységes, nagyobb portré kép */}
-                  <div className="relative h-84 sm:h-96 w-full bg-sand-200 overflow-hidden flex items-center justify-center border-b border-sand-300 shrink-0">
+                  {/* Egységes, elegáns 1/4 méretű portré kép */}
+                  <div className="relative h-40 sm:h-44 w-full bg-sand-200 overflow-hidden flex items-center justify-center border-b border-sand-300 shrink-0">
                     {getMemberPhoto(member) ? (
                       <img
                         src={getMemberPhoto(member)}
@@ -157,15 +157,15 @@ export const AboutPage = () => {
                         className="h-full w-full object-cover object-[center_20%] transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex flex-col items-center space-y-2 text-wine-800/70">
-                        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-wine-100 text-wine-800 text-3xl font-bold font-display shadow-inner">
+                      <div className="flex flex-col items-center space-y-1.5 text-wine-800/70">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-wine-100 text-wine-800 text-xl font-bold font-display shadow-inner">
                           {member.full_name?.split(' ').map((n) => n[0]).join('').slice(0, 2) || 'TK'}
                         </div>
-                        <span className="text-xs font-semibold text-ink-500">Portré feltöltésre vár</span>
+                        <span className="text-[11px] font-semibold text-ink-500">Portré feltöltésre vár</span>
                       </div>
                     )}
-                    <div className="absolute top-3 right-3 rounded-full bg-wine-700/90 text-white p-2 shadow-md">
-                      <Award className="h-4 w-4" aria-hidden="true" />
+                    <div className="absolute top-2.5 right-2.5 rounded-full bg-wine-700/90 text-white p-1.5 shadow-md">
+                      <Award className="h-3.5 w-3.5" aria-hidden="true" />
                     </div>
                   </div>
 
