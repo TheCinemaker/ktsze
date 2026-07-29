@@ -79,6 +79,8 @@ export const ThemeProvider = ({ children }) => {
 
 export const useTheme = () => {
   const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme csak ThemeProvider-en belül használható.');
+  if (!ctx) {
+    return { preference: 'system', resolved: 'light', setTheme: () => {}, cycle: () => {}, isDark: false };
+  }
   return ctx;
 };
