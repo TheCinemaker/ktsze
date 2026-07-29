@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Users, Flower2, Newspaper, FileText, Wallet, Settings, UserPlus } from 'lucide-react';
+import { Users, Flower2, Newspaper, FileText, Wallet, Settings, UserPlus, Mail } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import { PageHeader } from '../components/ui';
