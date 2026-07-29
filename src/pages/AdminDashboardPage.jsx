@@ -10,6 +10,7 @@ import { WorkgroupApplications } from '../components/admin/WorkgroupApplications
 import { NewsEditor } from '../components/admin/NewsEditor';
 import { DocumentAdmin } from '../components/admin/DocumentAdmin';
 import { DuesRatesAdmin } from '../components/admin/DuesRatesAdmin';
+import { NewsletterBroadcaster } from '../components/admin/NewsletterBroadcaster';
 import { AdminSettings } from '../components/admin/AdminSettings';
 
 /**
@@ -22,6 +23,7 @@ import { AdminSettings } from '../components/admin/AdminSettings';
  */
 const ALL_TABS = [
   { id: 'members', label: 'Tagnyilvántartás', icon: Users, permission: 'members.view', Component: MemberManagement },
+  { id: 'newsletter', label: 'Hírlevél Küldése', icon: Mail, permission: 'members.view', Component: NewsletterBroadcaster },
   { id: 'news', label: 'Hírek', icon: Newspaper, permission: 'news.manage', Component: NewsEditor },
   { id: 'workgroups', label: 'Munkacsoportok', icon: Flower2, permission: 'workgroups.manage', Component: WorkgroupAdmin },
   { id: 'applications', label: 'Jelentkezések', icon: UserPlus, permission: 'workgroups.decide', Component: WorkgroupApplications },

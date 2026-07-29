@@ -10,7 +10,8 @@ import {
   setMemberRoles,
   upsertDues,
   deleteMemberProfile,
-  getDuesProofUrl
+  getDuesProofUrl,
+  registerMemberByAdmin
 } from '../../lib/db';
 import { useAsyncData } from '../../lib/useAsyncData';
 import { useAuth } from '../../context/AuthContext';
@@ -27,6 +28,191 @@ import {
   Checkbox,
   Spinner
 } from '../ui';
+import { UserPlus, Key, Copy, Check } from 'lucide-react';
+
+/* -------------------------------------------------------------------------- */
+/*  Új Tag Kézi Regisztrálása (Elnökségi ideiglenes jelszóval)                  */
+/* -------------------------------------------------------------------------- */
+
+const RegisterMemberModal = ({ open, onClose, onSaved }) => {
+  const toast = useToast();
+  const [form, setForm] = useState({
+    full_name: '',
+    account_email: '',
+    private_email: '',
+    phone: '',
+    home_address: '',
+    member_category: 'Rendes tag',
+    service_location_name: '',
+    temp_password: `Koszeg${Math.floor(1000 + Math.random() * 9000)}!`
+  });
+  const [pending, setPending] = useState(false);
+  const [createdData, setCreatedData] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (!form.full_name.trim() || !form.account_email.trim()) return;
+
+    setPending(true);
+    try {
+      const res = await registerMemberByAdmin(form);
+      setCreatedData(res);
+      toast.success('Tag sikeresen regisztrálva!');
+      await onSaved();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const handleCopyCredentials = () => {
+    if (!createdData) return;
+    const text = `Tisztelt ${createdData.fullName}!\n\nElkészült a fiókod a Kőszegi Turisztikai Szövetség Egyesület tagi portálján:\n\nBelépési oldal: https://ktsze.netlify.app/belepes\nE-mail cím: ${createdData.email}\nIdeiglenes jelszó: ${createdData.tempPassword}\n\nKérjük, az első belépés után változtasd meg a jelszavadat!`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast.info('Belépési adatok a vágólapra másolva!');
+  };
+
+  const handleCloseAll = () => {
+    setCreatedData(null);
+    setForm({
+      full_name: '',
+      account_email: '',
+      private_email: '',
+      phone: '',
+      home_address: '',
+      member_category: 'Rendes tag',
+      service_location_name: '',
+      temp_password: `Koszeg${Math.floor(1000 + Math.random() * 9000)}!`
+    });
+    onClose();
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={handleCloseAll}
+      title="Új Tag Kézi Regisztrálása"
+      description="Regisztráld az egyesület új tagját ideiglenes jelszóval."
+    >
+      {createdData ? (
+        <div className="space-y-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-300">
+          <div className="flex items-center gap-2 text-emerald-900 font-bold text-base">
+            <Check className="h-5 w-5 text-emerald-600" />
+            Fiók Sikeresen Létrehozva!
+          </div>
+
+          <div className="space-y-2 text-xs font-mono bg-white p-3 rounded-xl border border-emerald-200">
+            <div><strong>Név:</strong> {createdData.fullName}</div>
+            <div><strong>E-mail:</strong> {createdData.email}</div>
+            <div><strong>Ideiglenes jelszó:</strong> <span className="text-wine-800 font-bold">{createdData.tempPassword}</span></div>
+          </div>
+
+          <p className="text-xs text-ink-600">
+            Másold ki az alábbi gombbal a belépési adatokat, és küldd el az új tag részére e-mailben vagy SMS-ben.
+          </p>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={handleCopyCredentials} className="btn-primary btn-sm font-bold flex items-center gap-1.5">
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? 'Másolva!' : 'Adatok Másolása'}
+            </button>
+            <button type="button" onClick={handleCloseAll} className="btn-secondary btn-sm">
+              Bezárás
+            </button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="label text-xs font-bold text-ink-800">Teljes Név *</label>
+              <input
+                type="text"
+                required
+                value={form.full_name}
+                onChange={set('full_name')}
+                placeholder="pl. Kovács Péter"
+                className="input py-2 px-3 text-sm rounded-xl"
+              />
+            </div>
+            <div>
+              <label className="label text-xs font-bold text-ink-800">Bejelentkezési E-mail *</label>
+              <input
+                type="email"
+                required
+                value={form.account_email}
+                onChange={set('account_email')}
+                placeholder="kovacs.peter@gmail.com"
+                className="input py-2 px-3 text-sm rounded-xl"
+              />
+            </div>
+            <div>
+              <label className="label text-xs font-bold text-ink-800">Telefonszám</label>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={set('phone')}
+                placeholder="+36 70 123 4567"
+                className="input py-2 px-3 text-sm rounded-xl"
+              />
+            </div>
+            <div>
+              <label className="label text-xs font-bold text-ink-800">Tagsági Kategória</label>
+              <select
+                value={form.member_category}
+                onChange={set('member_category')}
+                className="input py-2 px-3 text-sm rounded-xl"
+              >
+                <option value="Rendes tag">Rendes tag</option>
+                <option value="Pártoló tag">Pártoló tag</option>
+                <option value="Elnökségi tag">Elnökségi tag</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="label text-xs font-bold text-ink-800">Szervezet / Cég / Szolgáltatás Megnevezése</label>
+            <input
+              type="text"
+              value={form.service_location_name}
+              onChange={set('service_location_name')}
+              placeholder="pl. Kőszegi Vár Vendégház vagy Jurisics Pincészet"
+              className="input py-2 px-3 text-sm rounded-xl"
+            />
+          </div>
+
+          <div>
+            <label className="label text-xs font-bold text-ink-800 flex items-center gap-1">
+              <Key className="h-3.5 w-3.5 text-wine-600" /> Generált Ideiglenes Jelszó
+            </label>
+            <input
+              type="text"
+              required
+              value={form.temp_password}
+              onChange={set('temp_password')}
+              className="input py-2 px-3 text-sm rounded-xl font-mono text-wine-800 font-bold bg-sand-50"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-sand-200">
+            <button type="button" onClick={onClose} className="btn-secondary btn-sm" disabled={pending}>
+              Mégsem
+            </button>
+            <button type="submit" className="btn-primary btn-sm font-bold px-5" disabled={pending}>
+              {pending ? 'Regisztráció...' : 'Tag Regisztrálása'}
+            </button>
+          </div>
+        </form>
+      )}
+    </Modal>
+  );
+};
 
 const CATEGORY_OPTIONS = [
   { value: 'Rendes tag', label: 'Rendes tag' },
@@ -320,6 +506,8 @@ export const MemberManagement = () => {
     });
   }, [list, query, groupFilter, groupsByProfile]);
 
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+
   const currentYear = new Date().getFullYear();
   const duesOf = (memberId) => duesList.find((d) => d.profile_id === memberId && d.year === currentYear);
 
@@ -357,7 +545,17 @@ export const MemberManagement = () => {
             className="input pl-9"
           />
         </div>
+
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowRegisterModal(true)}
+            className="btn-primary btn-sm rounded-xl font-bold flex items-center gap-1.5 shadow-xs"
+          >
+            <UserPlus className="h-4 w-4" />
+            + Új Tag Regisztrálása
+          </button>
+
           <label htmlFor="member-group-filter" className="text-sm text-ink-600">
             Munkacsoport:
           </label>
@@ -545,6 +743,12 @@ export const MemberManagement = () => {
           onSaved={dues.reload}
         />
       )}
+
+      <RegisterMemberModal
+        open={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+        onSaved={members.reload}
+      />
 
       <ConfirmDialog
         open={Boolean(deleting)}

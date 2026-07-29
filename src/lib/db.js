@@ -832,3 +832,104 @@ export const uploadWorkgroupAttachment = async (file) => {
   const { data } = supabase.storage.from('workgroup-files').getPublicUrl(path);
   return { url: data.publicUrl, name: file.name };
 };
+
+// -----------------------------------------------------------------------------
+//  Tagok kézi felvétele (Elnökségi felületről ideiglenes jelszóval)
+// -----------------------------------------------------------------------------
+
+export const registerMemberByAdmin = async (input) => {
+  const email = input.account_email.trim();
+  const password = input.temp_password || `Koszeg${Math.floor(1000 + Math.random() * 9000)}!`;
+
+  // 1. Létrehozzuk az auth usert a Supabase-ben
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: input.full_name?.trim() || null
+      }
+    }
+  });
+
+  if (authError) {
+    throw new Error(`Nem sikerült a fiók regisztrációja: ${authError.message}`);
+  }
+
+  const userId = authData.user?.id;
+  if (!userId) {
+    throw new Error('A felhasználói azonosító nem jött létre.');
+  }
+
+  // 2. Frissítjük a profil adatait
+  await supabase.from('profiles').upsert({
+    id: userId,
+    account_email: email,
+    full_name: input.full_name?.trim() || null,
+    private_email: input.private_email?.trim() || email,
+    phone: input.phone?.trim() || null,
+    home_address: input.home_address?.trim() || null,
+    member_category: input.member_category || 'Rendes tag',
+    service_location_name: input.service_location_name?.trim() || null
+  });
+
+  // 3. Beállítjuk a tagi alapértelmezett szerepkört
+  await supabase.from('user_roles').upsert(
+    { user_id: userId, role: 'member' },
+    { onConflict: 'user_id,role' }
+  );
+
+  return {
+    userId,
+    email,
+    tempPassword: password,
+    fullName: input.full_name
+  };
+};
+
+// -----------------------------------------------------------------------------
+//  Resend Hírlevél Küldő Integráció
+// -----------------------------------------------------------------------------
+
+export const sendNewsletterViaResend = async ({ apiKey, fromEmail, recipients, subject, htmlContent }) => {
+  const key = apiKey || import.meta.env.VITE_RESEND_API_KEY;
+  if (!key) {
+    throw new Error('Hiányzik a Resend API Kulcs! Add meg a felületen vagy a VITE_RESEND_API_KEY környezeti változóban.');
+  }
+
+  const sender = fromEmail || 'Kőszegi Turisztikai Szövetség Egyesület <info@ktsze.hu>';
+
+  // A Resend API-n keresztül batch-ben vagy egyenként kiküldjük
+  const results = { total: recipients.length, success: 0, failed: 0, errors: [] };
+
+  for (const recipient of recipients) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${key.trim()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: sender,
+          to: [recipient.email],
+          subject: subject,
+          html: htmlContent.replace(/{{NAME}}/g, recipient.name || 'Tisztelt Tagunk')
+        })
+      });
+
+      if (response.ok) {
+        results.success += 1;
+      } else {
+        const errJson = await response.json().catch(() => ({}));
+        results.failed += 1;
+        results.errors.push(`${recipient.email}: ${errJson.message || response.statusText}`);
+      }
+    } catch (err) {
+      results.failed += 1;
+      results.errors.push(`${recipient.email}: ${err.message}`);
+    }
+  }
+
+  return results;
+};
