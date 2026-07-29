@@ -196,15 +196,15 @@ export const BoardIdeasAdmin = () => {
   return (
     <div className="space-y-6">
       {/* FEJLÉC ÉS GOMB ZÓNA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-wine-900 border border-wine-800 text-white shadow-md">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-white border border-sand-300 text-ink-900 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-white/10 backdrop-blur-md">
-              <Lightbulb className="h-6 w-6 text-amber-300 animate-pulse" />
+            <div className="p-2 rounded-xl bg-amber-100">
+              <Lightbulb className="h-6 w-6 text-amber-700" />
             </div>
-            <h2 className="font-display text-xl sm:text-2xl font-bold">Elnökségi Ötletelő &amp; Jegyzetfal</h2>
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-ink-900">Elnökségi Ötletelő &amp; Jegyzetfal</h2>
           </div>
-          <p className="mt-1 text-xs sm:text-sm text-sand-200 max-w-2xl leading-relaxed">
+          <p className="mt-1 text-xs sm:text-sm text-ink-600 max-w-2xl leading-relaxed">
             Zárt felület az elnökségi tagok számára. Rögzítsd gondolataidat, ötleteidet vagy a következő megbeszélés témáit, hogy semmi se vesszen el!
           </p>
         </div>
@@ -371,7 +371,7 @@ export const BoardIdeasAdmin = () => {
                       <button
                         type="button"
                         onClick={() => openConvertModal(idea)}
-                        className="w-full py-2 px-3.5 rounded-xl bg-wine-800 hover:bg-wine-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+                        className="w-full py-2 px-3.5 rounded-xl bg-wine-800 text-white font-bold text-xs flex items-center justify-center gap-1.5"
                       >
                         <Rocket className="h-3.5 w-3.5 text-amber-300" />
                         <span>Átalakítás Munkacsoport Projektté</span>
