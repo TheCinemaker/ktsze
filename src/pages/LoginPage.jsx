@@ -35,7 +35,7 @@ const ACTIVITY_OPTIONS = [
 ];
 
 const LoginForm = ({ onSwitch }) => {
-  const { login, requestPasswordReset } = useAuth();
+  const { login, can, requestPasswordReset } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,9 +51,13 @@ const LoginForm = ({ onSwitch }) => {
     try {
       await login(identifier, password);
       toast.success('Sikeres belépés.');
-      navigate(location.state?.from || '/tagi', { replace: true });
+      
+      const targetFrom = location.state?.from;
+      const userCanAdmin = can('admin.access') || can('board.access');
+      const safeTarget = (targetFrom && (!targetFrom.includes('/elnokseg') || userCanAdmin)) ? targetFrom : '/tagi';
+      
+      navigate(safeTarget, { replace: true });
     } catch (err) {
-      // A hibaüzenet szándékosan semmilyen támpontot nem ad.
       toast.error(err.message);
     } finally {
       setPending(false);
@@ -395,7 +399,12 @@ export const LoginPage = () => {
   }
 
   // Belépve nincs mit keresni a belépőoldalon.
-  if (isAuthenticated) return <Navigate to={location.state?.from || '/tagi'} replace />;
+  if (isAuthenticated) {
+    const targetFrom = location.state?.from;
+    const userCanAdmin = can('admin.access') || can('board.access');
+    const safeTarget = (targetFrom && (!targetFrom.includes('/elnokseg') || userCanAdmin)) ? targetFrom : '/tagi';
+    return <Navigate to={safeTarget} replace />;
+  }
 
   return (
     <div className="container-page flex justify-center py-12 sm:py-16">
