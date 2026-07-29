@@ -5,13 +5,15 @@ import { useAsyncData } from '../../lib/useAsyncData';
 import { useToast } from '../../context/ToastContext';
 import { Spinner, EmptyState } from '../ui';
 
+const DEFAULT_RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY || '';
+
 export const NewsletterBroadcaster = () => {
   const toast = useToast();
   const membersData = useAsyncData(listMembers);
   const workgroupsData = useAsyncData(listWorkgroups);
   const membershipsData = useAsyncData(listAllWorkgroupMemberships);
 
-  const [resendApiKey, setResendApiKey] = useState(() => localStorage.getItem('ktsze_resend_api_key') || '');
+  const [resendApiKey, setResendApiKey] = useState(() => localStorage.getItem('ktsze_resend_api_key') || DEFAULT_RESEND_KEY);
   const [fromEmail, setFromEmail] = useState('Kőszegi Turisztikai Szövetség <info@ktsze.hu>');
   const [audienceFilter, setAudienceFilter] = useState('all'); // 'all', 'rendes', 'partolo', 'workgroup'
   const [selectedWorkgroupId, setSelectedWorkgroupId] = useState('');
