@@ -1,26 +1,20 @@
 import React, { useState } from 'react';
-import { CreditCard, FileText, UserCog, Flower2 } from 'lucide-react';
+import { CreditCard, FileText, UserCog, Flower2, HelpCircle } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import { MembershipDues } from '../components/member/MembershipDues';
 import { DocumentVault } from '../components/member/DocumentVault';
 import { ProfileForm } from '../components/member/ProfileForm';
 import { MyWorkgroups } from '../components/member/MyWorkgroups';
+import { MemberUserManual } from '../components/member/MemberUserManual';
 import { PageHeader, LoadingBlock } from '../components/ui';
-
-/*
-  A Google Drive fül eltávolítva. Nem volt mögötte integráció: sem OAuth, sem
-  API-hívás — csak egy felület, ami alert-tel azt állította, hogy feltöltötte a
-  fájlt a megosztott mappába. A csatolási pont az adatbázisban elő van
-  készítve (documents.drive_file_id, documents.drive_url), így ha később
-  bekötjük, nem kell újra migrálni.
-*/
 
 const TABS = [
   { id: 'dues', label: 'Tagdíj', icon: CreditCard },
   { id: 'workgroups', label: 'Munkacsoportjaim', icon: Flower2 },
   { id: 'documents', label: 'Dokumentumok', icon: FileText },
-  { id: 'profile', label: 'Adatlapom', icon: UserCog }
+  { id: 'profile', label: 'Adatlapom', icon: UserCog },
+  { id: 'manual', label: 'Kézikönyv', icon: HelpCircle }
 ];
 
 export const MemberDashboardPage = () => {
@@ -85,6 +79,7 @@ export const MemberDashboardPage = () => {
             {active === 'workgroups' && <MyWorkgroups />}
             {active === 'documents' && <DocumentVault />}
             {active === 'profile' && <ProfileForm />}
+            {active === 'manual' && <MemberUserManual />}
           </div>
         </>
       )}

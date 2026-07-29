@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Users, Flower2, Newspaper, FileText, Wallet, Settings, UserPlus, Mail } from 'lucide-react';
+import { Users, Flower2, Newspaper, FileText, Wallet, Settings, UserPlus, Mail, HelpCircle } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import { PageHeader } from '../components/ui';
@@ -12,15 +12,8 @@ import { DocumentAdmin } from '../components/admin/DocumentAdmin';
 import { DuesRatesAdmin } from '../components/admin/DuesRatesAdmin';
 import { NewsletterBroadcaster } from '../components/admin/NewsletterBroadcaster';
 import { AdminSettings } from '../components/admin/AdminSettings';
+import { AdminUserManual } from '../components/admin/AdminUserManual';
 
-/**
- * Elnökségi felület.
- *
- * A fülek a szerepkör szerint jelennek meg: az alelnök tartalmat és
- * dokumentumokat kezel, de tagdíjat nem; az elnökségi tag betekint, de nem ír.
- * Ugyanezt a szabályrendszert az adatbázis RLS-e is érvényesíti, tehát egy
- * elrejtett fül nem jelent megkerülhető korlátot.
- */
 const ALL_TABS = [
   { id: 'members', label: 'Tagnyilvántartás', icon: Users, permission: 'members.view', Component: MemberManagement },
   { id: 'newsletter', label: 'Hírlevél Küldése', icon: Mail, permission: 'members.view', Component: NewsletterBroadcaster },
@@ -29,6 +22,7 @@ const ALL_TABS = [
   { id: 'applications', label: 'Jelentkezések', icon: UserPlus, permission: 'workgroups.decide', Component: WorkgroupApplications },
   { id: 'documents', label: 'Dokumentumok', icon: FileText, permission: 'documents.manage', Component: DocumentAdmin },
   { id: 'dues', label: 'Tagdíjtételek', icon: Wallet, permission: 'duesRates.manage', Component: DuesRatesAdmin },
+  { id: 'manual', label: 'Elnökségi Útmutató', icon: HelpCircle, permission: 'members.view', Component: AdminUserManual },
   { id: 'settings', label: 'Beállítások', icon: Settings, permission: 'settings.view', Component: AdminSettings }
 ];
 
