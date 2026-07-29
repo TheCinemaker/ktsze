@@ -25,7 +25,7 @@ export const Footer = () => {
               Hivatalos Dokumentumok
             </Link>
             <Link to="/kapcsolat" className="hover:text-wine-700 transition-colors">
-              Kapcsolat &amp; Elérhetőség
+              Kapcsolat &amp; Visszajelzés
             </Link>
             <Link to="/adatvedelem" className="hover:text-wine-700 transition-colors">
               Adatvédelem &amp; GDPR
