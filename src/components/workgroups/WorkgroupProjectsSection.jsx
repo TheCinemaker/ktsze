@@ -515,10 +515,10 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                         ) : (
                           <Circle className="h-5 w-5 text-sand-400 shrink-0" />
                         )}
-                        <div>
-                          <span className="text-sm font-semibold block truncate">{t.title}</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-sm font-semibold text-ink-900 block break-words leading-snug">{t.title}</span>
                           {(t.assignee_name || t.assignee?.full_name) && (
-                            <span className="text-[11px] font-bold text-wine-700 block mt-0.5">
+                            <span className="text-[11px] font-bold text-wine-700 block mt-0.5 break-words">
                               👤 Felelős: {t.assignee_name || t.assignee?.full_name}
                             </span>
                           )}

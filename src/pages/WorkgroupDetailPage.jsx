@@ -246,25 +246,25 @@ export const WorkgroupDetailPage = () => {
             </div>
           )}
 
-          <div className="surface p-5">
-            <h2 className="font-display text-base text-ink-900">A csoportról</h2>
+          <div className="surface p-5 break-words">
+            <h2 className="font-display text-base font-bold text-ink-900">A csoportról</h2>
             <dl className="mt-3 space-y-3 text-sm">
               {workgroup.leader_name && (
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-ink-500">Vezető</dt>
-                  <dd className="mt-0.5 text-ink-900">{workgroup.leader_name}</dd>
+                  <dt className="text-xs uppercase font-bold tracking-wide text-ink-500">Vezető</dt>
+                  <dd className="mt-0.5 font-semibold text-ink-900 break-words">{workgroup.leader_name}</dd>
                 </div>
               )}
               <div>
-                <dt className="text-xs uppercase tracking-wide text-ink-500">Létszám</dt>
-                <dd className="mt-0.5 flex items-center gap-1.5 text-ink-900">
-                  <Users className="h-4 w-4 text-wine-600" aria-hidden="true" />
-                  {memberCount} jóváhagyott tag
+                <dt className="text-xs uppercase font-bold tracking-wide text-ink-500">Létszám</dt>
+                <dd className="mt-0.5 flex items-center gap-1.5 font-medium text-ink-900">
+                  <Users className="h-4 w-4 text-wine-600 shrink-0" aria-hidden="true" />
+                  <span>{memberCount} jóváhagyott tag</span>
                 </dd>
               </div>
             </dl>
 
-            <p className="mt-4 border-t border-sand-300 pt-3 text-xs text-ink-500">
+            <p className="mt-4 border-t border-sand-300 pt-3 text-xs text-ink-600 break-words leading-relaxed">
               A tagok névsora nem nyilvános. A jelentkezésedet csak a csoport vezetője és az elnökség látja.
             </p>
           </div>
