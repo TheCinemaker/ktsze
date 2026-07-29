@@ -66,14 +66,15 @@ ALTER TABLE public.project_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_comments ENABLE ROW LEVEL SECURITY;
 
--- Újra-futtatható RLS szabályok
+-- Újra-futtatható RLS szabályok (CSAK BEJELENTKEZETT TAGOKNAK LÁTHATÓ!)
 DROP POLICY IF EXISTS "Projektek megtekintése mindenkinek" ON public.workgroup_projects;
+DROP POLICY IF EXISTS "Projektek megtekintése bejelentkezett tagoknak" ON public.workgroup_projects;
 DROP POLICY IF EXISTS "Projektek létrehozása bejelentkezett tagoknak" ON public.workgroup_projects;
 DROP POLICY IF EXISTS "Projektek szerkesztése tulajdonosnak vagy adminnak" ON public.workgroup_projects;
 DROP POLICY IF EXISTS "Projektek törlése elnökségi tagoknak" ON public.workgroup_projects;
 
-CREATE POLICY "Projektek megtekintése mindenkinek"
-  ON public.workgroup_projects FOR SELECT USING (true);
+CREATE POLICY "Projektek megtekintése bejelentkezett tagoknak"
+  ON public.workgroup_projects FOR SELECT USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Projektek létrehozása bejelentkezett tagoknak"
   ON public.workgroup_projects FOR INSERT WITH CHECK (auth.role() = 'authenticated');
@@ -96,47 +97,41 @@ CREATE POLICY "Projektek törlése elnökségi tagoknak"
     )
   );
 
--- Feladatok RLS
+-- Feladatok RLS (Zárt, csak bejelentkezetteknek)
 DROP POLICY IF EXISTS "Feladatok megtekintése mindenkinek" ON public.project_tasks;
 DROP POLICY IF EXISTS "Feladatok kezelése bejelentkezett tagoknak" ON public.project_tasks;
-
-CREATE POLICY "Feladatok megtekintése mindenkinek"
-  ON public.project_tasks FOR SELECT USING (true);
 
 CREATE POLICY "Feladatok kezelése bejelentkezett tagoknak"
   ON public.project_tasks FOR ALL USING (auth.role() = 'authenticated');
 
--- Külső partnerek RLS
+-- Külső partnerek RLS (Zárt, csak bejelentkezetteknek)
 DROP POLICY IF EXISTS "Külső partnerek megtekintése mindenkinek" ON public.project_contacts;
 DROP POLICY IF EXISTS "Külső partnerek kezelése bejelentkezett tagoknak" ON public.project_contacts;
-
-CREATE POLICY "Külső partnerek megtekintése mindenkinek"
-  ON public.project_contacts FOR SELECT USING (true);
 
 CREATE POLICY "Külső partnerek kezelése bejelentkezett tagoknak"
   ON public.project_contacts FOR ALL USING (auth.role() = 'authenticated');
 
--- Megjegyzések RLS
+-- Megjegyzések RLS (Zárt, csak bejelentkezetteknek)
 DROP POLICY IF EXISTS "Megjegyzések megtekintése mindenkinek" ON public.project_comments;
 DROP POLICY IF EXISTS "Megjegyzések írása bejelentkezett tagoknak" ON public.project_comments;
 
-CREATE POLICY "Megjegyzések megtekintése mindenkinek"
-  ON public.project_comments FOR SELECT USING (true);
+CREATE POLICY "Megjegyzések kezelése bejelentkezett tagoknak"
+  ON public.project_comments FOR ALL USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Megjegyzések írása bejelentkezett tagoknak"
-  ON public.project_comments FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
--- Supabase Storage vödör a munkacsoporti csatolmányoknak
+-- Supabase Storage vödör a munkacsoporti csatolmányoknak (Zárt olvasás tagoknak)
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('workgroup-files', 'workgroup-files', true)
+VALUES ('workgroup-files', 'workgroup-files', false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage RLS szabályok
 DROP POLICY IF EXISTS "Munkacsoport fájlok nyilvános olvasása" ON storage.objects;
 DROP POLICY IF EXISTS "Munkacsoport fájlok feltöltése tagoknak" ON storage.objects;
+DROP POLICY IF EXISTS "Munkacsoport fájlok olvasása tagoknak" ON storage.objects;
 
-CREATE POLICY "Munkacsoport fájlok nyilvános olvasása"
-  ON storage.objects FOR SELECT USING (bucket_id = 'workgroup-files');
+CREATE POLICY "Munkacsoport fájlok olvasása tagoknak"
+  ON storage.objects FOR SELECT USING (
+    bucket_id = 'workgroup-files' AND auth.role() = 'authenticated'
+  );
 
 CREATE POLICY "Munkacsoport fájlok feltöltése tagoknak"
   ON storage.objects FOR INSERT WITH CHECK (

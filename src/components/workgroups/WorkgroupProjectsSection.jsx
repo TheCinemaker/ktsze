@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle2, Circle, Clock, MessageSquare, Paperclip, Send, Image, FileText, FolderKanban, User, Phone, Mail, UserPlus, ShieldAlert, Award, Calendar, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, CheckCircle2, Circle, Clock, MessageSquare, Paperclip, Send, Image, FileText, FolderKanban, User, Phone, Mail, UserPlus, ShieldAlert, Award, Calendar, Trash2, Lock, LogIn } from 'lucide-react';
 import { 
   listProjectsByWorkgroup, 
   createWorkgroupProject,
@@ -23,7 +24,39 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
   const workgroupId = workgroup?.id;
   const { profile, isAuthenticated, can } = useAuth();
   const toast = useToast();
-  
+
+  // HA A FELHASZNÁLÓ NINCS BEJELENTKEZVE ➔ ZÁRT KÁRTYA JELENIK MEG!
+  if (!isAuthenticated) {
+    return (
+      <div className="card p-8 bg-gradient-to-r from-wine-900 via-wine-850 to-sand-900 text-white border border-gold-400/40 shadow-xl space-y-5 rounded-3xl">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-gold-400 border border-white/15 shadow-inner">
+            <Lock className="h-6 w-6" />
+          </div>
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-gold-400">Zárt Egyesületi Munkatér</span>
+            <h3 className="font-display text-xl font-bold text-white">Munkacsoport Projektek &amp; Feladatok</h3>
+          </div>
+        </div>
+
+        <p className="text-sm text-sand-200 leading-relaxed max-w-2xl">
+          A munkacsoport belső kezdeményezései, projektezése, feladatlistái, külső partnerei és ötletelő megbeszélései kizárólag bejelentkezett egyesületi tagjaink számára érhetők el.
+        </p>
+
+        <div className="pt-2 flex flex-wrap items-center gap-3">
+          <Link to="/belepes" className="btn-gold btn-md font-bold flex items-center gap-2 shadow-md">
+            <LogIn className="h-4 w-4" />
+            Belépés a Tagi Portálra
+          </Link>
+          <Link to="/tagsag" className="btn btn-md border-white/20 bg-white/10 text-white hover:bg-white/20 backdrop-blur-md font-semibold">
+            Tagság Feltételei
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // BEJELENTKEZETT TAGOKNÁL BETÖLTJÜK A PROJEKTEKET
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +70,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
     (workgroup?.leader_name && profile?.full_name && workgroup.leader_name.toLowerCase().includes(profile.full_name.toLowerCase()))
   );
 
-  // Projekt TÖRLÉSI jogosultság: KIZÁRÓLAG ELNÖKSÉGI TAG / ADMIN!
+  // Projekt TÖRLÉSI jogosultság: KIZÁRÓLAG ELNÖKSÉGI TAG!
   const canDeleteProject = Boolean(can('admin.access') || can('board.access'));
 
   // Új projekt form
@@ -89,8 +122,8 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
   };
 
   useEffect(() => {
-    if (workgroupId) loadProjects();
-  }, [workgroupId]);
+    if (workgroupId && isAuthenticated) loadProjects();
+  }, [workgroupId, isAuthenticated]);
 
   // 2. Kiválasztott projekt adatai
   const loadProjectDetails = async (projId) => {
@@ -110,7 +143,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
   };
 
   useEffect(() => {
-    if (selectedProjectId) {
+    if (selectedProjectId && isAuthenticated) {
       loadProjectDetails(selectedProjectId);
 
       const channel = supabase
@@ -124,7 +157,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
         supabase.removeChannel(channel);
       };
     }
-  }, [selectedProjectId]);
+  }, [selectedProjectId, isAuthenticated]);
 
   // Új projekt indítása
   const handleCreateProject = async (e) => {
@@ -151,7 +184,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
     }
   };
 
-  // PROJEKT TÖRLÉSE (KIZÁRÓLAG ELNÖKSÉGI TAG KIKÉNYSZERÍTVE)
+  // PROJEKT TÖRLÉSE (KIZÁRÓLAG ELNÖKSÉGI TAG)
   const handleDeleteProject = async (proj) => {
     if (!canDeleteProject) {
       toast.error('Projektek törlésére kizárólag az elnökségi tagok jogosultak!');
@@ -292,7 +325,7 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
           </p>
         </div>
 
-        {isAuthenticated && isLeaderOrBoard ? (
+        {isLeaderOrBoard ? (
           <button
             type="button"
             onClick={() => setShowNewProject(true)}
@@ -415,52 +448,50 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
               </div>
 
               {/* FELADAT KIÍRÁSA FORM */}
-              {isAuthenticated && (
-                <form onSubmit={handleAddTask} className="p-4 sm:p-5 rounded-2xl bg-sand-100/90 border border-sand-300 space-y-3">
-                  <h5 className="text-xs font-bold uppercase tracking-wider text-wine-900 flex items-center gap-1.5">
-                    <Plus className="h-4 w-4 text-wine-600" /> Új Feladat Kiírása &amp; Felelős Kijelölése
-                  </h5>
-                  
-                  <div className="space-y-3">
+              <form onSubmit={handleAddTask} className="p-4 sm:p-5 rounded-2xl bg-sand-100/90 border border-sand-300 space-y-3">
+                <h5 className="text-xs font-bold uppercase tracking-wider text-wine-900 flex items-center gap-1.5">
+                  <Plus className="h-4 w-4 text-wine-600" /> Új Feladat Kiírása &amp; Felelős Kijelölése
+                </h5>
+                
+                <div className="space-y-3">
+                  <div>
+                    <input
+                      type="text"
+                      required
+                      value={newTaskTitle}
+                      onChange={(e) => setNewTaskTitle(e.target.value)}
+                      placeholder="Feladat megnevezése (pl. QR-kódos táblák grafikai tervezése) *"
+                      className="input py-2.5 px-3.5 text-sm rounded-xl"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <input
                         type="text"
-                        required
-                        value={newTaskTitle}
-                        onChange={(e) => setNewTaskTitle(e.target.value)}
-                        placeholder="Feladat megnevezése (pl. QR-kódos táblák grafikai tervezése) *"
+                        value={newTaskAssignee}
+                        onChange={(e) => setNewTaskAssignee(e.target.value)}
+                        placeholder="Felelős neve (pl. Kovács Péter)"
                         className="input py-2.5 px-3.5 text-sm rounded-xl"
                       />
                     </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <input
-                          type="text"
-                          value={newTaskAssignee}
-                          onChange={(e) => setNewTaskAssignee(e.target.value)}
-                          placeholder="Felelős neve (pl. Kovács Péter)"
-                          className="input py-2.5 px-3.5 text-sm rounded-xl"
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="date"
-                          value={newTaskDate}
-                          onChange={(e) => setNewTaskDate(e.target.value)}
-                          className="input py-2.5 px-3.5 text-sm rounded-xl"
-                        />
-                      </div>
+                    <div>
+                      <input
+                        type="date"
+                        value={newTaskDate}
+                        onChange={(e) => setNewTaskDate(e.target.value)}
+                        className="input py-2.5 px-3.5 text-sm rounded-xl"
+                      />
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex justify-end pt-1">
-                    <button type="submit" className="btn-primary btn-sm font-bold px-5">
-                      + Feladat Hozzáadása
-                    </button>
-                  </div>
-                </form>
-              )}
+                <div className="flex justify-end pt-1">
+                  <button type="submit" className="btn-primary btn-sm font-bold px-5">
+                    + Feladat Hozzáadása
+                  </button>
+                </div>
+              </form>
 
               {/* Feladatok Listája */}
               <div className="space-y-2.5">
@@ -513,15 +544,13 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
                     Külső Partnerek &amp; Elérhetőségek (Főkertész, Polgármester stb.)
                   </h5>
 
-                  {isAuthenticated && (
-                    <button
-                      type="button"
-                      onClick={() => setShowNewContact(true)}
-                      className="btn-secondary btn-sm text-xs font-bold"
-                    >
-                      + Partner Csatolása
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowNewContact(true)}
+                    className="btn-secondary btn-sm text-xs font-bold"
+                  >
+                    + Partner Csatolása
+                  </button>
                 </div>
 
                 {/* Partner Hozzáadása Form */}
@@ -673,41 +702,35 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
               </div>
 
               {/* Megjegyzés & Fájl Form */}
-              {isAuthenticated ? (
-                <form onSubmit={handleSendComment} className="pt-3 border-t border-sand-200 space-y-2 shrink-0">
-                  {attachment && (
-                    <div className="flex items-center justify-between text-xs bg-wine-50 text-wine-800 p-2.5 rounded-xl border border-wine-200">
-                      <span className="truncate font-bold">📎 {attachment.name}</span>
-                      <button type="button" onClick={() => setAttachment(null)} className="text-wine-600 font-bold hover:text-wine-900">
-                        ×
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      placeholder="Írj egy megjegyzést..."
-                      className="input flex-1 py-2.5 px-3.5 text-sm rounded-xl"
-                    />
-
-                    <label className="btn-secondary btn-md cursor-pointer shrink-0 rounded-xl" title="Kép / Fájl csatolása">
-                      <Paperclip className="h-5 w-5 text-ink-600" />
-                      <input type="file" onChange={handleFileSelect} className="sr-only" />
-                    </label>
-
-                    <button type="submit" disabled={sendingComment || uploadingFile} className="btn-primary btn-md shrink-0 rounded-xl px-4">
-                      <Send className="h-4 w-4" />
+              <form onSubmit={handleSendComment} className="pt-3 border-t border-sand-200 space-y-2 shrink-0">
+                {attachment && (
+                  <div className="flex items-center justify-between text-xs bg-wine-50 text-wine-800 p-2.5 rounded-xl border border-wine-200">
+                    <span className="truncate font-bold">📎 {attachment.name}</span>
+                    <button type="button" onClick={() => setAttachment(null)} className="text-wine-600 font-bold hover:text-wine-900">
+                      ×
                     </button>
                   </div>
-                </form>
-              ) : (
-                <p className="text-xs text-ink-500 italic text-center pt-2 shrink-0">
-                  A hozzászóláshoz és fájlcsatoláshoz bejelentkezés szükséges.
-                </p>
-              )}
+                )}
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Írj egy megjegyzést..."
+                    className="input flex-1 py-2.5 px-3.5 text-sm rounded-xl"
+                  />
+
+                  <label className="btn-secondary btn-md cursor-pointer shrink-0 rounded-xl" title="Kép / Fájl csatolása">
+                    <Paperclip className="h-5 w-5 text-ink-600" />
+                    <input type="file" onChange={handleFileSelect} className="sr-only" />
+                  </label>
+
+                  <button type="submit" disabled={sendingComment || uploadingFile} className="btn-primary btn-md shrink-0 rounded-xl px-4">
+                    <Send className="h-4 w-4" />
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
