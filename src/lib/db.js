@@ -906,13 +906,15 @@ export const registerMemberByAdmin = async (input) => {
       </div>
     `;
 
-    await sendNewsletterViaResend({
-      fromEmail: 'Kőszegi Turisztikai Szövetség <info@ktsze.hu>',
+    const emailRes = await sendNewsletterViaResend({
+      fromEmail: 'Koszegi Turisztikai Szovetseg <info@ktsze.hu>',
       recipients: [{ name: input.full_name, email }],
       subject: '[KTSZE] Üdvözlünk az Egyesületben! — Belépési adataid',
       htmlContent: welcomeHtml
     });
-    emailSent = true;
+    if (emailRes && emailRes.success > 0) {
+      emailSent = true;
+    }
   } catch (mailErr) {
     console.warn('[RegisterMember] Üdvözlő email küldési hiba:', mailErr);
   }

@@ -31,13 +31,18 @@ export async function handler(event, context) {
       };
     }
 
-    const sender = fromEmail || 'Kőszegi Turisztikai Szövetség Egyesület <info@ktsze.hu>';
+    // Tisztított feladó név (Resend szigorú RFC822 formátum)
+    let sender = fromEmail || 'Koszegi Turisztikai Szovetseg <info@ktsze.hu>';
+    if (sender.includes('Kőszegi')) {
+      sender = sender.replace('Kőszegi', 'Koszegi').replace('Szövetség', 'Szovetseg').replace('Egyesület', 'Egyesulet');
+    }
+
     const results = { total: recipients.length, success: 0, failed: 0, errors: [] };
 
-    // Szerveroldalon küldjük el a leveleket a Resend REST API-n keresztül (NINCS CORS probléma!)
+    // Szerveroldalon küldjük el a leveleket a Resend REST API-n keresztül
     for (const recipient of recipients) {
       try {
-        const resendRes = await fetch('https://api.resend.com/emails', {
+        let resendRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey.trim()}`,
@@ -51,13 +56,37 @@ export async function handler(event, context) {
           })
         });
 
-        if (resendRes.ok) {
-          results.success += 1;
-        } else {
-          const errData = await resendRes.json().catch(() => ({}));
-          results.failed += 1;
-          results.errors.push(`${recipient.email}: ${errData.message || resendRes.statusText}`);
+        // Ha a domain még nem verificált a Resend-ben, tartalék feladóval próbáljuk (onboarding@resend.dev)
+        if (!resendRes.ok) {
+          const firstErr = await resendRes.json().catch(() => ({}));
+          console.warn('[SendNewsletter] Elsődleges feladó sikertelen, próbálkozás tartalékkal:', firstErr);
+
+          const fallbackRes = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey.trim()}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: 'KTSZE Egyesulet <onboarding@resend.dev>',
+              to: [recipient.email],
+              subject: subject,
+              html: htmlContent.replace(/{{NAME}}/g, recipient.name || 'Tisztelt Tagunk')
+            })
+          });
+
+          if (fallbackRes.ok) {
+            results.success += 1;
+            continue;
+          } else {
+            const fallbackErr = await fallbackRes.json().catch(() => ({}));
+            results.failed += 1;
+            results.errors.push(`${recipient.email}: ${firstErr.message || fallbackErr.message || resendRes.statusText}`);
+            continue;
+          }
         }
+
+        results.success += 1;
       } catch (err) {
         results.failed += 1;
         results.errors.push(`${recipient.email}: ${err.message}`);
