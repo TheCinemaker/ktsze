@@ -371,7 +371,7 @@ const ConfirmationNotice = ({ email }) => (
 );
 
 export const LoginPage = () => {
-  const { isAuthenticated, initializing, passwordRecovery } = useAuth();
+  const { isAuthenticated, initializing, passwordRecovery, can } = useAuth();
   const [mode, setMode] = useState('login');
   const [confirmationEmail, setConfirmationEmail] = useState(null);
   const location = useLocation();
