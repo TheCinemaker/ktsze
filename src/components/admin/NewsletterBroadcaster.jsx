@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Mail, Send, CheckCircle2, AlertTriangle, Users, Key, Sparkles, HelpCircle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Mail, Send, CheckCircle2, AlertTriangle, Users, Sparkles } from 'lucide-react';
 import { listMembers, listWorkgroups, listAllWorkgroupMemberships, sendNewsletterViaResend } from '../../lib/db';
 import { useAsyncData } from '../../lib/useAsyncData';
 import { useToast } from '../../context/ToastContext';
 import { Spinner, EmptyState } from '../ui';
-
-const DEFAULT_RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY || '';
 
 export const NewsletterBroadcaster = () => {
   const toast = useToast();
@@ -13,7 +11,6 @@ export const NewsletterBroadcaster = () => {
   const workgroupsData = useAsyncData(listWorkgroups);
   const membershipsData = useAsyncData(listAllWorkgroupMemberships);
 
-  const [resendApiKey, setResendApiKey] = useState(() => localStorage.getItem('ktsze_resend_api_key') || DEFAULT_RESEND_KEY);
   const [fromEmail, setFromEmail] = useState('Kőszegi Turisztikai Szövetség <info@ktsze.hu>');
   const [audienceFilter, setAudienceFilter] = useState('all'); // 'all', 'rendes', 'partolo', 'workgroup'
   const [selectedWorkgroupId, setSelectedWorkgroupId] = useState('');
@@ -24,51 +21,47 @@ export const NewsletterBroadcaster = () => {
   const [sending, setSending] = useState(false);
   const [lastReport, setLastReport] = useState(null);
 
-  // Mentjük a Resend API kulcsot a böngészőbe a kényelemért
-  const handleSaveApiKey = (val) => {
-    setResendApiKey(val);
-    localStorage.setItem('ktsze_resend_api_key', val);
-  };
-
-  // Címzettek kiszámítása a szűrő alapján
-  const targetRecipients = React.useMemo(() => {
+  // Minden tag kiválasztása a profiles táblából
+  const targetRecipients = useMemo(() => {
     const members = membersData.data || [];
-    if (audienceFilter === 'all') {
-      return members
-        .filter((m) => m.private_email || m.account_email)
-        .map((m) => ({ name: m.full_name, email: m.private_email || m.account_email }));
-    }
+    let filtered = members;
+
     if (audienceFilter === 'rendes') {
-      return members
-        .filter((m) => m.member_category === 'Rendes tag' && (m.private_email || m.account_email))
-        .map((m) => ({ name: m.full_name, email: m.private_email || m.account_email }));
-    }
-    if (audienceFilter === 'partolo') {
-      return members
-        .filter((m) => m.member_category === 'Pártoló tag' && (m.private_email || m.account_email))
-        .map((m) => ({ name: m.full_name, email: m.private_email || m.account_email }));
-    }
-    if (audienceFilter === 'workgroup' && selectedWorkgroupId) {
+      filtered = members.filter((m) => m.member_category === 'Rendes tag');
+    } else if (audienceFilter === 'partolo') {
+      filtered = members.filter((m) => m.member_category === 'Pártoló tag');
+    } else if (audienceFilter === 'workgroup' && selectedWorkgroupId) {
       const activeMemberIds = (membershipsData.data || [])
         .filter((ms) => ms.workgroup_id === selectedWorkgroupId && ms.status === 'approved')
         .map((ms) => ms.profile_id);
 
-      return members
-        .filter((m) => activeMemberIds.includes(m.id) && (m.private_email || m.account_email))
-        .map((m) => ({ name: m.full_name, email: m.private_email || m.account_email }));
+      filtered = members.filter((m) => activeMemberIds.includes(m.id));
     }
-    return [];
+
+    // Egyedi e-mail címek kiszűrése (mindig a profiles táblából)
+    const recipientMap = new Map();
+    filtered.forEach((m) => {
+      const email = (m.private_email || m.account_email || '').trim();
+      if (email && !recipientMap.has(email)) {
+        recipientMap.set(email, {
+          name: m.full_name || 'Egyesületi Tag',
+          email: email
+        });
+      }
+    });
+
+    return Array.from(recipientMap.values());
   }, [membersData.data, membershipsData.data, audienceFilter, selectedWorkgroupId]);
 
   // Hírlevél kiküldése
   const handleSendNewsletter = async (e) => {
     e.preventDefault();
     if (targetRecipients.length === 0) {
-      toast.error('Nincs egyetlen címzett sem a kiválasztott szűrő alapján.');
+      toast.error('Nincs egyetlen elérhető e-mail cím sem a kiválasztott szűrő alapján.');
       return;
     }
 
-    if (!window.confirm(`Biztosan kiküldöd a hírlevelet ${targetRecipients.length} tagunknak a Resend rendszerén keresztül?`)) {
+    if (!window.confirm(`Biztosan kiküldöd a hírlevelet ${targetRecipients.length} tagunknak?`)) {
       return;
     }
 
@@ -76,24 +69,23 @@ export const NewsletterBroadcaster = () => {
       setSending(true);
       setLastReport(null);
 
-      // Formázzuk a HTML tartalmat (sorközök megtartásával)
+      // HTML sablon formázása
       const htmlBody = `
-        <div style="font-family: sans-serif; line-height: 1.6; color: #1e1b26; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e0d8; rounded-radius: 12px; background-color: #faf7f1;">
+        <div style="font-family: sans-serif; line-height: 1.6; color: #1e1b26; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e0d8; rounded-radius: 16px; background-color: #faf7f1;">
           <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #701a2e;">
-            <h2 style="color: #701a2e; margin: 0;">Kőszegi Turisztikai Szövetség Egyesület</h2>
+            <h2 style="color: #701a2e; margin: 0; font-size: 20px;">Kőszegi Turisztikai Szövetség Egyesület</h2>
             <p style="font-size: 12px; color: #666; margin-top: 4px;">Hivatalos Egyesületi Tájékoztató & Hírlevél</p>
           </div>
-          <div style="padding: 20px 0; font-size: 15px; white-space: pre-line;">
+          <div style="padding: 24px 0; font-size: 15px; white-space: pre-line; color: #2d2838;">
             ${content}
           </div>
-          <div style="border-top: 1px solid #e5e0d8; pt: 15px; text-align: center; font-size: 11px; color: #888;">
-            <p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.netlify.app" style="color: #701a2e;">ktsze.netlify.app</a></p>
+          <div style="border-top: 1px solid #e5e0d8; pt: 16px; text-align: center; font-size: 11px; color: #888;">
+            <p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.netlify.app" style="color: #701a2e; text-decoration: underline;">ktsze.netlify.app</a></p>
           </div>
         </div>
       `;
 
       const result = await sendNewsletterViaResend({
-        apiKey: resendApiKey,
         fromEmail,
         recipients: targetRecipients,
         subject,
@@ -115,59 +107,29 @@ export const NewsletterBroadcaster = () => {
 
   return (
     <div className="space-y-8">
-      {/* Fejléc */}
-      <div className="card p-6 bg-white space-y-4 border border-sand-300">
+      <div className="card p-6 bg-white space-y-6 border border-sand-300 shadow-2xs">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-sand-200 pb-4">
           <div>
             <h3 className="font-display text-2xl font-bold text-ink-900 flex items-center gap-2.5">
               <Mail className="h-6 w-6 text-wine-600" />
-              Egyesületi Hírlevél Küldő (Resend Integráció)
+              Egyesületi Hírlevél Küldése
             </h3>
             <p className="text-sm text-ink-600 mt-1">
-              Küldj hivatalos tájékoztatót vagy értesítést a tagoknak Resend segítségével.
+              Küldj hivatalos tájékoztatót az egyesület adatbázisában rögzített tagoknak.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-wine-800 bg-wine-50 px-3 py-1.5 rounded-xl border border-wine-200">
-              👥 Kiválasztott címzettek: {targetRecipients.length} fő
+            <span className="text-xs font-bold text-wine-800 bg-wine-50 px-3.5 py-2 rounded-xl border border-wine-200">
+              👥 Címzettek száma a profiles táblából: {targetRecipients.length} fő
             </span>
           </div>
         </div>
 
-        {/* Resend API Kulcs Beállító Blokkoló */}
-        <div className="p-4 rounded-2xl bg-sand-100/90 border border-sand-300 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <label className="label text-xs font-bold text-ink-800 flex items-center gap-1.5">
-              <Key className="h-4 w-4 text-wine-600" /> Resend API Kulcs (resend.com)
-            </label>
-            <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-xs text-wine-700 font-semibold hover:underline flex items-center gap-1">
-              <HelpCircle className="h-3.5 w-3.5" /> Ingyenes API kulcs beszerzése
-            </a>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input
-              type="password"
-              value={resendApiKey}
-              onChange={(e) => handleSaveApiKey(e.target.value)}
-              placeholder="re_123456789... (Resend API Key)"
-              className="input py-2.5 px-3.5 text-sm rounded-xl font-mono"
-            />
-            <input
-              type="text"
-              value={fromEmail}
-              onChange={(e) => setFromEmail(e.target.value)}
-              placeholder="Kőszegi Turisztikai Szövetség <info@ktsze.hu>"
-              className="input py-2.5 px-3.5 text-sm rounded-xl"
-            />
-          </div>
-        </div>
-
         {/* Hírlevél Küldő Form */}
-        <form onSubmit={handleSendNewsletter} className="space-y-5 pt-2">
-          {/* Célcsoport Választó */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <form onSubmit={handleSendNewsletter} className="space-y-5">
+          {/* Célcsoport & Feladó */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="label text-xs font-bold text-ink-800">Célcsoport Szűrése</label>
               <select
@@ -175,7 +137,7 @@ export const NewsletterBroadcaster = () => {
                 onChange={(e) => setAudienceFilter(e.target.value)}
                 className="input py-2.5 px-3.5 text-sm rounded-xl font-medium"
               >
-                <option value="all">Minden Tag ({membersData.data?.length || 0} fő)</option>
+                <option value="all">Minden Tag a Profiles táblából ({membersData.data?.length || 0} fő)</option>
                 <option value="rendes">Csak Rendes Tagok</option>
                 <option value="partolo">Csak Pártoló Tagok</option>
                 <option value="workgroup">Adott Munkacsoport Tagjai</option>
@@ -199,6 +161,17 @@ export const NewsletterBroadcaster = () => {
             )}
 
             <div>
+              <label className="label text-xs font-bold text-ink-800">Feladó Neve &amp; E-mail Címe</label>
+              <input
+                type="text"
+                value={fromEmail}
+                onChange={(e) => setFromEmail(e.target.value)}
+                placeholder="Kőszegi Turisztikai Szövetség <info@ktsze.hu>"
+                className="input py-2.5 px-3.5 text-sm rounded-xl font-medium"
+              />
+            </div>
+
+            <div className={audienceFilter === 'workgroup' ? 'lg:col-span-3' : 'sm:col-span-2 lg:col-span-1'}>
               <label className="label text-xs font-bold text-ink-800">Levél Tárgya (Subject) *</label>
               <input
                 type="text"
@@ -214,10 +187,10 @@ export const NewsletterBroadcaster = () => {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="label text-xs font-bold text-ink-800">Hírlevél Üzenet Törzse *</label>
-              <span className="text-[11px] text-ink-500 italic">Használható dinamikus változó: <strong>&#123;&#123;NAME&#123;&#123;</strong> (a tag teljes neve)</span>
+              <span className="text-[11px] text-ink-500 italic">Használható dinamikus változó: <strong>&#123;&#123;NAME&#123;&#123;</strong> (a tag neve)</span>
             </div>
             <textarea
-              rows={8}
+              rows={9}
               required
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -226,15 +199,15 @@ export const NewsletterBroadcaster = () => {
           </div>
 
           {/* Kiküldés Gomb */}
-          <div className="flex items-center justify-between pt-2 border-t border-sand-200">
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-sand-200">
             <span className="text-xs text-ink-600 font-medium">
-              A kiküldés a Resend API-n keresztül történik a tagok nyilvántartott e-mail címére.
+              A kiküldés az egyesületi e-mail küldő rendszeren keresztül történik minden rögzített tag részére.
             </span>
 
             <button
               type="submit"
               disabled={sending || targetRecipients.length === 0}
-              className="btn-primary btn-md rounded-xl font-bold flex items-center gap-2 shadow-sm px-6"
+              className="btn-primary btn-md rounded-xl font-bold flex items-center gap-2 shadow-sm px-7"
             >
               <Send className="h-4.5 w-4.5" />
               {sending ? 'Kiküldés folyamatban...' : `Hírlevél Kiküldése (${targetRecipients.length} fő)`}
