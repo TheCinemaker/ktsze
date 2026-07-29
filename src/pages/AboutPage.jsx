@@ -236,7 +236,7 @@ export const AboutPage = () => {
       <section className="pt-8 border-t border-sand-300 space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="eyebrow text-wine-700">Összefogás Kőszegért</div>
+            <div className="eyebrow text-wine-700">Fogjunk össze Kőszegért</div>
             <h2 className="mt-1 font-display text-2xl text-ink-900 flex items-center gap-2">
               <Building2 className="h-6 w-6 text-wine-600" />
               Támogató Vállalkozások &amp; Szövetségi Tagjaink
