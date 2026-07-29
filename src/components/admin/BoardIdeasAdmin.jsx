@@ -196,7 +196,7 @@ export const BoardIdeasAdmin = () => {
   return (
     <div className="space-y-6">
       {/* FEJLÉC ÉS GOMB ZÓNA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-wine-900 via-wine-800 to-wine-950 text-white shadow-md">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-wine-900 border border-wine-800 text-white shadow-md">
         <div>
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-xl bg-white/10 backdrop-blur-md">
@@ -361,9 +361,9 @@ export const BoardIdeasAdmin = () => {
                   {/* PROJEKTTÉ ÁTALAKÍTÓ AKCIÓ GOMB */}
                   <div className="pt-2 border-t border-sand-200">
                     {idea.status === 'converted' ? (
-                      <div className="flex items-center justify-between text-[11px] font-bold text-purple-800 bg-purple-50 p-2 rounded-lg border border-purple-200">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-wine-900 bg-wine-50 p-2 rounded-xl border border-wine-200">
                         <span className="flex items-center gap-1.5">
-                          <Rocket className="h-3.5 w-3.5 text-purple-600" />
+                          <Rocket className="h-3.5 w-3.5 text-wine-700" />
                           Munkacsoport Projektté Alakítva
                         </span>
                       </div>
@@ -371,7 +371,7 @@ export const BoardIdeasAdmin = () => {
                       <button
                         type="button"
                         onClick={() => openConvertModal(idea)}
-                        className="w-full py-1.5 px-3 rounded-lg bg-gradient-to-r from-purple-700 to-wine-800 hover:from-purple-800 hover:to-wine-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all active:scale-98"
+                        className="w-full py-2 px-3.5 rounded-xl bg-wine-800 hover:bg-wine-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors"
                       >
                         <Rocket className="h-3.5 w-3.5 text-amber-300" />
                         <span>Átalakítás Munkacsoport Projektté</span>
