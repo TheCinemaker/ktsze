@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { PageHeader, EmptyState, LoadingBlock, ErrorBlock, FormattedText } from '../components/ui';
 import { JoinWorkgroupButton } from '../components/workgroups/JoinWorkgroupButton';
 import { DonationModal } from '../components/workgroups/DonationModal';
+import { WorkgroupProjectsSection } from '../components/workgroups/WorkgroupProjectsSection';
 import { getWorkgroupDonationStats, fetchWorkgroupDonationStats } from '../lib/barion';
 import { formatHuf } from '../lib/format';
 import { supabase } from '../lib/supabaseClient';
@@ -154,6 +155,11 @@ export const WorkgroupDetailPage = () => {
               description="A csoport vezetője vagy az elnökség a belső felületen tud leírást és friss információkat hozzáadni."
             />
           )}
+
+          {/* Munkacsoport Projektek, Feladatlisták & Fájlcsatolmányok */}
+          <section className="pt-6 border-t border-sand-300">
+            <WorkgroupProjectsSection workgroupId={workgroup.id} />
+          </section>
         </div>
 
         <aside className="space-y-5">

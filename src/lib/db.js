@@ -694,3 +694,105 @@ export const getDuesProofUrl = async (proofPath) => {
   if (error) throw new Error(`Az igazolás megnyitása nem sikerült: ${error.message}`);
   return data.signedUrl;
 };
+
+// -----------------------------------------------------------------------------
+//  Munkacsoport Projektek, Feladatok & Csatolmányok
+// -----------------------------------------------------------------------------
+
+export const listProjectsByWorkgroup = async (workgroupId) =>
+  unwrap(
+    await supabase
+      .from('workgroup_projects')
+      .select('*, profiles:created_by(full_name, avatar_url)')
+      .eq('workgroup_id', workgroupId)
+      .order('created_at', { ascending: false })
+  ) || [];
+
+export const createWorkgroupProject = async (input) =>
+  unwrap(
+    await supabase
+      .from('workgroup_projects')
+      .insert({
+        workgroup_id: input.workgroup_id,
+        title: input.title.trim(),
+        description: input.description?.trim() || null,
+        status: input.status || 'active',
+        created_by: input.created_by || null
+      })
+      .select('*, profiles:created_by(full_name, avatar_url)')
+      .single()
+  );
+
+export const listProjectTasks = async (projectId) =>
+  unwrap(
+    await supabase
+      .from('project_tasks')
+      .select('*, assignee:assignee_id(full_name, avatar_url)')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true })
+  ) || [];
+
+export const createProjectTask = async (input) =>
+  unwrap(
+    await supabase
+      .from('project_tasks')
+      .insert({
+        project_id: input.project_id,
+        title: input.title.trim(),
+        status: input.status || 'todo',
+        assignee_id: input.assignee_id || null,
+        due_date: input.due_date || null,
+        created_by: input.created_by || null
+      })
+      .select('*, assignee:assignee_id(full_name, avatar_url)')
+      .single()
+  );
+
+export const updateTaskStatus = async (taskId, newStatus) =>
+  unwrap(
+    await supabase
+      .from('project_tasks')
+      .update({ status: newStatus })
+      .eq('id', taskId)
+      .select('*, assignee:assignee_id(full_name, avatar_url)')
+      .single()
+  );
+
+export const listProjectComments = async (projectId) =>
+  unwrap(
+    await supabase
+      .from('project_comments')
+      .select('*, user:user_id(full_name, avatar_url)')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true })
+  ) || [];
+
+export const addProjectComment = async (input) =>
+  unwrap(
+    await supabase
+      .from('project_comments')
+      .insert({
+        project_id: input.project_id,
+        user_id: input.user_id || null,
+        comment_text: input.comment_text.trim(),
+        attachment_url: input.attachment_url || null,
+        attachment_name: input.attachment_name || null
+      })
+      .select('*, user:user_id(full_name, avatar_url)')
+      .single()
+  );
+
+export const uploadWorkgroupAttachment = async (file) => {
+  const extension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'file';
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${extension}`;
+  const path = `attachments/${fileName}`;
+
+  const { error } = await supabase.storage
+    .from('workgroup-files')
+    .upload(path, file, { upsert: true, contentType: file.type || undefined });
+
+  if (error) throw new Error(`A fájl feltöltése nem sikerült: ${error.message}`);
+
+  const { data } = supabase.storage.from('workgroup-files').getPublicUrl(path);
+  return { url: data.publicUrl, name: file.name };
+};
