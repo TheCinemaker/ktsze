@@ -83,12 +83,33 @@ const isEmbedError = (error) =>
  * ilyenkor két külön kéréssel szedjük össze ugyanazt.
  */
 export const getProfile = async (userId) => {
-  const embedded = await supabase.from('profiles').select(PROFILE_WITH_ROLES).eq('id', userId).maybeSingle();
+  let embedded = await supabase.from('profiles').select(PROFILE_WITH_ROLES).eq('id', userId).maybeSingle();
 
-  if (!embedded.error) return embedded.data;
-  if (!isEmbedError(embedded.error)) throw new Error(describeError(embedded.error));
+  // Ha a profil sor hiányzik (pl. külső regisztráció vagy törlés után), automatikusan pótoljuk (Self-Healing)
+  if (!embedded.data && !embedded.error) {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+      if (user && user.id === userId) {
+        await supabase.from('profiles').upsert({
+          id: userId,
+          account_email: user.email,
+          full_name: user.user_metadata?.full_name || null,
+          member_category: 'Rendes tag'
+        });
+        await supabase.from('user_roles').upsert(
+          { user_id: userId, role: 'member' },
+          { onConflict: 'user_id,role' }
+        );
+        embedded = await supabase.from('profiles').select(PROFILE_WITH_ROLES).eq('id', userId).maybeSingle();
+      }
+    } catch (healErr) {
+      console.warn('[db] Automatikus profilpótlás hiba:', healErr);
+    }
+  }
 
-  console.warn('[db] A szerepkörök beágyazása nem sikerült, tartalék útra váltok. Futtasd le a supabase/04_fix_embed.sql szkriptet.');
+  if (!embedded.error && embedded.data) return embedded.data;
+  if (embedded.error && !isEmbedError(embedded.error)) throw new Error(describeError(embedded.error));
 
   const profile = unwrap(await supabase.from('profiles').select('*').eq('id', userId).maybeSingle());
   if (!profile) return null;
@@ -841,8 +862,9 @@ export const registerMemberByAdmin = async (input) => {
   const email = input.account_email.trim();
   const password = input.temp_password || `Koszeg${Math.floor(1000 + Math.random() * 9000)}!`;
 
-  // 1. Létrehozzuk az auth usert a Supabase-ben
+  let userId = null;
   const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/belepes` : 'https://ktsze.hu/belepes';
+
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
@@ -855,10 +877,21 @@ export const registerMemberByAdmin = async (input) => {
   });
 
   if (authError) {
-    throw new Error(`Nem sikerült a fiók regisztrációja: ${authError.message}`);
+    if (authError.message?.toLowerCase().includes('already registered')) {
+      // Meglévő profil keresése e-mail alapján
+      const existing = await supabase.from('profiles').select('id').eq('account_email', email).maybeSingle();
+      if (existing?.data?.id) {
+        userId = existing.data.id;
+      } else {
+        throw new Error(`Ez az e-mail cím (${email}) már regisztrálva van a Supabase hitelesítőben. Töröld az Authentication -> Users menüben, ha újra szeretnéd regisztrálni!`);
+      }
+    } else {
+      throw new Error(`Nem sikerült a fiók regisztrációja: ${authError.message}`);
+    }
+  } else {
+    userId = authData.user?.id;
   }
 
-  const userId = authData.user?.id;
   if (!userId) {
     throw new Error('A felhasználói azonosító nem jött létre.');
   }
