@@ -124,7 +124,21 @@ CREATE POLICY "Munkacsoport fájlok feltöltése tagoknak"
     bucket_id = 'workgroup-files' AND auth.role() = 'authenticated'
   );
 
--- Realtime bekapcsolása
-ALTER PUBLICATION supabase_realtime ADD TABLE public.project_tasks;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.project_contacts;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.project_comments;
+-- Realtime biztonságos hozzáadása (ha már benne van, nem dob hibát)
+DO $$
+BEGIN
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.project_tasks;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.project_contacts;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.project_comments;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+END $$;

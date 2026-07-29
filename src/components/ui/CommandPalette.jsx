@@ -25,8 +25,15 @@ const normalize = (text) =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 
-export const CommandPalette = () => {
-  const [open, setOpen] = useState(false);
+export const CommandPalette = ({ isOpen: propOpen, onClose: propOnClose }) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = propOpen !== undefined ? propOpen : internalOpen;
+
+  const handleClose = useCallback(() => {
+    setInternalOpen(false);
+    if (propOnClose) propOnClose();
+  }, [propOnClose]);
+
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
 
@@ -108,12 +115,13 @@ export const CommandPalette = () => {
     const onKey = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        setOpen((v) => !v);
+        if (open) handleClose();
+        else setInternalOpen(true);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [open, handleClose]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -137,15 +145,15 @@ export const CommandPalette = () => {
 
   const runCommand = useCallback(
     async (item) => {
-      setOpen(false);
+      handleClose();
       await item.run();
     },
-    []
+    [handleClose]
   );
 
   const onKeyDown = (event) => {
     if (event.key === 'Escape') {
-      setOpen(false);
+      handleClose();
       return;
     }
     if (event.key === 'ArrowDown') {
@@ -172,7 +180,7 @@ export const CommandPalette = () => {
         type="button"
         aria-label="Bezárás"
         tabIndex={-1}
-        onClick={() => setOpen(false)}
+        onClick={handleClose}
         className="fixed inset-0 h-full w-full cursor-default border-0 bg-sand-100/40 backdrop-blur-md"
         style={{ backgroundColor: 'oklch(var(--i-900) / 0.42)' }}
       />
