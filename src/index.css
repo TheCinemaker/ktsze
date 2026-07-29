@@ -202,13 +202,9 @@
     @apply inline-block text-xs font-semibold uppercase tracking-[0.14em] text-wine-600;
   }
 
-  /* --- Fülsáv: mobilon vízszintesen csúsztatható, nem csordul túl --- */
+  /* --- Fülsáv: mobilon és PC-n is többsorosan illeszkedő, ha nem fér ki --- */
   .tabbar {
-    @apply flex gap-1 overflow-x-auto border-b border-sand-400
-           [scrollbar-width:none] [-ms-overflow-style:none];
-  }
-  .tabbar::-webkit-scrollbar {
-    display: none;
+    @apply flex flex-wrap gap-1 border-b border-sand-400;
   }
 
   .tab {
