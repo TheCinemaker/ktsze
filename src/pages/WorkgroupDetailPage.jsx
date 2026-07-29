@@ -30,6 +30,12 @@ export const WorkgroupDetailPage = () => {
   const isCrowdfundingEnabled = Boolean(workgroup?.enable_crowdfunding);
   const [donationStats, setDonationStats] = useState(null);
 
+  const approvedMembersData = useAsyncData(
+    () => (workgroup?.id ? listApprovedWorkgroupMembers(workgroup.id) : Promise.resolve([])),
+    [workgroup?.id],
+    { enabled: Boolean(workgroup?.id), initialData: [] }
+  );
+
   const reloadDonationStats = useCallback(async () => {
     if (!workgroup || !isCrowdfundingEnabled) return;
     const fresh = await fetchWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000);
@@ -63,8 +69,8 @@ export const WorkgroupDetailPage = () => {
   }, [workgroup, isCrowdfundingEnabled, reloadDonationStats]);
 
   const reloadAll = useCallback(async () => {
-    await Promise.all([stats.reload(), memberships.reload(), reloadDonationStats()]);
-  }, [stats, memberships, reloadDonationStats]);
+    await Promise.all([stats.reload(), memberships.reload(), reloadDonationStats(), approvedMembersData.reload()]);
+  }, [stats, memberships, reloadDonationStats, approvedMembersData]);
 
   if (group.loading) return <LoadingBlock />;
 
@@ -95,12 +101,6 @@ export const WorkgroupDetailPage = () => {
 
   const memberCount = (stats.data || {})[workgroup.id]?.approved ?? 0;
   const membership = (memberships.data || []).find((m) => m.workgroup_id === workgroup.id);
-
-  const approvedMembersData = useAsyncData(
-    () => listApprovedWorkgroupMembers(workgroup?.id),
-    [workgroup?.id],
-    { enabled: Boolean(workgroup?.id), initialData: [] }
-  );
   const approvedMembers = approvedMembersData.data || [];
 
   const isLeader = Boolean(
