@@ -24,7 +24,8 @@ export const WorkgroupsPage = () => {
 
   const active = (groups.data || []).filter((g) => g.is_active);
   const myMemberships = memberships.data || [];
-  const membershipOf = (workgroupId) => myMemberships.find((m) => m.workgroup_id === workgroupId);
+  const membershipOf = (workgroupId) =>
+    myMemberships.find((m) => String(m.workgroup_id) === String(workgroupId) || String(m.workgroups?.id) === String(workgroupId));
 
   return (
     <div className="container-page py-12 sm:py-16">

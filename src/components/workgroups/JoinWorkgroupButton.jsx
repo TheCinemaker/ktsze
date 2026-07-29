@@ -51,18 +51,30 @@ export const JoinWorkgroupButton = ({ workgroup, membership, onChanged, size = '
     );
   }
 
-  // --- 4. Már jóváhagyott tag -------------------------------------------------
-  if (membership?.status === 'approved') {
+  // Csoportvezető vagy Jóváhagyott tag ellenőrzése
+  const isLeader = Boolean(
+    profile?.full_name &&
+    workgroup?.leader_name &&
+    (profile.full_name.toLowerCase().includes(workgroup.leader_name.toLowerCase()) ||
+     workgroup.leader_name.toLowerCase().includes(profile.full_name.toLowerCase()))
+  );
+
+  const isApproved = membership?.status === 'approved' || membership?.status === 'active' || isLeader;
+
+  // --- 4. Már jóváhagyott tag vagy Csoportvezető -------------------------------
+  if (isApproved) {
     return (
       <>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="badge-positive">
-            <Check className="h-3.5 w-3.5" aria-hidden="true" />
-            Tagja vagy
+          <span className="badge-positive font-bold px-3 py-1 text-xs">
+            <Check className="h-4 w-4" aria-hidden="true" />
+            {isLeader ? 'Csoportvezető' : 'Tagja vagy'}
           </span>
-          <button type="button" onClick={() => setConfirmLeave(true)} className={`btn-ghost ${sizeClass}`}>
-            Kilépés
-          </button>
+          {!isLeader && (
+            <button type="button" onClick={() => setConfirmLeave(true)} className={`btn-ghost ${sizeClass} text-xs font-semibold text-ink-500 hover:text-rose-700`}>
+              Kilépés
+            </button>
+          )}
         </div>
 
         <ConfirmDialog
