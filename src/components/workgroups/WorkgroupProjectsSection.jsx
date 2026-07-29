@@ -28,14 +28,14 @@ export const WorkgroupProjectsSection = ({ workgroup }) => {
   // HA A FELHASZNÁLÓ NINCS BEJELENTKEZVE ➔ ZÁRT KÁRTYA JELENIK MEG!
   if (!isAuthenticated) {
     return (
-      <div className="card p-8 bg-gradient-to-r from-wine-900 via-wine-850 to-sand-900 text-white border border-gold-400/40 shadow-xl space-y-5 rounded-3xl">
-        <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-gold-400 border border-white/15 shadow-inner">
+      <div className="surface-noir p-8 sm:p-10 text-white border border-sand-400/30 shadow-2xl space-y-6 rounded-3xl relative overflow-hidden">
+        <div className="flex items-center gap-3.5">
+          <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center text-gold-400 border border-white/15">
             <Lock className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-gold-400">Zárt Egyesületi Munkatér</span>
-            <h3 className="font-display text-xl font-bold text-white">Munkacsoport Projektek &amp; Feladatok</h3>
+            <span className="text-xs font-bold uppercase tracking-wider text-champagne-400">Zárt Egyesületi Munkatér</span>
+            <h3 className="font-display text-2xl font-bold text-white mt-0.5">Munkacsoport Projektek &amp; Feladatok</h3>
           </div>
         </div>
 
