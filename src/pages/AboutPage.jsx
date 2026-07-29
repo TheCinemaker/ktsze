@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Flower2, Award, Crown, Mail, User, Phone } from 'lucide-react';
+import { Users, Award, Crown, Mail, Phone, Building2, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
 
 import { ORGANIZATION, formattedAddress, BOARD_MEMBERS_BIO } from '../config/organization';
-import { listWorkgroups, listPublicBoardMembers } from '../lib/db';
+import { listPublicBoardMembers } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
-import { PageHeader, EmptyState, Spinner, ErrorBlock, DetailRow, FormattedText } from '../components/ui';
+import { PageHeader, Spinner, DetailRow, FormattedText } from '../components/ui';
 import { SEO } from '../components/ui/SEO';
 
 const getMemberKey = (member) => {
@@ -69,10 +69,36 @@ const getMemberPhone = (member) => {
   return null;
 };
 
+// Példa nyilvános támogató vállalkozások és tagok
+const PUBLIC_PARTNERS = [
+  {
+    name: 'Jurisics Vár Művelődési Központ',
+    category: 'Kulturális & Turisztikai Szolgáltató',
+    description: 'Kőszeg történelmi szívének kulturális és közösségi központja.',
+    badge: 'Alapító Partnertag'
+  },
+  {
+    name: 'Kőszegi Bortermelők Egyesülete',
+    category: 'Borászat & Gasztronómia',
+    description: 'A kőszegi borvidék hagyományainak és borászatainak összefogása.',
+    badge: 'Szakmai Partnertag'
+  },
+  {
+    name: 'VisitKőszeg Turisztikai Platform',
+    category: 'Digitális Turisztikai Szolgáltatás',
+    description: 'Kőszeg okos turisztikai információs rendszere és látogatói kalauza.',
+    badge: 'Kiemelt Szövetségi Partner'
+  },
+  {
+    name: 'Írottkő Natúrpark Egyesület',
+    category: 'Ökoturizmus & Természetvédelem',
+    description: 'A határtalan natúrparki értékek és túraútvonalak gondozója.',
+    badge: 'Szakmai Partnertag'
+  }
+];
+
 export const AboutPage = () => {
-  const { data: groups, loading, error, reload } = useAsyncData(listWorkgroups);
   const { data: boardMembers, loading: boardLoading } = useAsyncData(listPublicBoardMembers);
-  const active = (groups || []).filter((g) => g.is_active);
   const address = formattedAddress();
 
   const hasLegalData = Boolean(
@@ -80,21 +106,22 @@ export const AboutPage = () => {
   );
 
   return (
-    <div className="container-page py-12 sm:py-16">
+    <div className="container-page py-12 sm:py-16 space-y-16">
       <SEO
         title="Egyesületünkről &amp; Vezetőség"
-        description="Ismerje meg a Kőszegi Turisztikai Szövetség Egyesület elnökségét, tisztségviselőit, hivatalos adatait és szakmai munkacsoportjait."
+        description="Ismerje meg a Kőszegi Turisztikai Szövetség Egyesület elnökségét, tisztségviselőit, támogató tagjait és hivatalos adatait."
       />
+
       <PageHeader eyebrow="Egyesületünkről" title={ORGANIZATION.legalName} description={ORGANIZATION.mission} />
 
-      {/* Elnökség & Vezetőség */}
-      <section className="mt-12">
+      {/* 1. Elnökség & Vezetőség */}
+      <section>
         <div className="flex items-center gap-2">
           <Crown className="h-6 w-6 text-wine-600" aria-hidden="true" />
           <h2 className="font-display text-2xl text-ink-900">Elnökség &amp; Tisztségviselők</h2>
         </div>
         <p className="mt-1 text-sm text-ink-600">
-          Az egyesület hivatalosan megválasztott elnöksége, tisztségviselői és szakmai vezetői.
+          Az egyesület hivatalosan megválasztott elnöksége és tisztségviselői.
         </p>
 
         <div className="mt-6">
@@ -102,7 +129,7 @@ export const AboutPage = () => {
 
           {!boardLoading && (!boardMembers || boardMembers.length === 0) && (
             <div className="rounded-xl border border-dashed border-sand-400 p-6 text-center text-sm text-ink-600">
-              Az elnökségi és tisztségviselői adatok frissítés alatt. Az elnökség az adminisztrációs felületen adhat meg tisztségneveket (pl. Elnök, Alelnök).
+              Az elnökségi és tisztségviselői adatok frissítés alatt.
             </div>
           )}
 
@@ -113,7 +140,7 @@ export const AboutPage = () => {
                   key={member.id}
                   className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white group h-[660px]"
                 >
-                  {/* Portré kép / Helykitöltő header */}
+                  {/* Portré kép */}
                   <div className="relative h-72 w-full bg-sand-200 overflow-hidden flex items-center justify-center border-b border-sand-300">
                     {getMemberPhoto(member) ? (
                       <img
@@ -197,10 +224,59 @@ export const AboutPage = () => {
         </div>
       </section>
 
-      {/* Hivatalos adatok — csak a kitöltött mezők */}
+      {/* 2. Támogató Vállalkozások & Nyilvános Partnereink */}
+      <section className="pt-8 border-t border-sand-300 space-y-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="eyebrow text-wine-700">Összefogás Kőszegért</div>
+            <h2 className="mt-1 font-display text-2xl text-ink-900 flex items-center gap-2">
+              <Building2 className="h-6 w-6 text-wine-600" />
+              Támogató Vállalkozások &amp; Szövetségi Tagjaink
+            </h2>
+            <p className="mt-1 text-sm text-ink-600 max-w-2xl">
+              A Kőszegi Turisztikai Szövetség mögött álló helyi szálláshelyek, borászatok, vendéglátók és kulturális szolgáltatók, akik közösen dolgoznak a város turizmusán.
+            </p>
+          </div>
+
+          <Link to="/tagsag" className="btn-primary btn-sm rounded-xl font-bold shadow-xs">
+            Csatlakozzon Vállalkozásával
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {PUBLIC_PARTNERS.map((partner) => (
+            <div key={partner.name} className="card p-6 bg-white space-y-3 border border-sand-300 hover:border-wine-300 transition-all shadow-2xs">
+              <span className="inline-block rounded-full bg-wine-50 px-3 py-1 text-[11px] font-bold text-wine-800 border border-wine-200">
+                {partner.badge}
+              </span>
+              <h3 className="font-display text-lg font-bold text-ink-900">{partner.name}</h3>
+              <p className="text-xs font-semibold text-wine-700">{partner.category}</p>
+              <p className="text-xs text-ink-600 leading-relaxed">{partner.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Felhívás Kőszegi Vállalkozóknak */}
+        <div className="card p-8 bg-gradient-to-r from-sand-100 via-sand-50 to-sand-100 border border-gold-300/60 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center sm:text-left">
+            <h3 className="font-display text-xl font-bold text-ink-900">
+              „Egy város akkor erős, ha a szereplői egy irányba néznek.”
+            </h3>
+            <p className="text-sm text-ink-600 max-w-xl leading-relaxed">
+              Szálláshely, vendéglátóhely, borászat vagy kulturális szolgáltató: a szövetség tagjaként közös felületen, közös hanggal jelenhet meg.
+            </p>
+          </div>
+          <Link to="/tagsag" className="btn-gold btn-md whitespace-nowrap font-bold shrink-0 shadow-md">
+            Tagsági Feltételek &amp; Csatlakozás
+          </Link>
+        </div>
+      </section>
+
+      {/* 3. Hivatalos adatok */}
       {hasLegalData && (
-        <section className="mt-14">
-          <h2 className="font-display text-2xl text-ink-900">Hivatalos adatok</h2>
+        <section className="pt-8 border-t border-sand-300">
+          <h2 className="font-display text-2xl text-ink-900">Hivatalos egyesületi adatok</h2>
           <dl className="mt-4 max-w-2xl divide-y divide-sand-300 border-y border-sand-300">
             <DetailRow label="Székhely" value={address} />
             <DetailRow label="Adószám" value={ORGANIZATION.taxNumber} />
@@ -209,68 +285,6 @@ export const AboutPage = () => {
           </dl>
         </section>
       )}
-
-      {/* Munkacsoportok */}
-      <section className="mt-14">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="eyebrow">Szakmai munka</p>
-            <h2 className="mt-2 font-display text-2xl text-ink-900">Munkacsoportok</h2>
-          </div>
-          <Link to="/munkacsoportok" className="btn-secondary btn-sm">
-            Csatlakozási lehetőségek
-          </Link>
-        </div>
-
-        <div className="mt-6">
-          {loading && <Spinner />}
-          {error && <ErrorBlock message={error} onRetry={reload} />}
-
-          {!loading && !error && active.length === 0 && (
-            <EmptyState
-              icon={Flower2}
-              title="Még nincs létrehozott munkacsoport"
-              description="A munkacsoportokat az elnökség hozza létre a belső felületen. Amíg nincs egy sem, itt nem jelenik meg semmi."
-            />
-          )}
-
-          {active.length > 0 && (
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {active.map((group) => (
-                <article key={group.id} className="card p-6">
-                  <Users className="mb-3 h-5 w-5 text-wine-600" aria-hidden="true" />
-                  <h3 className="font-display text-lg text-ink-900">
-                    <Link
-                      to={`/munkacsoportok/${group.slug}`}
-                      className="rounded transition-colors hover:text-wine-600"
-                    >
-                      {group.name}
-                    </Link>
-                  </h3>
-
-                  {group.leader_name && (
-                    <p className="mt-1 text-xs font-medium uppercase tracking-wide text-wine-600">
-                      Vezető: {group.leader_name}
-                    </p>
-                  )}
-
-                  {group.description && (
-                    <div className="mt-3 text-sm text-ink-600">
-                      <FormattedText>{group.description}</FormattedText>
-                    </div>
-                  )}
-
-                  {group.latest_updates && (
-                    <div className="mt-3 border-t border-sand-300 pt-3 text-sm text-ink-500">
-                      <FormattedText>{group.latest_updates}</FormattedText>
-                    </div>
-                  )}
-                </article>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
     </div>
   );
 };
