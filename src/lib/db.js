@@ -1100,3 +1100,288 @@ export const deleteBoardIdea = async (id) => {
   saveLocalIdeas(updated);
   return true;
 };
+
+// =============================================================================
+//  "Kőszeg Virágzik" — Okos Kaspó & Virágláda Örökbefogadási és Öntözési Napló
+// =============================================================================
+
+const INITIAL_FLOWER_SPOTS = [
+  {
+    id: 'spot-1',
+    title: 'Fő tér 1. sz. Kaspó — Írottkő Hotel előtt',
+    location_name: 'Fő tér keleti oldal',
+    description: 'Piros és rózsaszín futómuskátlik, fehér petúniák.',
+    photo_url: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+    adopter_name: 'Drescher Gábor (Írottkő Hotel)',
+    adopter_user_id: null,
+    status: 'active',
+    last_watered_at: new Date(Date.now() - 3600000 * 4).toISOString(), // 4 órája
+    water_count_this_month: 12,
+    created_at: '2026-07-01T10:00:00Z'
+  },
+  {
+    id: 'spot-2',
+    title: 'Fő tér 2. sz. Beton Virágláda — Ibrahim Kávézó felől',
+    location_name: 'Fő tér és Jurisics utca sarok',
+    description: 'Illatos levendulabokrok és kék szarkaláb.',
+    photo_url: 'https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&w=800&q=80',
+    adopter_name: 'Farkas Péter (Ibrahim Kávézó)',
+    adopter_user_id: null,
+    status: 'active',
+    last_watered_at: new Date(Date.now() - 3600000 * 18).toISOString(), // 18 órája
+    water_count_this_month: 9,
+    created_at: '2026-07-01T10:00:00Z'
+  },
+  {
+    id: 'spot-3',
+    title: 'Fő tér 3. sz. Kaspó — Városháza bejárata',
+    location_name: 'Fő tér 1. (Városháza)',
+    description: 'Sárga és narancs begóniák, zöld díszfüvek.',
+    photo_url: 'https://images.unsplash.com/photo-1534710961216-75c88202f43e?auto=format&fit=crop&w=800&q=80',
+    adopter_name: 'Városszépítő Munkacsoport',
+    adopter_user_id: null,
+    status: 'active',
+    last_watered_at: new Date(Date.now() - 3600000 * 48).toISOString(), // 2 napja
+    water_count_this_month: 6,
+    created_at: '2026-07-05T10:00:00Z'
+  },
+  {
+    id: 'spot-4',
+    title: 'Jurisics tér 4. sz. Virágos Pont',
+    location_name: 'Jurisics tér vár felőli kapu',
+    description: 'Kőszegi kékfrankos tőke és környező virágágyás.',
+    photo_url: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&q=80',
+    adopter_name: 'Vörös Róbert (Kőszegi Borászok)',
+    adopter_user_id: null,
+    status: 'active',
+    last_watered_at: new Date(Date.now() - 3600000 * 12).toISOString(),
+    water_count_this_month: 14,
+    created_at: '2026-07-10T10:00:00Z'
+  }
+];
+
+const INITIAL_FLOWER_LOGS = [
+  {
+    id: 'log-1',
+    spot_id: 'spot-1',
+    user_name: 'Drescher Gábor',
+    action_type: 'locsolas',
+    water_liters: 15,
+    notes: 'Bőséges esti öntözést kaptak a petúniák a kánikulában.',
+    photo_url: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+    created_at: new Date(Date.now() - 3600000 * 4).toISOString()
+  },
+  {
+    id: 'log-2',
+    spot_id: 'spot-2',
+    user_name: 'Farkas Péter',
+    action_type: 'locsolas',
+    water_liters: 10,
+    notes: 'Reggeli frissítő öntözés és gyomlálás elvégezve.',
+    photo_url: 'https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&w=800&q=80',
+    created_at: new Date(Date.now() - 3600000 * 18).toISOString()
+  }
+];
+
+const FLOWER_SPOTS_STORAGE_KEY = 'ktsze_flower_spots_v1';
+const FLOWER_LOGS_STORAGE_KEY = 'ktsze_flower_logs_v1';
+
+const getLocalFlowerSpots = () => {
+  try {
+    const raw = localStorage.getItem(FLOWER_SPOTS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : INITIAL_FLOWER_SPOTS;
+  } catch {
+    return INITIAL_FLOWER_SPOTS;
+  }
+};
+
+const saveLocalFlowerSpots = (spots) => {
+  try {
+    localStorage.setItem(FLOWER_SPOTS_STORAGE_KEY, JSON.stringify(spots));
+  } catch (err) {
+    console.warn('[db] LocalStorage hiányzik:', err);
+  }
+};
+
+const getLocalFlowerLogs = () => {
+  try {
+    const raw = localStorage.getItem(FLOWER_LOGS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : INITIAL_FLOWER_LOGS;
+  } catch {
+    return INITIAL_FLOWER_LOGS;
+  }
+};
+
+const saveLocalFlowerLogs = (logs) => {
+  try {
+    localStorage.setItem(FLOWER_LOGS_STORAGE_KEY, JSON.stringify(logs));
+  } catch (err) {
+    console.warn('[db] LocalStorage hiányzik:', err);
+  }
+};
+
+/** Összes virágos pont lekérése */
+export const listFlowerSpots = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('flower_spots')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && data && data.length > 0) return data;
+  } catch (err) {
+    console.warn('[db] Supabase flower_spots nem érhető el, tartalék használata:', err);
+  }
+  return getLocalFlowerSpots();
+};
+
+/** Egy virágos pont létrehozása (Admin) */
+export const createFlowerSpot = async (input) => {
+  const newSpot = {
+    title: input.title?.trim(),
+    location_name: input.location_name?.trim() || 'Kőszeg Belváros',
+    description: input.description?.trim() || '',
+    photo_url: input.photo_url || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+    adopter_name: input.adopter_name?.trim() || 'Nincs örökbefogadó',
+    adopter_user_id: input.adopter_user_id || null,
+    status: 'active',
+    last_watered_at: new Date().toISOString(),
+    water_count_this_month: 0,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const { data, error } = await supabase.from('flower_spots').insert(newSpot).select().single();
+    if (!error && data) return data;
+  } catch (err) {
+    console.warn('[db] Supabase mentés hiba, helyi tárba mentünk:', err);
+  }
+
+  const spots = getLocalFlowerSpots();
+  const created = { id: `spot_${Date.now()}`, ...newSpot };
+  const updated = [created, ...spots];
+  saveLocalFlowerSpots(updated);
+  return created;
+};
+
+/** Virágos pont frissítése */
+export const updateFlowerSpot = async (id, patch) => {
+  try {
+    const { data, error } = await supabase.from('flower_spots').update(patch).eq('id', id).select().single();
+    if (!error && data) return data;
+  } catch (err) {
+    console.warn('[db] Supabase frissítés hiba:', err);
+  }
+
+  const spots = getLocalFlowerSpots();
+  const updated = spots.map((s) => (s.id === id ? { ...s, ...patch } : s));
+  saveLocalFlowerSpots(updated);
+  return updated.find((s) => s.id === id);
+};
+
+/** Virágos pont törlése */
+export const deleteFlowerSpot = async (id) => {
+  try {
+    await supabase.from('flower_spots').delete().eq('id', id);
+  } catch (err) {
+    console.warn('[db] Supabase törlés hiba:', err);
+  }
+
+  const spots = getLocalFlowerSpots();
+  const updated = spots.filter((s) => s.id !== id);
+  saveLocalFlowerSpots(updated);
+  return true;
+};
+
+/** Öntözési naplóbejegyzések lekérése */
+export const listFlowerLogs = async (spotId = null) => {
+  try {
+    let query = supabase.from('flower_logs').select('*').order('created_at', { ascending: false });
+    if (spotId) query = query.eq('spot_id', spotId);
+    const { data, error } = await query;
+    if (!error && data && data.length > 0) return data;
+  } catch (err) {
+    console.warn('[db] Supabase flower_logs nem érhető el:', err);
+  }
+
+  const logs = getLocalFlowerLogs();
+  if (spotId) return logs.filter((l) => l.spot_id === spotId);
+  return logs;
+};
+
+/** Új öntözési/gondozási bejegyzés rögzítése */
+export const addFlowerLog = async (input) => {
+  const newLog = {
+    spot_id: input.spot_id,
+    user_name: input.user_name || 'Kőszegi Önkéntes',
+    action_type: input.action_type || 'locsolas',
+    water_liters: Number(input.water_liters) || 10,
+    notes: input.notes?.trim() || '',
+    photo_url: input.photo_url || null,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const { data, error } = await supabase.from('flower_logs').insert(newLog).select().single();
+    if (!error && data) {
+      // Kaspó utolsó öntözési idejének frissítése
+      await supabase
+        .from('flower_spots')
+        .update({
+          last_watered_at: newLog.created_at,
+          water_count_this_month: (input.water_count_this_month || 0) + 1
+        })
+        .eq('id', input.spot_id);
+      return data;
+    }
+  } catch (err) {
+    console.warn('[db] Supabase log hiba, helyi mentés:', err);
+  }
+
+  // Helyi mentés
+  const logs = getLocalFlowerLogs();
+  const createdLog = { id: `log_${Date.now()}`, ...newLog };
+  saveLocalFlowerLogs([createdLog, ...logs]);
+
+  // Helyi kaspó frissítése
+  const spots = getLocalFlowerSpots();
+  const updatedSpots = spots.map((s) =>
+    s.id === input.spot_id
+      ? {
+          ...s,
+          last_watered_at: newLog.created_at,
+          water_count_this_month: (s.water_count_this_month || 0) + 1
+        }
+      : s
+  );
+  saveLocalFlowerSpots(updatedSpots);
+
+  return createdLog;
+};
+
+/** Statisztika lekérése a virágos pontokról */
+export const getFlowerStats = async () => {
+  const spots = await listFlowerSpots();
+  const logs = await listFlowerLogs();
+
+  const totalSpots = spots.length;
+  const totalWateringsThisMonth = spots.reduce((acc, s) => acc + (s.water_count_this_month || 0), 0);
+  const totalLiters = logs.reduce((acc, l) => acc + (l.water_liters || 10), 0);
+
+  // Ranglista készítés az öntözőkről
+  const leaderboardMap = {};
+  logs.forEach((log) => {
+    const name = log.user_name || 'Névtelen Gondozó';
+    leaderboardMap[name] = (leaderboardMap[name] || 0) + 1;
+  });
+
+  const leaderboard = Object.entries(leaderboardMap)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+
+  return {
+    totalSpots,
+    totalWateringsThisMonth,
+    totalLiters,
+    leaderboard
+  };
+};

@@ -22,6 +22,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { DiagnosticsPage } from './pages/DiagnosticsPage';
 import { WorkgroupsPage } from './pages/WorkgroupsPage';
 import { WorkgroupDetailPage } from './pages/WorkgroupDetailPage';
+import { FlowerMapPage } from './pages/FlowerMapPage';
 
 // Biztonságos lusta betöltés: ha új deployment miatt a böngésző 404-es hibát kap az régebbi JS chunkra, automatikusan frissíti az oldalt.
 const safeLazy = (importFn) =>
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="/egyesulet" element={<AboutPage />} />
           <Route path="/munkacsoportok" element={<WorkgroupsPage />} />
           <Route path="/munkacsoportok/:slug" element={<WorkgroupDetailPage />} />
+          <Route path="/viragos-koszeg" element={<FlowerMapPage />} />
           <Route path="/hirek" element={<NewsPage />} />
           <Route path="/hirek/:slug" element={<NewsDetailPage />} />
           <Route path="/dokumentumok" element={<DocumentsPage />} />
