@@ -425,7 +425,7 @@ export const FlowerMapPage = () => {
       <section className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="font-display text-2xl text-ink-900 font-extrabold">Rögzített növények</h2>
+            <h2 className="font-display text-2xl text-ink-900 font-extrabold">Rögzített növények (öntözz, szelfizz!)</h2>
             <span className="text-xs text-ink-500 font-semibold">
               {filteredSpots.length} regisztrált növény
               {spotsRefreshing && <span className="ml-2 text-emerald-700">frissítés…</span>}
@@ -715,6 +715,7 @@ export const FlowerMapPage = () => {
           photoUrl={createdStoryData.photoUrl}
           userName={createdStoryData.userName}
           locationName={createdStoryData.locationName}
+          actionType={createdStoryData.actionType}
         />
       )}
 

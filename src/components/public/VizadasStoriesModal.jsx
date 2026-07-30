@@ -98,7 +98,15 @@ export const VizadasStoriesModal = ({ isOpen, onClose, logs = [], onShareStory }
 
             <div className="bg-emerald-600/90 text-white font-extrabold text-[11px] px-3 py-1.5 rounded-full shadow-md backdrop-blur-md flex items-center gap-1">
               <Droplets className="h-3.5 w-3.5" />
-              Vízadás Kőszegen
+              {currentLog.action_type === 'gondozas'
+                ? 'Gondozás Kőszegen'
+                : currentLog.action_type === 'gallyazas'
+                ? 'Gallyazás Kőszegen'
+                : currentLog.action_type === 'kapalas'
+                ? 'Gyomlálás Kőszegen'
+                : currentLog.action_type === 'szemetmentesites'
+                ? 'Szemétmentesítés'
+                : 'Vízadás Kőszegen'}
             </div>
           </div>
 
@@ -165,7 +173,8 @@ export const VizadasStoriesModal = ({ isOpen, onClose, logs = [], onShareStory }
                     onShareStory({
                       photoUrl: currentLog.photo_url,
                       userName: currentLog.user_name || 'Kőszegi Vízadó Polgár',
-                      locationName: 'Kőszeg Belváros'
+                      locationName: 'Kőszeg Belváros',
+                      actionType: currentLog.action_type
                     });
                   }}
                   className="flex-1 py-3.5 px-3 rounded-2xl font-extrabold text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center gap-1.5 shadow-lg transition-all transform active:scale-95 border border-amber-300"

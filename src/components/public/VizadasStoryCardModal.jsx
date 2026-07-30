@@ -1,7 +1,17 @@
 import React, { useRef, useState } from 'react';
-import { X, Download, Share2, Check, Droplets } from 'lucide-react';
+import { X, Share2, Check, Droplets } from 'lucide-react';
 
-export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, locationName }) => {
+const getActionLabel = (type) => {
+  switch (type) {
+    case 'gondozas': return 'NÖVÉNYGONDOZÁS';
+    case 'gallyazas': return 'GALLYAZÁS & METSZÉS';
+    case 'kapalas': return 'GYOMLÁLÁS & KAPÁLÁS';
+    case 'szemetmentesites': return 'SZEMÉTMENTESÍTÉS';
+    default: return 'FAÖNTÖZÉS — „VÍZADÁS”';
+  }
+};
+
+export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, locationName, actionType }) => {
   const cardRef = useRef(null);
   const [downloading, setDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
@@ -10,6 +20,7 @@ export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, loc
 
   const displayName = userName?.trim() && userName !== 'Kőszegi Önkéntes' ? userName : 'Kőszegi Vízadó Polgár';
   const displayLocation = locationName || 'Kőszeg Belváros';
+  const actionTitle = getActionLabel(actionType);
 
   const handleDownloadOrShareImage = async () => {
     if (!cardRef.current) return;
@@ -53,7 +64,7 @@ export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, loc
 
       ctx.fillStyle = '#6ee7b7';
       ctx.font = 'bold 36px sans-serif';
-      ctx.fillText('ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS”', 1080 / 2, 480);
+      ctx.fillText(actionTitle, 1080 / 2, 480);
 
       // Szelfi fotó kirajzolása ha van
       if (photoUrl) {
@@ -84,9 +95,10 @@ export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, loc
       ctx.font = 'bold 38px sans-serif';
       ctx.fillText(`📍 ${displayLocation}`, 1080 / 2, 1630);
 
+      // Frissített hashtagek: #ktsze #visitkoszeg hozzáadva!
       ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 34px sans-serif';
-      ctx.fillText('#VízadásKőszeg  #KőszegVirágzik  #KőszegVáros', 1080 / 2, 1720);
+      ctx.font = 'bold 30px sans-serif';
+      ctx.fillText('#VízadásKőszeg #KőszegVirágzik #ktsze #visitkoszeg', 1080 / 2, 1720);
 
       // Blobra konvertálás a közvetlen telefonos kép-megosztáshoz (Insta / FB / Galéria)
       canvas.toBlob(async (blob) => {
@@ -144,28 +156,28 @@ export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, loc
           <div className="flex flex-col items-center gap-1.5 pt-1">
             <img src="/koszeg_cimer.png" alt="Kőszeg Város Címere" className="h-16 w-auto object-contain drop-shadow-md" />
             <div className="text-[11px] font-extrabold tracking-wider uppercase text-emerald-200">
-              Kőszeg Város — Vízadás 2026
+              Kőszeg Város — {actionTitle}
             </div>
           </div>
 
           {/* Szelfi / Fotó keret */}
           {photoUrl ? (
             <div className="relative h-64 w-full rounded-2xl overflow-hidden border-2 border-emerald-400 shadow-md">
-              <img src={photoUrl} alt="Vízadási szelfi" className="h-full w-full object-cover" />
+              <img src={photoUrl} alt="Öntözési szelfi" className="h-full w-full object-cover" />
             </div>
           ) : (
             <div className="h-44 w-full rounded-2xl bg-emerald-900/60 border border-emerald-700 flex flex-col items-center justify-center gap-2 text-emerald-200">
               <Droplets className="h-10 w-10 text-emerald-400" />
-              <span className="text-xs font-bold">Önkéntes Faöntözés Kőszegen</span>
+              <span className="text-xs font-bold">{actionTitle} Kőszegen</span>
             </div>
           )}
 
-          {/* Név & Utca */}
+          {/* Név & Utca & Hashtagek */}
           <div className="space-y-0.5 pt-1">
             <div className="font-extrabold text-base text-white">{displayName}</div>
             <div className="text-xs font-bold text-emerald-300">📍 {displayLocation}</div>
-            <div className="text-[11px] font-semibold text-amber-300 pt-1">
-              #VízadásKőszeg #KőszegVirágzik
+            <div className="text-[10px] font-bold text-amber-300 pt-1 tracking-tight">
+              #VízadásKőszeg #KőszegVirágzik #ktsze #visitkoszeg
             </div>
           </div>
         </div>

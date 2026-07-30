@@ -108,6 +108,16 @@ export const FlowerSpotCard = ({ spot, onLogAdded, onStoryCreated, initialOpen =
       // AZONNAL frissül — nem várunk rá másodperceket.
       setSuccessMsg(true);
       if (onLogAdded) onLogAdded();
+
+      if (photoUrl && onStoryCreated) {
+        onStoryCreated({
+          photoUrl: photoUrl,
+          userName: userName.trim() || 'Kőszegi Vízadó Polgár',
+          locationName: spot.location_name || spot.title,
+          actionType: actionType
+        });
+      }
+
       setTimeout(() => {
         setSuccessMsg(false);
         setShowLogModal(false);
