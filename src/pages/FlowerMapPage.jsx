@@ -36,7 +36,18 @@ export const FlowerMapPage = () => {
   }, [reload, reloadStats, reloadLogs]);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('all'); // all, thirsty, street
   const [showAddSpotModal, setShowAddSpotModal] = useState(false);
+  const [bannerCollapsed, setBannerCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('ktsze_banner_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [userCoords, setUserCoords] = useState(null);
+
   const [newTitle, setNewTitle] = useState('');
   const [newLocation, setNewLocation] = useState('');
   const [newAdopter, setNewAdopter] = useState('');
@@ -44,15 +55,58 @@ export const FlowerMapPage = () => {
   const [newPhoto, setNewPhoto] = useState('');
   const [submittingSpot, setSubmittingSpot] = useState(false);
 
-  const flowerSpots = spots || [];
-  const flowerLogs = (logs || []).slice(0, 10); // 10 legfrissebb log
+  const toggleBanner = () => {
+    const next = !bannerCollapsed;
+    setBannerCollapsed(next);
+    try {
+      localStorage.setItem('ktsze_banner_collapsed', String(next));
+    } catch {}
+  };
 
-  const filteredSpots = flowerSpots.filter(
-    (spot) =>
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert('A böngésző nem támogatja a GPS helymeghatározást.');
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserCoords({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        });
+        setGpsLoading(false);
+        // Gördítés a fákhoz
+        const el = document.getElementById('flower-spots-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      },
+      (err) => {
+        setGpsLoading(false);
+        alert('Nem sikerült lekérni a GPS pozíciót: ' + err.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const flowerSpots = spots || [];
+  const flowerLogs = (logs || []).slice(0, 10);
+
+  // Szűrt fák listája
+  let filteredSpots = flowerSpots.filter((spot) => {
+    const queryMatch =
       spot.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       spot.location_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      spot.adopter_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      spot.adopter_name?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (!queryMatch) return false;
+
+    if (activeFilter === 'thirsty') {
+      if (!spot.last_watered_at) return true;
+      const diffHours = (Date.now() - new Date(spot.last_watered_at).getTime()) / (1000 * 60 * 60);
+      return diffHours >= 24; // 24 óránál régebben öntözött
+    }
+    return true;
+  });
 
   const handleRefreshData = () => {
     reload();
@@ -79,77 +133,119 @@ export const FlowerMapPage = () => {
       setNewPhoto('');
       handleRefreshData();
     } catch (err) {
-      alert('Hiba történt a kaspó hozzáadásakor: ' + err.message);
+      alert('Hiba történt a fa hozzáadásakor: ' + err.message);
     } finally {
       setSubmittingSpot(false);
     }
   };
 
   return (
-    <div className="container-page py-12 sm:py-16 space-y-12">
+    <div className="container-page py-6 sm:py-12 space-y-8">
       <SEO
-        title="Kőszeg Virágzik — Okos Kaspó & Virágágyás Örökbefogadás"
-        description="Tekintse meg Kőszeg örökbefogadott főtéri kaspóit, virágládáit és az öntözési naplót. Fogadj örökbe egy kaspót és tegyél Kőszeg szépségéért!"
+        title="Kőszeg Virágzik — Önkéntes Vízadás & Faöntözés"
+        description="Segítsük Kőszeg szomjazó fáit a hőségben! Önkéntes faöntözési térkép és regisztráció utca & házszám alapján."
       />
 
-      <PageHeader
-        eyebrow="Városszépítő & Közösségi Kezdeményezés"
-        title="Kőszeg Virágzik"
-        description="„Kőszeg virágzik - a város tisztul, szépül, él és újra vendéget vár.” Fogadj örökbe egy főtéri kaspót, vezesd az öntözési naplót és építsük együtt Kőszeg arculatát!"
-      />
+      {/* MOBIL GYORS GOMB BAR (Viszi a usert egyenesen a fákhoz!) */}
+      <div className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-emerald-900 text-white shadow-lg sm:hidden sticky top-3 z-30">
+        <button
+          type="button"
+          onClick={() => {
+            const el = document.getElementById('flower-spots-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="flex-1 font-extrabold text-xs py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-1.5 shadow-xs"
+        >
+          <Droplets className="h-4 w-4" />
+          ⚡ Ugrás a Fákhoz (Locsolás)
+        </button>
 
-      {/* 0. Hivatalos VÍZADÁS Felhívás Banner */}
-      <section className="rounded-3xl border border-emerald-300 bg-gradient-to-br from-emerald-50 via-white to-sand-100 p-6 sm:p-8 shadow-md overflow-hidden relative space-y-6">
-        <div className="grid gap-6 lg:grid-cols-12 items-center">
-          <div className="lg:col-span-8 space-y-4">
+        <button
+          type="button"
+          onClick={handleGetLocation}
+          disabled={gpsLoading}
+          className="font-bold text-xs py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1.5 border border-white/20"
+        >
+          <MapPin className="h-4 w-4 text-emerald-300" />
+          {gpsLoading ? 'GPS…' : 'Közelemben'}
+        </button>
+      </div>
+
+      {/* TÁJÉKOZTATÓ BANNER (Összecsukható a visszatérő usereknek!) */}
+      {bannerCollapsed ? (
+        <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-xs text-emerald-950 font-bold shadow-xs">
+          <div className="flex items-center gap-2">
+            <Droplets className="h-4 w-4 text-emerald-700 shrink-0" />
+            <span>🌳 ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN</span>
+          </div>
+          <button
+            type="button"
+            onClick={toggleBanner}
+            className="text-xs text-emerald-800 hover:text-emerald-950 underline font-extrabold"
+          >
+            ℹ️ Tájékoztató megnyitása
+          </button>
+        </div>
+      ) : (
+        <section className="rounded-3xl border border-emerald-300 bg-gradient-to-br from-emerald-50 via-white to-sand-100 p-5 sm:p-8 shadow-md overflow-hidden relative space-y-4">
+          <div className="flex justify-between items-start">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-700 text-white font-extrabold text-xs shadow-xs">
               <Droplets className="h-4 w-4 text-emerald-200" />
               ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN 🌳🚿
             </div>
 
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-ink-900 leading-tight">
-              Segítsünk Kőszeg szomjazó fáinak a kánikulában!
-            </h2>
-
-            <div className="text-xs sm:text-sm text-ink-800 space-y-2 leading-relaxed bg-white/80 p-4 rounded-2xl border border-emerald-200 shadow-xs">
-              <p>
-                <strong>Pintér Gábor főkertész és Básthy Béla polgármester</strong> felhívása minden segítő szándékú kőszegihez: a házatok előtt, vagy közelében található fákat segítsétek öntözéssel a hőség idején!
-              </p>
-              <p>
-                💡 <strong>Szakkifejezett jótanács:</strong> Leginkább a fiatal, 15 cm alatti törzsátmérőjű fák igénylik a locsolást. A törzs körül kialakított 1–1,5 méter átmérőjű tányér segít a vizet helyben tartani. Alkalmanként <strong>30–50 liter vizet</strong> érdemes a tányérba leszivárogtatni!
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => setShowAddSpotModal(true)}
-                className="btn-primary text-xs font-extrabold rounded-xl py-3 px-5 flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
-              >
-                <Plus className="h-4 w-4" />
-                🌳 Új Fa Regisztrálása &amp; Öntözése (Utca &amp; Házszám)
-              </button>
-
-              <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : 'https://ktsze.hu/viragos-koszeg')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary text-xs font-bold rounded-xl py-3 px-4 flex items-center gap-2 border-blue-300 text-blue-900 bg-blue-50 hover:bg-blue-100"
-              >
-                📢 Megosztom Facebookon (#VízadásKőszeg)
-              </a>
-            </div>
+            <button
+              type="button"
+              onClick={toggleBanner}
+              className="text-xs font-bold text-ink-500 hover:text-ink-900 bg-sand-200/80 px-2.5 py-1 rounded-lg"
+            >
+              ▲ Tájékoztató elrejtése
+            </button>
           </div>
 
-          <div className="lg:col-span-4 flex justify-center items-center">
-            <img
-              src="/vizadas_photo.jpg"
-              alt="Önkéntes faöntözés Vízadás Kőszeg"
-              className="rounded-2xl object-cover h-64 w-full shadow-lg border-2 border-white"
-            />
+          <div className="grid gap-6 lg:grid-cols-12 items-center">
+            <div className="lg:col-span-8 space-y-4">
+              <h2 className="font-display text-xl sm:text-3xl font-extrabold text-ink-900 leading-tight">
+                Segítsünk Kőszeg szomjazó fáinak a kánikulában!
+              </h2>
+
+              <div className="text-xs sm:text-sm text-ink-800 space-y-2 leading-relaxed bg-white/80 p-4 rounded-2xl border border-emerald-200 shadow-xs">
+                <p>
+                  <strong>Pintér Gábor főkertész és Básthy Béla polgármester</strong> felhívása minden segítő szándékú kőszegihez: a házatok előtt, vagy közelében található fákat segítsétek öntözéssel a hőség idején!
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowAddSpotModal(true)}
+                  className="btn-primary text-xs font-extrabold rounded-xl py-3 px-5 flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
+                >
+                  <Plus className="h-4 w-4" />
+                  🌳 Új Fa Regisztrálása (Utca &amp; Házszám)
+                </button>
+
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : 'https://ktsze.hu/viragos-koszeg')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary text-xs font-bold rounded-xl py-3 px-4 flex items-center gap-2 border-blue-300 text-blue-900 bg-blue-50 hover:bg-blue-100"
+                >
+                  📢 Megosztom Facebookon (#VízadásKőszeg)
+                </a>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 flex justify-center items-center">
+              <img
+                src="/vizadas_photo.jpg"
+                alt="Önkéntes faöntözés Vízadás Kőszeg"
+                className="rounded-2xl object-cover h-48 sm:h-56 w-full shadow-lg border-2 border-white"
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 0.5. Főkertészi Öntözési Kisokos — Mikor és hogyan öntözzünk? */}
       <section className="p-5 sm:p-6 rounded-2xl bg-amber-50/80 border border-amber-200 text-ink-900 space-y-3 shadow-xs">
@@ -232,26 +328,77 @@ export const FlowerMapPage = () => {
       </section>
 
       {/* Keresés Utca & Házszám Alapján & Új Fa Rögzítése */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-sand-100 border border-sand-300">
-        <div className="relative flex-1 min-w-[240px]">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Keresés Utca, Házszám vagy Öntöző neve alapján (pl. Jurisics tér 8.)…"
-            className="input pl-9 text-xs"
-          />
+      <div id="flower-spots-section" className="p-4 sm:p-5 rounded-2xl bg-sand-100 border border-sand-300 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Keresés Utca, Házszám vagy Öntöző neve alapján (pl. Jurisics tér 8.)…"
+              className="input pl-9 text-xs font-bold"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleGetLocation}
+              disabled={gpsLoading}
+              className="btn-secondary btn-sm text-xs font-bold flex items-center gap-1.5 border-emerald-300 text-emerald-900 bg-emerald-50 hover:bg-emerald-100"
+            >
+              <MapPin className="h-4 w-4 text-emerald-700" />
+              {gpsLoading ? 'GPS Keresés…' : '📍 GPS Helyzetem'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowAddSpotModal(true)}
+              className="btn-primary btn-sm text-xs font-extrabold flex items-center gap-1.5 shadow-xs bg-emerald-700 hover:bg-emerald-800 text-white"
+            >
+              <Plus className="h-4 w-4" />
+              + Új Fa Regisztrálása
+            </button>
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowAddSpotModal(true)}
-          className="btn-primary btn-sm text-xs font-extrabold flex items-center gap-1.5 shadow-xs bg-emerald-700 hover:bg-emerald-800 text-white"
-        >
-          <Plus className="h-4 w-4" />
-          + Új Fa / Kaspó Regisztrálása
-        </button>
+        {/* Utca & Állapot Gyorsgombok (Quick Filter Pills) */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
+          <span className="text-[11px] font-bold text-ink-500 mr-1">Gyorsszűrő:</span>
+          <button
+            type="button"
+            onClick={() => { setActiveFilter('all'); setSearchQuery(''); }}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+              activeFilter === 'all' && !searchQuery ? 'bg-emerald-700 text-white' : 'bg-white border border-sand-300 text-ink-700 hover:bg-sand-200'
+            }`}
+          >
+            🌐 Összes Fa ({flowerSpots.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveFilter('thirsty')}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+              activeFilter === 'thirsty' ? 'bg-rose-600 text-white animate-pulse' : 'bg-rose-50 border border-rose-200 text-rose-900 hover:bg-rose-100'
+            }`}
+          >
+            🚨 Szomjas fák (Sürgős)
+          </button>
+
+          {['Jurisics tér', 'Fő tér', 'Kecskeméti u.', 'Rákóczi u.'].map((street) => (
+            <button
+              key={street}
+              type="button"
+              onClick={() => { setActiveFilter('all'); setSearchQuery(street); }}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                searchQuery === street ? 'bg-ink-900 text-white' : 'bg-white border border-sand-300 text-ink-700 hover:bg-sand-200'
+              }`}
+            >
+              📍 {street}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 2. Virágos Pontok Kártyái */}
