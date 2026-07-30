@@ -1108,55 +1108,29 @@ export const deleteBoardIdea = async (id) => {
 const INITIAL_FLOWER_SPOTS = [
   {
     id: 'spot-1',
-    title: 'Fő tér 1. sz. Kaspó — Írottkő Hotel előtt',
-    location_name: 'Fő tér keleti oldal',
-    description: 'Piros és rózsaszín futómuskátlik, fehér petúniák.',
-    photo_url: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
-    adopter_name: 'Drescher Gábor (Írottkő Hotel)',
+    title: 'Jurisics tér 1. — Városháza előtti Gömbjuharok',
+    location_name: 'Jurisics tér 1.',
+    description: 'A Városháza előtti fiatal gömbjuhar fák öntözése a kánikulában.',
+    photo_url: '/vizadas_photo.jpg',
+    adopter_name: 'Városháza / Önkéntes Vízadók',
     adopter_user_id: null,
     status: 'active',
-    last_watered_at: new Date(Date.now() - 3600000 * 4).toISOString(), // 4 órája
-    water_count_this_month: 12,
-    created_at: '2026-07-01T10:00:00Z'
+    last_watered_at: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 órája
+    water_count_this_month: 4,
+    created_at: '2026-07-25T10:00:00Z'
   },
   {
     id: 'spot-2',
-    title: 'Fő tér 2. sz. Beton Virágláda — Ibrahim Kávézó felől',
-    location_name: 'Fő tér és Jurisics utca sarok',
-    description: 'Illatos levendulabokrok és kék szarkaláb.',
-    photo_url: 'https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&w=800&q=80',
-    adopter_name: 'Farkas Péter (Ibrahim Kávézó)',
+    title: 'Jurisics tér 1. — Városháza udvarán ültetett Fügefa',
+    location_name: 'Jurisics tér 1. (Udvar)',
+    description: 'A Városháza belső udvarán lévő fiatal fügefa vízadása.',
+    photo_url: '/vizadas_photo.jpg',
+    adopter_name: 'Városháza / Önkéntes Vízadók',
     adopter_user_id: null,
     status: 'active',
-    last_watered_at: new Date(Date.now() - 3600000 * 18).toISOString(), // 18 órája
-    water_count_this_month: 9,
-    created_at: '2026-07-01T10:00:00Z'
-  },
-  {
-    id: 'spot-3',
-    title: 'Fő tér 3. sz. Kaspó — Városháza bejárata',
-    location_name: 'Fő tér 1. (Városháza)',
-    description: 'Sárga és narancs begóniák, zöld díszfüvek.',
-    photo_url: 'https://images.unsplash.com/photo-1534710961216-75c88202f43e?auto=format&fit=crop&w=800&q=80',
-    adopter_name: 'Városszépítő Munkacsoport',
-    adopter_user_id: null,
-    status: 'active',
-    last_watered_at: new Date(Date.now() - 3600000 * 48).toISOString(), // 2 napja
-    water_count_this_month: 6,
-    created_at: '2026-07-05T10:00:00Z'
-  },
-  {
-    id: 'spot-4',
-    title: 'Jurisics tér 4. sz. Virágos Pont',
-    location_name: 'Jurisics tér vár felőli kapu',
-    description: 'Kőszegi kékfrankos tőke és környező virágágyás.',
-    photo_url: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&q=80',
-    adopter_name: 'Vörös Róbert (Kőszegi Borászok)',
-    adopter_user_id: null,
-    status: 'active',
-    last_watered_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-    water_count_this_month: 14,
-    created_at: '2026-07-10T10:00:00Z'
+    last_watered_at: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 órája
+    water_count_this_month: 3,
+    created_at: '2026-07-25T10:00:00Z'
   }
 ];
 
@@ -1164,22 +1138,12 @@ const INITIAL_FLOWER_LOGS = [
   {
     id: 'log-1',
     spot_id: 'spot-1',
-    user_name: 'Drescher Gábor',
+    user_name: 'Kőszegi Önkéntes Vízadó',
     action_type: 'locsolas',
-    water_liters: 15,
-    notes: 'Bőséges esti öntözést kaptak a petúniák a kánikulában.',
-    photo_url: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
-    created_at: new Date(Date.now() - 3600000 * 4).toISOString()
-  },
-  {
-    id: 'log-2',
-    spot_id: 'spot-2',
-    user_name: 'Farkas Péter',
-    action_type: 'locsolas',
-    water_liters: 10,
-    notes: 'Reggeli frissítő öntözés és gyomlálás elvégezve.',
-    photo_url: 'https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&w=800&q=80',
-    created_at: new Date(Date.now() - 3600000 * 18).toISOString()
+    water_liters: 40,
+    notes: '40 liter víz beszivárogtatva a gömbjuhar tányérjába.',
+    photo_url: '/vizadas_photo.jpg',
+    created_at: new Date(Date.now() - 3600000 * 2).toISOString()
   }
 ];
 

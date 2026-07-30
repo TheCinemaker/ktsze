@@ -141,16 +141,11 @@ export const FlowerMapPage = () => {
             </div>
           </div>
 
-          <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center items-center">
+          <div className="lg:col-span-4 flex justify-center items-center">
             <img
               src="/vizadas_photo.jpg"
               alt="Önkéntes faöntözés Vízadás Kőszeg"
-              className="rounded-2xl object-cover h-48 w-full shadow-md border-2 border-white"
-            />
-            <img
-              src="/vizadas_logo.jpg"
-              alt="Kőszeg Város Címere és Faöntözés"
-              className="rounded-2xl object-cover h-36 w-full shadow-xs border border-sand-200 bg-white"
+              className="rounded-2xl object-cover h-64 w-full shadow-lg border-2 border-white"
             />
           </div>
         </div>
@@ -350,30 +345,47 @@ export const FlowerMapPage = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="font-bold text-ink-800">Fotó URL</label>
+              <label className="font-bold text-ink-800 flex items-center gap-1.5 text-xs">
+                <Camera className="h-4 w-4 text-emerald-700" />
+                <span>📸 Kép Készítése a Fáról / Képgaléria Válostó (Mobil kamera)</span>
+              </label>
               <input
-                type="url"
-                value={newPhoto}
-                onChange={(e) => setNewPhoto(e.target.value)}
-                placeholder="https://..."
-                className="input text-xs"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setNewPhoto(reader.result);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="input text-xs p-3 w-full rounded-xl border border-sand-300 file:mr-3 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-emerald-100 file:text-emerald-900 hover:file:bg-emerald-200"
               />
+              {newPhoto && (
+                <div className="mt-2 relative h-36 w-full rounded-2xl overflow-hidden border-2 border-emerald-300 shadow-md">
+                  <img src={newPhoto} alt="Kiválasztott fa fotó" className="h-full w-full object-cover" />
+                </div>
+              )}
             </div>
 
             <div className="pt-3 flex justify-end gap-2 border-t border-sand-200">
               <button
                 type="button"
                 onClick={() => setShowAddSpotModal(false)}
-                className="btn-secondary text-xs font-bold"
+                className="btn-secondary text-xs font-bold py-2.5 px-4 rounded-xl"
               >
                 Mégse
               </button>
               <button
                 type="submit"
                 disabled={submittingSpot}
-                className="btn-primary text-xs font-bold"
+                className="btn-primary text-xs font-extrabold py-3 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
               >
-                {submittingSpot ? 'Mentés…' : 'Kaspó Létrehozása'}
+                {submittingSpot ? 'Mentés…' : '🌳 Fa / Kaspó Rögzítése'}
               </button>
             </div>
           </form>

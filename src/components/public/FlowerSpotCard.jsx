@@ -128,33 +128,33 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
           </div>
         </div>
 
-        {/* Akció gombok: Marika néni 1-kattintásos gyors gomb + részletes gomb */}
-        <div className="p-5 pt-0 space-y-2">
+        {/* Akció gombok: Mobilra optimalizált óriási gombok (Marika néninek, regisztráció NÉLKÜL) */}
+        <div className="p-4 sm:p-5 pt-0 space-y-2">
           {successMsg ? (
-            <div className="p-3 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-bold text-center flex items-center justify-center gap-2 animate-bounce">
-              <CheckCircle2 className="h-5 w-5 text-emerald-700" />
-              🌸 Köszönjük! Az öntözést elmentettük!
+            <div className="p-4 rounded-2xl bg-emerald-100 border-2 border-emerald-400 text-emerald-950 text-sm font-extrabold text-center flex items-center justify-center gap-2 animate-bounce shadow-md">
+              <CheckCircle2 className="h-6 w-6 text-emerald-700 shrink-0" />
+              <span>🌸 Köszönjük! Az öntözést elmentettük!</span>
             </div>
           ) : (
             <>
-              {/* ÓRIÁSI MARIKA NÉNI 1-KATTINTÁSOS GOMB */}
+              {/* ÓRIÁSI MARIKA NÉNI 1-KATTINTÁSOS MOBIL GOMB */}
               <button
                 type="button"
                 disabled={loading}
                 onClick={handleQuickWater}
-                className="w-full btn-primary text-sm font-extrabold rounded-xl py-3 flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white shadow-md transition-all transform active:scale-98"
+                className="w-full text-base sm:text-sm font-extrabold rounded-2xl py-4 sm:py-3 px-4 flex items-center justify-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg transition-all transform active:scale-95 border-b-4 border-emerald-800"
               >
-                <Droplets className="h-5 w-5 text-emerald-200" />
-                🪣 Meglocsoltam! (1 kattintás)
+                <Droplets className="h-6 w-6 text-emerald-200 shrink-0" />
+                <span>🪣 Meglocsoltam! (1 kattintás)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowLogModal(true)}
-                className="btn-secondary w-full text-xs font-bold rounded-xl py-1.5 flex items-center justify-center gap-1.5 text-ink-600"
+                className="btn-secondary w-full text-xs font-bold rounded-xl py-2.5 flex items-center justify-center gap-1.5 text-ink-700 bg-sand-100 hover:bg-sand-200"
               >
-                <Plus className="h-3.5 w-3.5" />
-                Részletek / Fotó feltöltése
+                <Plus className="h-4 w-4 text-ink-500" />
+                Részletek / Saját fotó csatolása
               </button>
             </>
           )}
