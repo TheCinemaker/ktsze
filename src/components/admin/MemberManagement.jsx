@@ -87,13 +87,25 @@ const parseMemberLines = (text) => {
 
 const BulkRegisterModal = ({ open, onClose, onSaved }) => {
   const toast = useToast();
+  const { data: existingMembersList } = useAsyncData(listMembers);
   const [rawText, setRawText] = useState('');
   const [memberCategory, setMemberCategory] = useState('Rendes tag');
   const [step, setStep] = useState('input');
   const [parsedList, setParsedList] = useState([]);
+  const [filterMissingOnly, setFilterMissingOnly] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, activeName: '' });
   const [results, setResults] = useState([]);
   const [copied, setCopied] = useState(false);
+
+  // Regisztrált e-mailek halmaza a Supabase adatbázisból
+  const registeredEmailsSet = useMemo(() => {
+    const set = new Set();
+    (existingMembersList || []).forEach((m) => {
+      if (m.account_email) set.add(m.account_email.toLowerCase());
+      if (m.private_email) set.add(m.private_email.toLowerCase());
+    });
+    return set;
+  }, [existingMembersList]);
 
   const handleTextChange = (e) => {
     const val = e.target.value;
@@ -104,21 +116,27 @@ const BulkRegisterModal = ({ open, onClose, onSaved }) => {
   const validItems = parsedList.filter((item) => item.isValid);
   const invalidItems = parsedList.filter((item) => !item.isValid);
 
+  // Hiányzó tagok (akik még NINCSENEK a Supabase profilok között)
+  const missingItems = validItems.filter((item) => !registeredEmailsSet.has(item.account_email));
+  const alreadyRegisteredCount = validItems.length - missingItems.length;
+
+  const targetItemsToRegister = filterMissingOnly ? missingItems : validItems;
+
   const handleStartBulkRegister = async () => {
-    if (validItems.length === 0) {
-      toast.error('Nincs egyetlen érvényes e-mail cím sem a megadott listában!');
+    if (targetItemsToRegister.length === 0) {
+      toast.error('Nincs regisztrálandó tag a kijelölt listában!');
       return;
     }
 
     setStep('processing');
-    setProgress({ current: 0, total: validItems.length, activeName: '' });
+    setProgress({ current: 0, total: targetItemsToRegister.length, activeName: '' });
     const runResults = [];
 
-    for (let i = 0; i < validItems.length; i++) {
-      const item = validItems[i];
+    for (let i = 0; i < targetItemsToRegister.length; i++) {
+      const item = targetItemsToRegister[i];
       setProgress({
         current: i + 1,
-        total: validItems.length,
+        total: targetItemsToRegister.length,
         activeName: `${item.full_name} (${item.account_email})`
       });
 
@@ -148,13 +166,14 @@ const BulkRegisterModal = ({ open, onClose, onSaved }) => {
         });
       }
 
-      await new Promise((r) => setTimeout(r, 350));
+      // 800ms szünet a Supabase & Resend e-mail szerver Rate Limit megakadályozására
+      await new Promise((r) => setTimeout(r, 800));
     }
 
     setResults(runResults);
     setStep('done');
     const successCount = runResults.filter((r) => r.success).length;
-    toast.success(`Tömeges regisztráció kész! ${successCount}/${runResults.length} tag sikeresen regisztrálva.`);
+    toast.success(`Tömeges regisztráció kész! ${successCount}/${runResults.length} tag feldolgozva.`);
     await onSaved();
   };
 
@@ -163,6 +182,7 @@ const BulkRegisterModal = ({ open, onClose, onSaved }) => {
     setParsedList([]);
     setResults([]);
     setStep('input');
+    setFilterMissingOnly(false);
     onClose();
   };
 
@@ -182,7 +202,7 @@ const BulkRegisterModal = ({ open, onClose, onSaved }) => {
       open={open}
       onClose={step === 'processing' ? () => {} : handleCloseAll}
       title="Tömeges Tag Regisztráció & Meghívás"
-      description="Másold be a tagok e-mail címeit és nevét. A rendszer automatikusan fiókot hoz létre és kiküldi az üdvözlő e-maileket az ideiglenes jelszóval."
+      description="Másold be a tagok e-mail címeit. A rendszer automatikusan összeveti az adatbázissal, és kiszűri a még hiányzó tagokat!"
     >
       {step === 'input' && (
         <div className="space-y-4">
@@ -223,30 +243,67 @@ const BulkRegisterModal = ({ open, onClose, onSaved }) => {
           </div>
 
           {parsedList.length > 0 && (
-            <div className="rounded-xl border border-sand-400 bg-sand-50 p-3 space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold text-ink-800">
-                <span>Felismerve: {validItems.length} érvényes cím</span>
+            <div className="rounded-xl border border-sand-400 bg-sand-50 p-3 space-y-3">
+              {/* Adatbázis összehasonlító jelvények */}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    ✓ {alreadyRegisteredCount} Már regisztrálva (Adatbázisban)
+                  </span>
+                  <span className="inline-block px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                    🎯 {missingItems.length} Hiányzó tag (Még nincs fiókja)
+                  </span>
+                </div>
+
                 {invalidItems.length > 0 && (
                   <span className="text-caution-700">{invalidItems.length} érvénytelen sorminta</span>
                 )}
               </div>
+
+              {/* Szűrő gombok */}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFilterMissingOnly(false)}
+                  className={`btn-xs rounded-lg px-3 py-1 text-xs font-bold ${
+                    !filterMissingOnly ? 'btn-primary' : 'btn-secondary'
+                  }`}
+                >
+                  Összes érvényes cím ({validItems.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterMissingOnly(true)}
+                  className={`btn-xs rounded-lg px-3 py-1 text-xs font-bold ${
+                    filterMissingOnly ? 'btn-primary' : 'btn-secondary'
+                  }`}
+                >
+                  🎯 Csak a hiányzó tagok ({missingItems.length})
+                </button>
+              </div>
+
               <div className="max-h-36 overflow-y-auto space-y-1 text-xs font-mono">
-                {parsedList.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`p-1.5 rounded-lg flex justify-between items-center ${
-                      item.isValid ? 'bg-white border border-sand-300' : 'bg-caution-50 text-caution-900 border border-caution-300'
-                    }`}
-                  >
-                    <span className="truncate max-w-[220px]">
-                      <strong>{item.full_name}</strong>
-                    </span>
-                    <span className="text-ink-500 truncate max-w-[200px]">{item.account_email}</span>
-                    <span className={item.isValid ? 'text-positive-600 font-bold' : 'text-caution-600 font-bold'}>
-                      {item.isValid ? '✓ OK' : '✕ Érvénytelen'}
-                    </span>
-                  </div>
-                ))}
+                {targetItemsToRegister.map((item) => {
+                  const isRegistered = registeredEmailsSet.has(item.account_email);
+                  return (
+                    <div
+                      key={item.id}
+                      className={`p-1.5 rounded-lg flex justify-between items-center ${
+                        isRegistered
+                          ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
+                          : 'bg-white border border-sand-300'
+                      }`}
+                    >
+                      <span className="truncate max-w-[200px]">
+                        <strong>{item.full_name}</strong>
+                      </span>
+                      <span className="text-ink-500 truncate max-w-[180px]">{item.account_email}</span>
+                      <span className={isRegistered ? 'text-emerald-700 font-bold text-[11px]' : 'text-amber-700 font-bold text-[11px]'}>
+                        {isRegistered ? '✓ Már Tag' : '🎯 Regisztrálandó'}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -258,11 +315,11 @@ const BulkRegisterModal = ({ open, onClose, onSaved }) => {
             <button
               type="button"
               onClick={handleStartBulkRegister}
-              disabled={validItems.length === 0}
-              className="btn-primary btn-sm font-bold flex items-center gap-1.5"
+              disabled={targetItemsToRegister.length === 0}
+              className="btn-primary btn-sm font-bold flex items-center gap-1.5 shadow-xs"
             >
               <Send className="h-4 w-4" />
-              {validItems.length} Tag Regisztrálása & Kiküldése
+              {targetItemsToRegister.length} Tag Regisztrálása &amp; Kiküldése
             </button>
           </div>
         </div>
