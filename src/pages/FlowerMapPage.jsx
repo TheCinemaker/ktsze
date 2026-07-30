@@ -702,6 +702,7 @@ export const FlowerMapPage = () => {
         isOpen={showStoriesModal}
         onClose={() => setShowStoriesModal(false)}
         logs={logs || []}
+        onShareStory={(storyData) => setCreatedStoryData(storyData)}
       />
 
       {/* INSTAGRAM / FB STORY KÁRTYA GENERÁLÓ (KŐSZEG CÍMERREL) */}

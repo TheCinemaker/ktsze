@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Heart, Share2, Clock, Droplets, Camera } from 'lucide-react';
 
-export const VizadasStoriesModal = ({ isOpen, onClose, logs = [] }) => {
+export const VizadasStoriesModal = ({ isOpen, onClose, logs = [], onShareStory }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [likes, setLikes] = useState({});
 
@@ -143,19 +143,37 @@ export const VizadasStoriesModal = ({ isOpen, onClose, logs = [] }) => {
               </p>
             )}
 
-            <div className="pt-1">
+            <div className="flex items-center gap-2 pt-1">
               <button
                 type="button"
                 onClick={toggleLike}
-                className={`w-full py-3.5 px-4 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-lg border ${
+                className={`flex-1 py-3.5 px-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all transform active:scale-95 shadow-lg border ${
                   isLiked
                     ? 'bg-rose-600 border-rose-500 text-white'
                     : 'bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-md'
                 }`}
               >
-                <Heart className={`h-5 w-5 ${isLiked ? 'fill-white text-white' : 'text-white'}`} />
-                <span>{isLiked ? 'Tetszik! (1)' : 'Tetszik ez az öntözés'}</span>
+                <Heart className={`h-4 w-4 ${isLiked ? 'fill-white text-white' : 'text-white'}`} />
+                <span>{isLiked ? 'Tetszik! (1)' : 'Tetszik'}</span>
               </button>
+
+              {onShareStory && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShareStory({
+                      photoUrl: currentLog.photo_url,
+                      userName: currentLog.user_name || 'Kőszegi Vízadó Polgár',
+                      locationName: 'Kőszeg Belváros'
+                    });
+                  }}
+                  className="flex-1 py-3.5 px-3 rounded-2xl font-extrabold text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center gap-1.5 shadow-lg transition-all transform active:scale-95 border border-amber-300"
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span>Story Kártya</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
