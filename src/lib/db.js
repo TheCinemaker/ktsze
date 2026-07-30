@@ -1205,36 +1205,15 @@ export const listFlowerLogs = async (spotId = null, limit = 20) => {
  * Öntözés rögzítése a flower_logs és flower_spots táblákba.
  */
 export const addFlowerLog = async (input) => {
-  const createdAt = new Date().toISOString();
-  
-  // 1. Öntözési bejegyzés beszúrása a flower_logs táblába
-  const createdLog = unwrap(
-    await supabase
-      .from('flower_logs')
-      .insert({
-        spot_id: input.spot_id,
-        user_name: input.user_name?.trim() || 'Kőszegi Önkéntes',
-        action_type: input.action_type || 'locsolas',
-        water_liters: Number(input.water_liters) || 10,
-        notes: input.notes?.trim() || null,
-        photo_url: input.photo_url || null,
-        created_at: createdAt
-      })
-      .select(FLOWER_LOG_COLUMNS)
-      .single()
-  );
-
-  // 2. Kaspó utolsó öntözési idejének frissítése a flower_spots táblában
-  const { error: updateError } = await supabase
-    .from('flower_spots')
-    .update({
-      last_watered_at: createdAt,
-      water_count_this_month: (input.water_count_this_month || 0) + 1
+  return unwrap(
+    await supabase.rpc('flower_log_watering', {
+      p_spot_id: input.spot_id,
+      p_user_name: input.user_name?.trim() || 'Kőszegi Önkéntes',
+      p_action_type: input.action_type || 'locsolas',
+      p_water_liters: Number(input.water_liters) || 10,
+      p_notes: input.notes?.trim() || null,
+      p_photo_url: input.photo_url || null
     })
-    .eq('id', input.spot_id);
-
-  if (updateError) console.warn('[db] A kaspó számlálójának frissítése nem sikerült:', updateError.message);
-
-  return createdLog;
+  );
 };
 
