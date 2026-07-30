@@ -1105,47 +1105,8 @@ export const deleteBoardIdea = async (id) => {
 //  "Kőszeg Virágzik" — Okos Kaspó & Virágláda Örökbefogadási és Öntözési Napló
 // =============================================================================
 
-const INITIAL_FLOWER_SPOTS = [
-  {
-    id: 'spot-1',
-    title: 'Jurisics tér 1. — Városháza előtti Gömbjuharok',
-    location_name: 'Jurisics tér 1.',
-    description: 'A Városháza előtti fiatal gömbjuhar fák öntözése a kánikulában.',
-    photo_url: '/vizadas_photo.jpg',
-    adopter_name: 'Városháza / Önkéntes Vízadók',
-    adopter_user_id: null,
-    status: 'active',
-    last_watered_at: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 órája
-    water_count_this_month: 4,
-    created_at: '2026-07-25T10:00:00Z'
-  },
-  {
-    id: 'spot-2',
-    title: 'Jurisics tér 1. — Városháza udvarán ültetett Fügefa',
-    location_name: 'Jurisics tér 1. (Udvar)',
-    description: 'A Városháza belső udvarán lévő fiatal fügefa vízadása.',
-    photo_url: '/vizadas_photo.jpg',
-    adopter_name: 'Városháza / Önkéntes Vízadók',
-    adopter_user_id: null,
-    status: 'active',
-    last_watered_at: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 órája
-    water_count_this_month: 3,
-    created_at: '2026-07-25T10:00:00Z'
-  }
-];
-
-const INITIAL_FLOWER_LOGS = [
-  {
-    id: 'log-1',
-    spot_id: 'spot-1',
-    user_name: 'Kőszegi Önkéntes Vízadó',
-    action_type: 'locsolas',
-    water_liters: 40,
-    notes: '40 liter víz beszivárogtatva a gömbjuhar tányérjába.',
-    photo_url: '/vizadas_photo.jpg',
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString()
-  }
-];
+const INITIAL_FLOWER_SPOTS = [];
+const INITIAL_FLOWER_LOGS = [];
 
 const FLOWER_SPOTS_STORAGE_KEY = 'ktsze_flower_spots_v1';
 const FLOWER_LOGS_STORAGE_KEY = 'ktsze_flower_logs_v1';
