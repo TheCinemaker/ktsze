@@ -50,34 +50,58 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
     }
   };
 
+  const handleQuickWater = async () => {
+    setLoading(true);
+    try {
+      await addFlowerLog({
+        spot_id: spot.id,
+        user_name: profile?.full_name || user?.email?.split('@')[0] || 'Kőszegi Virágangyal',
+        action_type: 'locsolas',
+        water_liters: 10,
+        notes: 'Gyors 1-kattintásos öntözés',
+        photo_url: spot.photo_url,
+        water_count_this_month: spot.water_count_this_month || 0
+      });
+      setSuccessMsg(true);
+      setTimeout(() => {
+        setSuccessMsg(false);
+        if (onLogAdded) onLogAdded();
+      }, 1800);
+    } catch (err) {
+      alert('Hiba történt az öntözés rögzítésekor: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <article className="card overflow-hidden flex flex-col justify-between border border-sand-300 bg-white hover:shadow-xl transition-all duration-300 group">
         <div>
           {/* Növény/kaspó fotó */}
-          <div className="relative h-48 w-full overflow-hidden bg-sand-100">
+          <div className="relative h-52 w-full overflow-hidden bg-sand-100">
             <img
               src={spot.photo_url}
               alt={spot.title}
               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-md bg-white/90 text-ink-900 backdrop-blur-xs">
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-md bg-white/95 text-ink-900 backdrop-blur-xs">
               <MapPin className="h-3.5 w-3.5 text-wine-600" />
               {spot.location_name}
             </div>
 
             {/* Öntözési állapot jelvény */}
             <div
-              className={`absolute top-3 right-3 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-md text-white ${
-                isFresh ? 'bg-positive-600' : 'bg-gold-600'
+              className={`absolute top-3 right-3 flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-extrabold shadow-lg text-white ${
+                isFresh ? 'bg-emerald-600' : 'bg-amber-600 animate-pulse'
               }`}
             >
-              <Droplets className="h-3.5 w-3.5" />
+              <Droplets className="h-4 w-4" />
               {hoursAgo < 1
-                ? 'Épp most öntözve'
+                ? '🟢 Épp most öntözve'
                 : hoursAgo < 24
-                ? `${hoursAgo} órája öntözve`
-                : `${Math.floor(hoursAgo / 24)} napja nem öntözték`}
+                ? `🟢 ${hoursAgo} órája öntözve`
+                : `🚨 ${Math.floor(hoursAgo / 24)} napja szomjas!`}
             </div>
           </div>
 
@@ -91,28 +115,49 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
             <div className="pt-2 border-t border-sand-200 space-y-1.5 text-xs text-ink-700">
               <div className="flex items-center gap-2">
                 <User className="h-3.5 w-3.5 text-wine-600 shrink-0" />
-                <span className="font-semibold text-ink-900">Örökbefogadó:</span>
-                <span className="truncate">{spot.adopter_name}</span>
+                <span className="font-semibold text-ink-900">Gondozó / Örökbefogadó:</span>
+                <span className="truncate font-bold text-ink-800">{spot.adopter_name}</span>
               </div>
 
               <div className="flex items-center gap-2">
                 <Droplets className="h-3.5 w-3.5 text-wine-600 shrink-0" />
-                <span className="font-semibold text-ink-900">Öntözések ebben a hónapban:</span>
-                <span className="font-bold text-wine-700">{spot.water_count_this_month || 0} alkalom</span>
+                <span className="font-semibold text-ink-900">E havi gondozások:</span>
+                <span className="font-bold text-wine-800 bg-sand-100 px-2 py-0.5 rounded-full">{spot.water_count_this_month || 0} alkalom</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-5 pt-0">
-          <button
-            type="button"
-            onClick={() => setShowLogModal(true)}
-            className="btn-primary w-full text-xs font-bold rounded-xl py-2.5 flex items-center justify-center gap-2 shadow-xs"
-          >
-            <Plus className="h-4 w-4" />
-            Öntözés / Ápolás Rögzítése
-          </button>
+        {/* Akció gombok: Marika néni 1-kattintásos gyors gomb + részletes gomb */}
+        <div className="p-5 pt-0 space-y-2">
+          {successMsg ? (
+            <div className="p-3 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-bold text-center flex items-center justify-center gap-2 animate-bounce">
+              <CheckCircle2 className="h-5 w-5 text-emerald-700" />
+              🌸 Köszönjük! Az öntözést elmentettük!
+            </div>
+          ) : (
+            <>
+              {/* ÓRIÁSI MARIKA NÉNI 1-KATTINTÁSOS GOMB */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleQuickWater}
+                className="w-full btn-primary text-sm font-extrabold rounded-xl py-3 flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white shadow-md transition-all transform active:scale-98"
+              >
+                <Droplets className="h-5 w-5 text-emerald-200" />
+                🪣 Meglocsoltam! (1 kattintás)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowLogModal(true)}
+                className="btn-secondary w-full text-xs font-bold rounded-xl py-1.5 flex items-center justify-center gap-1.5 text-ink-600"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Részletek / Fotó feltöltése
+              </button>
+            </>
+          )}
         </div>
       </article>
 
