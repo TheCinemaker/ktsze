@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Droplets, Calendar, MapPin, User, CheckCircle2, AlertCircle, Camera, Plus } from 'lucide-react';
+import { Droplets, MapPin, User, CheckCircle2, Camera, Plus } from 'lucide-react';
 import { Modal } from '../ui';
-import { addFlowerLog } from '../../lib/db';
+import { addFlowerLog, uploadFlowerPhoto } from '../../lib/db';
 import { useAuth } from '../../context/AuthContext';
 
 export const FlowerSpotCard = ({ spot, onLogAdded }) => {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const [showLogModal, setShowLogModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [actionType, setActionType] = useState('locsolas');
@@ -13,7 +13,31 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
   const [userName, setUserName] = useState(''); // 8. Alapértelmezetten ÜRES!
   const [notes, setNotes] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState('');
   const [successMsg, setSuccessMsg] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const mapsUrl =
+    Number.isFinite(spot.latitude) && Number.isFinite(spot.longitude)
+      ? `https://www.google.com/maps?q=${spot.latitude},${spot.longitude}`
+      : null;
+
+  /** A fotó azonnal a tárolóba megy, a táblába csak a rövid URL kerül. */
+  const handlePhotoPick = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setPhotoError('');
+    setPhotoUploading(true);
+    try {
+      setPhotoUrl(await uploadFlowerPhoto(file));
+    } catch (err) {
+      setPhotoUrl('');
+      setPhotoError(err.message);
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
   // 13. Napi 2x öntözési státusz kiszámítása az időbélyegekből
   const getWateringBadge = () => {
@@ -66,37 +90,42 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
   const handleSubmitLog = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setSuccessMsg(true); // 7. AZONNAL TOAST!
+    setErrorMsg('');
     try {
       await addFlowerLog({
         spot_id: spot.id,
-        user_name: userName.trim() || 'Kőszegi Önkéntes',
+        user_name: userName.trim(),
         action_type: actionType,
         water_liters: Number(waterLiters),
         notes: notes,
-        photo_url: photoUrl || spot.photo_url,
+        // Csak a most készített fotó — a fa meglévő képét nem másoljuk a naplóba.
+        photo_url: photoUrl || null,
         water_count_this_month: spot.water_count_this_month || 0
       });
+
+      // A siker csak a tényleges mentés UTÁN jelenik meg, és a lista is
+      // AZONNAL frissül — nem várunk rá másodperceket.
+      setSuccessMsg(true);
+      if (onLogAdded) onLogAdded();
       setTimeout(() => {
         setSuccessMsg(false);
         setShowLogModal(false);
         setNotes('');
         setPhotoUrl('');
-        if (onLogAdded) onLogAdded();
       }, 1500);
     } catch (err) {
-      alert('Hiba történt a mentés során: ' + err.message);
+      setErrorMsg(err.message);
       setSuccessMsg(false);
     } finally {
       setLoading(false);
     }
   };
 
-  // 7. AZONNALI INSTANT TOAST A MEGLOCSOLTAM GOMBRA! (0ms várakozás!)
+  // Egykattintásos vízadás (regisztráció nélkül, Marika néninek)
   const handleQuickWater = async () => {
     if (loading || successMsg) return;
     setLoading(true);
-    setSuccessMsg(true); // Instant visszajelzés azonnal!
+    setErrorMsg('');
 
     try {
       await addFlowerLog({
@@ -105,15 +134,16 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
         action_type: 'locsolas',
         water_liters: 30,
         notes: 'Gyors 1-kattintásos vízadás',
-        photo_url: spot.photo_url,
         water_count_this_month: spot.water_count_this_month || 0
       });
-      setTimeout(() => {
-        setSuccessMsg(false);
-        if (onLogAdded) onLogAdded();
-      }, 3500); // 3.5 másodpercig látható marad, hogy Marika néni el tudja olvasni!
+
+      setSuccessMsg(true);
+      // A badge és a számláló azonnal frissül; a köszönő üzenet ettől
+      // függetlenül 3.5 másodpercig marad, hogy el lehessen olvasni.
+      if (onLogAdded) onLogAdded();
+      setTimeout(() => setSuccessMsg(false), 3500);
     } catch (err) {
-      console.error('Locsolási hiba:', err);
+      setErrorMsg(err.message);
     } finally {
       setLoading(false);
     }
@@ -125,11 +155,19 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
         <div>
           {/* Növény/kaspó fotó */}
           <div className="relative h-52 w-full overflow-hidden bg-sand-100">
-            <img
-              src={spot.photo_url}
-              alt={spot.title}
-              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
+            {spot.photo_url ? (
+              <img
+                src={spot.photo_url}
+                alt={spot.title}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center bg-emerald-50 text-emerald-700">
+                <Droplets className="h-10 w-10" />
+              </div>
+            )}
 
             {/* 12. Nem összefolyó, egymás alatti BADGE-EK a képen */}
             <div className="absolute top-3 left-3 right-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pointer-events-none">
@@ -159,8 +197,26 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
               <div className="flex items-center gap-2">
                 <User className="h-3.5 w-3.5 text-wine-600 shrink-0" />
                 <span className="font-semibold text-ink-900">Gondozó / Örökbefogadó:</span>
-                <span className="truncate font-bold text-ink-800">{spot.adopter_name}</span>
+                <span className="truncate font-bold text-ink-800">
+                  {spot.adopter_name || 'Nincs örökbefogadó'}
+                </span>
               </div>
+
+              {/* A rögzített GPS koordináta — innen nyílik a térkép */}
+              {mapsUrl && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-3.5 w-3.5 text-wine-600 shrink-0" />
+                  <span className="font-semibold text-ink-900">GPS:</span>
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold text-emerald-800 underline hover:text-emerald-900"
+                  >
+                    {spot.latitude.toFixed(5)}, {spot.longitude.toFixed(5)} — térképen
+                  </a>
+                </div>
+              )}
 
               <div className="flex items-center gap-2">
                 <Droplets className="h-3.5 w-3.5 text-wine-600 shrink-0" />
@@ -180,15 +236,21 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
             </div>
           ) : (
             <>
+              {errorMsg && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-xs font-bold">
+                  {errorMsg}
+                </div>
+              )}
+
               {/* ÓRIÁSI MARIKA NÉNI 1-KATTINTÁSOS MOBIL GOMB */}
               <button
                 type="button"
                 disabled={loading}
                 onClick={handleQuickWater}
-                className="w-full text-base sm:text-sm font-extrabold rounded-2xl py-4 sm:py-3 px-4 flex items-center justify-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg transition-all transform active:scale-95 border-b-4 border-emerald-800"
+                className="w-full text-base sm:text-sm font-extrabold rounded-2xl py-4 sm:py-3 px-4 flex items-center justify-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-500 text-white shadow-lg transition-all transform active:scale-95 border-b-4 border-emerald-800"
               >
                 <Droplets className="h-6 w-6 text-emerald-200 shrink-0" />
-                <span>Meglocsoltam! (1 kattintás)</span>
+                <span>{loading ? 'Mentés folyamatban…' : 'Meglocsoltam! (1 kattintás)'}</span>
               </button>
 
               <button
@@ -280,24 +342,23 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
                   type="file"
                   accept="image/*"
                   capture="environment"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setPhotoUrl(reader.result);
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
+                  onChange={handlePhotoPick}
                   className="input text-xs p-2.5 w-full rounded-xl border border-sand-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-emerald-100 file:text-emerald-900"
                 />
-                {photoUrl && (
+                {photoUploading && <p className="text-[11px] font-bold text-emerald-800">Fotó feltöltése…</p>}
+                {photoError && <p className="text-[11px] font-bold text-rose-800">{photoError}</p>}
+                {photoUrl && !photoUploading && (
                   <div className="mt-2 relative h-28 w-full rounded-xl overflow-hidden border border-emerald-300 shadow-xs">
                     <img src={photoUrl} alt="Szelfi / öntözési fotó" className="h-full w-full object-cover" />
                   </div>
                 )}
               </div>
+
+              {errorMsg && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-xs font-bold">
+                  {errorMsg}
+                </div>
+              )}
 
               <div className="pt-3 flex justify-end gap-2 border-t border-sand-200">
                 <button
@@ -309,7 +370,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || photoUploading}
                   className="btn-primary text-xs font-bold flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="h-4 w-4" />

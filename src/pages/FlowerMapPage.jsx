@@ -1,36 +1,62 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Droplets, Search, MapPin, Plus, Clock, Camera } from 'lucide-react';
-import { listFlowerSpots, listFlowerLogs, createFlowerSpot } from '../lib/db';
+import { listFlowerSpots, listFlowerLogs, createFlowerSpot, uploadFlowerPhoto } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { useAsyncData } from '../lib/useAsyncData';
-import { PageHeader, LoadingBlock, ErrorBlock, Modal } from '../components/ui';
+import { LoadingBlock, ErrorBlock, Modal } from '../components/ui';
 import { SEO } from '../components/ui/SEO';
 import { FlowerSpotCard } from '../components/public/FlowerSpotCard';
-import { useAuth } from '../context/AuthContext';
 
 export const FlowerMapPage = () => {
-  const { profile } = useAuth();
-  const isAdmin = profile?.roles?.includes('admin');
-
-  const { data: spots, loading: spotsLoading, error, reload } = useAsyncData(listFlowerSpots);
+  const {
+    data: spots,
+    loading: spotsLoading,
+    refreshing: spotsRefreshing,
+    error,
+    reload
+  } = useAsyncData(listFlowerSpots);
   const { data: logs, reload: reloadLogs } = useAsyncData(() => listFlowerLogs());
 
-  // FULL REALTIME ELŐFIZETÉS: Ha bárki meglocsol egy virágot, az az összes látogató telefonján azonnal élőben frissül!
+  const handleRefreshData = useCallback(() => {
+    reload();
+    reloadLogs();
+  }, [reload, reloadLogs]);
+
+  // Realtime: ha bárki meglocsol egy fát, az mindenki telefonján frissül.
+  //
+  // Az események sűrű sorozatban is jöhetnek (egy öntözés két táblát ír), ezért
+  // nem indítunk minden eseményre külön kérést, hanem 400 ms-ra összevárjuk
+  // őket — így nem lesz 4-5 párhuzamos lekérés egyetlen locsolásból.
+  const refreshTimer = useRef(null);
   useEffect(() => {
+    const scheduleRefresh = () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      refreshTimer.current = setTimeout(handleRefreshData, 400);
+    };
+
     const channel = supabase
       .channel('flower_realtime_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'flower_spots' }, () => {
-        reload();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'flower_logs' }, () => {
-        reloadLogs();
-      })
-      .subscribe();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'flower_spots' }, scheduleRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'flower_logs' }, scheduleRefresh)
+      .subscribe((status) => {
+        // Ha ez nem 'SUBSCRIBED', akkor a táblák nincsenek a supabase_realtime
+        // publikációban (lásd supabase/18_flower_spots_full_schema.sql 7. pont).
+        if (status !== 'SUBSCRIBED') console.warn('[vizadas] Realtime csatorna állapota:', status);
+      });
+
+    // Tartalék, ha a realtime nem él: amikor a látogató visszatér a laphoz,
+    // egyszer frissítünk. Ez fedi le a "más telefonján történt" öntözéseket is.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') scheduleRefresh();
+    };
+    document.addEventListener('visibilitychange', onVisible);
 
     return () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      document.removeEventListener('visibilitychange', onVisible);
       supabase.removeChannel(channel);
     };
-  }, [reload, reloadLogs]);
+  }, [handleRefreshData]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // all, thirsty, street
@@ -46,13 +72,31 @@ export const FlowerMapPage = () => {
   const [userCoords, setUserCoords] = useState(null);
 
   const [newTitle, setNewTitle] = useState('');
-  const [newLocation, setNewLocation] = useState('');
   const [newAdopter, setNewAdopter] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPhoto, setNewPhoto] = useState('');
+  const [newPhotoUploading, setNewPhotoUploading] = useState(false);
   const [newLat, setNewLat] = useState(null);
   const [newLng, setNewLng] = useState(null);
+  const [newGpsLoading, setNewGpsLoading] = useState(false);
+  const [spotError, setSpotError] = useState('');
   const [submittingSpot, setSubmittingSpot] = useState(false);
+
+  /** Az űrlap fotója azonnal a tárolóba megy; a táblába csak az URL kerül. */
+  const handleNewPhotoPick = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setSpotError('');
+    setNewPhotoUploading(true);
+    try {
+      setNewPhoto(await uploadFlowerPhoto(file));
+    } catch (err) {
+      setNewPhoto('');
+      setSpotError(err.message);
+    } finally {
+      setNewPhotoUploading(false);
+    }
+  };
 
   const toggleBanner = () => {
     const next = !bannerCollapsed;
@@ -91,11 +135,13 @@ export const FlowerMapPage = () => {
   const flowerLogs = (logs || []).slice(0, 10);
 
   // Szűrt fák listája
-  let filteredSpots = flowerSpots.filter((spot) => {
+  const query = searchQuery.trim().toLowerCase();
+  const filteredSpots = flowerSpots.filter((spot) => {
     const queryMatch =
-      spot.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      spot.location_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      spot.adopter_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      !query ||
+      spot.title?.toLowerCase().includes(query) ||
+      spot.location_name?.toLowerCase().includes(query) ||
+      spot.adopter_name?.toLowerCase().includes(query);
 
     if (!queryMatch) return false;
 
@@ -107,14 +153,22 @@ export const FlowerMapPage = () => {
     return true;
   });
 
-  const handleRefreshData = () => {
-    reload();
-    reloadLogs();
-  };
+  // A "Közelemben" gomb után a rögzített GPS koordináták alapján a legközelebbi
+  // fák jönnek előre. Koordináta nélküli fák a lista végére kerülnek.
+  if (userCoords) {
+    const distanceFrom = (spot) => {
+      if (!Number.isFinite(spot.latitude) || !Number.isFinite(spot.longitude)) return Number.MAX_SAFE_INTEGER;
+      const dLat = spot.latitude - userCoords.lat;
+      const dLng = (spot.longitude - userCoords.lng) * Math.cos((userCoords.lat * Math.PI) / 180);
+      return dLat * dLat + dLng * dLng; // négyzetes távolság: rendezéshez elég
+    };
+    filteredSpots.sort((a, b) => distanceFrom(a) - distanceFrom(b));
+  }
 
   const handleCreateSpot = async (e) => {
     e.preventDefault();
     setSubmittingSpot(true);
+    setSpotError('');
     try {
       await createFlowerSpot({
         title: newTitle,
@@ -127,7 +181,6 @@ export const FlowerMapPage = () => {
       });
       setShowAddSpotModal(false);
       setNewTitle('');
-      setNewLocation('');
       setNewAdopter('');
       setNewDesc('');
       setNewPhoto('');
@@ -135,7 +188,7 @@ export const FlowerMapPage = () => {
       setNewLng(null);
       handleRefreshData();
     } catch (err) {
-      alert('Hiba történt a fa hozzáadásakor: ' + err.message);
+      setSpotError(err.message);
     } finally {
       setSubmittingSpot(false);
     }
@@ -327,7 +380,10 @@ export const FlowerMapPage = () => {
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-2xl text-ink-900 font-extrabold">Rögzített növények</h2>
-          <span className="text-xs text-ink-500 font-semibold">{filteredSpots.length} regisztrált növény</span>
+          <span className="text-xs text-ink-500 font-semibold">
+            {filteredSpots.length} regisztrált növény
+            {spotsRefreshing && <span className="ml-2 text-emerald-700">frissítés…</span>}
+          </span>
         </div>
 
         {spotsLoading && <LoadingBlock />}
@@ -339,7 +395,9 @@ export const FlowerMapPage = () => {
           </div>
         )}
 
-        {!spotsLoading && !error && filteredSpots.length > 0 && (
+        {/* A kész lista egy háttérben elhasalt frissítés miatt sem tűnik el:
+            a hibát a fenti sáv mutatja, a fák maradnak a helyükön. */}
+        {!spotsLoading && filteredSpots.length > 0 && (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredSpots.map((spot) => (
               <FlowerSpotCard key={spot.id} spot={spot} onLogAdded={handleRefreshData} />
@@ -397,32 +455,54 @@ export const FlowerMapPage = () => {
           description="Rögzítsd a fát a pontos utca és házszám megadásával, vagy koppints a GPS gombra!"
         >
           <form onSubmit={handleCreateSpot} className="space-y-4 text-xs">
-            {/* GPS koordináta (opcionális) */}
+            {/* GPS koordináta (opcionális) — csak a számok mennek a táblába,
+                városnevet nem fűzünk a cím elé. */}
             <div className="space-y-1">
               <label className="font-bold text-ink-800">GPS koordináta (Opcionális — térképhez)</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
+                  disabled={newGpsLoading}
                   onClick={() => {
-                    if (navigator.geolocation) {
-                      navigator.geolocation.getCurrentPosition(
-                        (pos) => {
-                          setNewLat(pos.coords.latitude);
-                          setNewLng(pos.coords.longitude);
-                        },
-                        () => alert('GPS pozíció nem érhető el.')
-                      );
+                    if (!navigator.geolocation) {
+                      setSpotError('A böngésző nem támogatja a GPS helymeghatározást.');
+                      return;
                     }
+                    setNewGpsLoading(true);
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        setNewLat(pos.coords.latitude);
+                        setNewLng(pos.coords.longitude);
+                        setNewGpsLoading(false);
+                      },
+                      (err) => {
+                        setNewGpsLoading(false);
+                        setSpotError('A GPS pozíció nem érhető el: ' + err.message);
+                      },
+                      { enableHighAccuracy: true, timeout: 10000 }
+                    );
                   }}
                   className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 hover:bg-emerald-100 flex items-center gap-1.5"
                 >
                   <MapPin className="h-3.5 w-3.5" />
-                  Helyzetem rögzítése GPS-szel
+                  {newGpsLoading ? 'GPS keresés…' : 'Helyzetem rögzítése GPS-szel'}
                 </button>
-                {newLat && newLng && (
-                  <span className="text-[11px] text-emerald-800 font-semibold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
-                    {newLat.toFixed(5)}, {newLng.toFixed(5)}
-                  </span>
+                {newLat !== null && newLng !== null && (
+                  <>
+                    <span className="text-[11px] text-emerald-800 font-semibold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                      {newLat.toFixed(5)}, {newLng.toFixed(5)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewLat(null);
+                        setNewLng(null);
+                      }}
+                      className="text-[11px] font-bold text-ink-500 underline hover:text-ink-800"
+                    >
+                      Törlés
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -471,24 +551,22 @@ export const FlowerMapPage = () => {
                 type="file"
                 accept="image/*"
                 capture="environment"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setNewPhoto(reader.result);
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
+                onChange={handleNewPhotoPick}
                 className="input text-xs p-3 w-full rounded-xl border border-sand-300 file:mr-3 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-emerald-100 file:text-emerald-900"
               />
-              {newPhoto && (
+              {newPhotoUploading && <p className="text-[11px] font-bold text-emerald-800">Fotó feltöltése…</p>}
+              {newPhoto && !newPhotoUploading && (
                 <div className="mt-2 relative h-36 w-full rounded-2xl overflow-hidden border-2 border-emerald-300 shadow-md">
                   <img src={newPhoto} alt="Kiválasztott fa fotó" className="h-full w-full object-cover" />
                 </div>
               )}
             </div>
+
+            {spotError && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-xs font-bold whitespace-pre-line">
+                {spotError}
+              </div>
+            )}
 
             <div className="pt-3 flex justify-end gap-2 border-t border-sand-200">
               <button
@@ -500,7 +578,7 @@ export const FlowerMapPage = () => {
               </button>
               <button
                 type="submit"
-                disabled={submittingSpot}
+                disabled={submittingSpot || newPhotoUploading}
                 className="btn-primary text-xs font-extrabold py-3 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
               >
                 {submittingSpot ? 'Mentés…' : 'Fa Rögzítése'}

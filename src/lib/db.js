@@ -1102,219 +1102,156 @@ export const deleteBoardIdea = async (id) => {
 };
 
 // =============================================================================
-//  "Kőszeg Virágzik" — Okos Kaspó & Virágláda Örökbefogadási és Öntözési Napló
+//  "Vízadás" — önkéntes faöntözési térkép és napló
+//
+//  Séma: supabase/18_flower_spots_full_schema.sql
+//
+//  Két szabály, amit ez a szekció korábban megszegett:
+//    1. NINCS localStorage tartalék. Ha a mentés elhasal, azt a felhasználónak
+//       látnia kell — a "csak nálam létező fa" rosszabb, mint egy hibaüzenet.
+//    2. A fotó a flower-photos bucketbe megy, és csak az URL kerül a táblába.
+//       A base64 data URI soronként MB-okat jelent, és a lista minden
+//       betöltéskor letölti mindet.
 // =============================================================================
 
-const INITIAL_FLOWER_SPOTS = [];
-const INITIAL_FLOWER_LOGS = [];
+/** A napló listájához pontosan ennyi kell — a `select('*')` felesleges terhelés. */
+const FLOWER_LOG_COLUMNS = 'id,created_at,spot_id,user_name,action_type,water_liters,notes,photo_url';
 
-const FLOWER_SPOTS_STORAGE_KEY = 'ktsze_flower_spots_v1';
-const FLOWER_LOGS_STORAGE_KEY = 'ktsze_flower_logs_v1';
+/**
+ * Fa-fotó feltöltése a publikus bucketbe. Belépés nem kell hozzá.
+ * @returns {Promise<string>} a kép publikus URL-je
+ */
+export const uploadFlowerPhoto = async (file) => {
+  const extension = (file.name?.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+  const path = `fak/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
 
-const getLocalFlowerSpots = () => {
-  try {
-    const raw = localStorage.getItem(FLOWER_SPOTS_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : INITIAL_FLOWER_SPOTS;
-  } catch {
-    return INITIAL_FLOWER_SPOTS;
-  }
+  const { error } = await supabase.storage
+    .from('flower-photos')
+    .upload(path, file, { contentType: file.type || undefined, cacheControl: '31536000' });
+
+  if (error) throw new Error(`A fotó feltöltése nem sikerült: ${describeError(error)}`);
+
+  const { data } = supabase.storage.from('flower-photos').getPublicUrl(path);
+  return data.publicUrl;
 };
 
-const saveLocalFlowerSpots = (spots) => {
-  try {
-    localStorage.setItem(FLOWER_SPOTS_STORAGE_KEY, JSON.stringify(spots));
-  } catch (err) {
-    console.warn('[db] LocalStorage hiányzik:', err);
-  }
-};
-
-const getLocalFlowerLogs = () => {
-  try {
-    const raw = localStorage.getItem(FLOWER_LOGS_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : INITIAL_FLOWER_LOGS;
-  } catch {
-    return INITIAL_FLOWER_LOGS;
-  }
-};
-
-const saveLocalFlowerLogs = (logs) => {
-  try {
-    localStorage.setItem(FLOWER_LOGS_STORAGE_KEY, JSON.stringify(logs));
-  } catch (err) {
-    console.warn('[db] LocalStorage hiányzik:', err);
-  }
-};
-
-/** Összes virágos pont lekérése */
-export const listFlowerSpots = async () => {
-  try {
-    const { data, error } = await supabase
+/** Összes fa lekérése (üres tömb is valid válasz). */
+export const listFlowerSpots = async () =>
+  unwrap(
+    await supabase
       .from('flower_spots')
       .select('*')
-      .order('created_at', { ascending: false });
-    if (!error && data) return data; // Üres tömb is VALID! Nem fallback-elünk localStorage-ra
-  } catch (err) {
-    console.warn('[db] Supabase flower_spots nem érhető el, tartalék használata:', err);
-  }
-  return getLocalFlowerSpots();
-};
+      .order('created_at', { ascending: false })
+      .limit(500)
+  ) || [];
 
-/** Egy virágos pont létrehozása */
+/** Új fa rögzítése — cím kötelező, GPS opcionális. */
 export const createFlowerSpot = async (input) => {
-  const newSpot = {
-    title: input.title?.trim(),
-    location_name: input.location_name?.trim() || input.title?.trim() || '',
-    description: input.description?.trim() || '',
-    photo_url: input.photo_url || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
-    adopter_name: input.adopter_name?.trim() || '',
-    adopter_user_id: input.adopter_user_id || null,
-    status: 'active',
-    last_watered_at: new Date().toISOString(),
-    water_count_this_month: 0,
-    latitude: input.latitude || null,
-    longitude: input.longitude || null,
-    created_at: new Date().toISOString()
-  };
+  const title = input.title?.trim();
+  if (!title) throw new Error('A pontos cím (utca, házszám) megadása kötelező.');
 
-  try {
-    const { data, error } = await supabase.from('flower_spots').insert(newSpot).select().single();
-    if (!error && data) return data;
-  } catch (err) {
-    console.warn('[db] Supabase mentés hiba, helyi tárba mentünk:', err);
-  }
-
-  const spots = getLocalFlowerSpots();
-  const created = { id: `spot_${Date.now()}`, ...newSpot };
-  const updated = [created, ...spots];
-  saveLocalFlowerSpots(updated);
-  return created;
+  return unwrap(
+    await supabase
+      .from('flower_spots')
+      .insert({
+        title,
+        // A helymegjelölés maga a cím — nincs kitalált városrész elé fűzve.
+        location_name: input.location_name?.trim() || title,
+        description: input.description?.trim() || null,
+        photo_url: input.photo_url || null,
+        adopter_name: input.adopter_name?.trim() || null,
+        adopter_user_id: input.adopter_user_id || null,
+        status: 'active',
+        // Az új fa NEM megöntözött: a badge így rögtön a vízadásra hív.
+        last_watered_at: null,
+        water_count_this_month: 0,
+        water_count_today: 0,
+        latitude: Number.isFinite(input.latitude) ? input.latitude : null,
+        longitude: Number.isFinite(input.longitude) ? input.longitude : null
+      })
+      .select()
+      .single()
+  );
 };
 
-/** Virágos pont frissítése */
-export const updateFlowerSpot = async (id, patch) => {
-  try {
-    const { data, error } = await supabase.from('flower_spots').update(patch).eq('id', id).select().single();
-    if (!error && data) return data;
-  } catch (err) {
-    console.warn('[db] Supabase frissítés hiba:', err);
-  }
+/** Fa adatainak módosítása (tartalomkezelői jog kell hozzá). */
+export const updateFlowerSpot = async (id, patch) =>
+  unwrap(await supabase.from('flower_spots').update(patch).eq('id', id).select().single());
 
-  const spots = getLocalFlowerSpots();
-  const updated = spots.map((s) => (s.id === id ? { ...s, ...patch } : s));
-  saveLocalFlowerSpots(updated);
-  return updated.find((s) => s.id === id);
-};
-
-/** Virágos pont törlése */
+/** Fa törlése (tartalomkezelői jog kell hozzá). */
 export const deleteFlowerSpot = async (id) => {
-  try {
-    await supabase.from('flower_spots').delete().eq('id', id);
-  } catch (err) {
-    console.warn('[db] Supabase törlés hiba:', err);
-  }
-
-  const spots = getLocalFlowerSpots();
-  const updated = spots.filter((s) => s.id !== id);
-  saveLocalFlowerSpots(updated);
+  unwrap(await supabase.from('flower_spots').delete().eq('id', id).select('id'));
   return true;
 };
 
-/** Öntözési naplóbejegyzések lekérése — max 30 db, csökkenő sorrendben */
-export const listFlowerLogs = async (spotId = null) => {
-  try {
-    let query = supabase
-      .from('flower_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(30);
-    if (spotId) query = query.eq('spot_id', spotId);
-    const { data, error } = await query;
-    if (!error && data) return data; // Üres tömb is VALID! Nem fallback-elünk localStorage-ra
-  } catch (err) {
-    console.warn('[db] Supabase flower_logs nem érhető el:', err);
-  }
-
-  const logs = getLocalFlowerLogs();
-  if (spotId) return logs.filter((l) => l.spot_id === spotId);
-  return logs;
+/** Öntözési naplóbejegyzések, legfrissebb elöl. */
+export const listFlowerLogs = async (spotId = null, limit = 20) => {
+  let query = supabase
+    .from('flower_logs')
+    .select(FLOWER_LOG_COLUMNS)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (spotId) query = query.eq('spot_id', spotId);
+  return unwrap(await query) || [];
 };
 
-/** Új öntözési/gondozási bejegyzés rögzítése */
+/**
+ * Öntözés rögzítése.
+ *
+ * Egyetlen RPC hívás: a naplóbejegyzés és a kaspó számlálói együtt frissülnek,
+ * a számlálókat az adatbázis a naplóból számolja (így a havi érték
+ * hónapváltáskor magától nullázódik). Ha a 18-as migráció még nem futott le, a
+ * régi, két kérésből álló útvonalra esünk vissza.
+ */
 export const addFlowerLog = async (input) => {
-  const newLog = {
-    spot_id: input.spot_id,
-    user_name: input.user_name || 'Kőszegi Önkéntes',
-    action_type: input.action_type || 'locsolas',
-    water_liters: Number(input.water_liters) || 10,
-    notes: input.notes?.trim() || '',
-    photo_url: input.photo_url || null,
-    created_at: new Date().toISOString()
-  };
+  const { data, error } = await supabase.rpc('flower_log_watering', {
+    p_spot_id: input.spot_id,
+    p_user_name: input.user_name?.trim() || null,
+    p_action_type: input.action_type || 'locsolas',
+    p_water_liters: Number(input.water_liters) || 10,
+    p_notes: input.notes?.trim() || null,
+    p_photo_url: input.photo_url || null
+  });
 
-  try {
-    const { data, error } = await supabase.from('flower_logs').insert(newLog).select().single();
-    if (!error && data) {
-      // Kaspó utolsó öntözési idejének frissítése
-      await supabase
-        .from('flower_spots')
-        .update({
-          last_watered_at: newLog.created_at,
-          water_count_this_month: (input.water_count_this_month || 0) + 1
-        })
-        .eq('id', input.spot_id);
-      return data;
-    }
-  } catch (err) {
-    console.warn('[db] Supabase log hiba, helyi mentés:', err);
+  if (!error) return data;
+
+  // PGRST202 / 42883 = nincs ilyen adatbázis-függvény
+  if (error.code !== 'PGRST202' && error.code !== '42883') {
+    throw new Error(describeError(error));
   }
 
-  // Helyi mentés
-  const logs = getLocalFlowerLogs();
-  const createdLog = { id: `log_${Date.now()}`, ...newLog };
-  saveLocalFlowerLogs([createdLog, ...logs]);
-
-  // Helyi kaspó frissítése
-  const spots = getLocalFlowerSpots();
-  const updatedSpots = spots.map((s) =>
-    s.id === input.spot_id
-      ? {
-          ...s,
-          last_watered_at: newLog.created_at,
-          water_count_this_month: (s.water_count_this_month || 0) + 1
-        }
-      : s
+  console.warn(
+    '[db] A flower_log_watering RPC nincs telepítve (futtasd le a supabase/18_flower_spots_full_schema.sql-t) — tartalék útvonal.'
   );
-  saveLocalFlowerSpots(updatedSpots);
+
+  const createdAt = new Date().toISOString();
+  const createdLog = unwrap(
+    await supabase
+      .from('flower_logs')
+      .insert({
+        spot_id: input.spot_id,
+        user_name: input.user_name?.trim() || null,
+        action_type: input.action_type || 'locsolas',
+        water_liters: Number(input.water_liters) || 10,
+        notes: input.notes?.trim() || null,
+        photo_url: input.photo_url || null,
+        created_at: createdAt
+      })
+      .select(FLOWER_LOG_COLUMNS)
+      .single()
+  );
+
+  // A napló már megvan; ha a számláló frissítése nem megy át, azt nem
+  // hibaként dobjuk vissza — a következő betöltés helyrerakja.
+  const { error: updateError } = await supabase
+    .from('flower_spots')
+    .update({
+      last_watered_at: createdAt,
+      water_count_this_month: (input.water_count_this_month || 0) + 1
+    })
+    .eq('id', input.spot_id);
+  if (updateError) console.warn('[db] A kaspó számlálójának frissítése nem sikerült:', updateError.message);
 
   return createdLog;
 };
-
-/** Statisztika lekérése a virágos pontokról */
-export const getFlowerStats = async () => {
-  const spots = await listFlowerSpots();
-  const logs = await listFlowerLogs();
-
-  const totalSpots = spots.length;
-  const totalWateringsThisMonth = spots.reduce((acc, s) => acc + (s.water_count_this_month || 0), 0);
-  const totalLiters = logs.reduce((acc, l) => acc + (l.water_liters || 10), 0);
-
-  // Ranglista készítés az öntözőkről
-  const leaderboardMap = {};
-  logs.forEach((log) => {
-    const name = log.user_name || 'Névtelen Gondozó';
-    leaderboardMap[name] = (leaderboardMap[name] || 0) + 1;
-  });
-
-  const leaderboard = Object.entries(leaderboardMap)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
-
-  return {
-    totalSpots,
-    totalWateringsThisMonth,
-    totalLiters,
-    leaderboard
-  };
-};
-
 

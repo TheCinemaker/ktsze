@@ -3,11 +3,16 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 /**
  * Adatbetöltés Supabase-ből, hibakezeléssel.
  *
- * Négy állapotot ad vissza, és a felületnek mind a négyet kezelnie kell:
- *   loading -> töltés folyik
- *   error   -> a betöltés elhasalt, van mit kiírni a felhasználónak
- *   data    -> megjött, de lehet üres tömb  ->  üres állapot kell, nem kitalált tartalom
- *   reload  -> újratöltés mentés után
+ * Állapotok, és a felületnek mindet kezelnie kell:
+ *   loading    -> az ELSŐ töltés folyik, még nincs mit mutatni  ->  vázlat/spinner
+ *   refreshing -> már van adat, a háttérben frissül  ->  a lista MARAD a helyén
+ *   error      -> a betöltés elhasalt, van mit kiírni a felhasználónak
+ *   data       -> megjött, de lehet üres tömb  ->  üres állapot kell, nem kitalált tartalom
+ *   reload     -> újratöltés mentés után
+ *
+ * A `loading` szándékosan csak az első körben igaz: ha minden újratöltésre
+ * spinnerre cserélnénk a kész listát (mentés után, realtime eseménynél), a
+ * felület villogna, és a művelet sokkal lassabbnak tűnne, mint amennyi.
  *
  * @param {() => Promise<any>} fetcher
  * @param {any[]} deps
@@ -16,11 +21,15 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 export const useAsyncData = (fetcher, deps = [], { enabled = true, initialData = null } = {}) => {
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(enabled);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   // A legfrissebb fetcher referenciája, hogy ne kelljen a deps-be tenni.
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
+
+  // A `data` aktuális értéke a run() belsejéből, a callback újraépítése nélkül.
+  const hasData = useRef(initialData !== null);
 
   // Csak a legutolsó kérés eredményét fogadjuk el (verseny elkerülése).
   const requestId = useRef(0);
@@ -41,17 +50,24 @@ export const useAsyncData = (fetcher, deps = [], { enabled = true, initialData =
     const id = requestId.current + 1;
     requestId.current = id;
 
-    setLoading(true);
+    // Ha már van kész adat, azt a helyén hagyjuk, és csak a `refreshing`-et
+    // jelezzük — így a lista nem tűnik el minden újratöltésnél.
+    if (hasData.current) setRefreshing(true);
+    else setLoading(true);
     setError(null);
     try {
       const result = await fetcherRef.current();
       if (!mounted.current || requestId.current !== id) return;
+      hasData.current = result !== null && result !== undefined;
       setData(result);
     } catch (err) {
       if (!mounted.current || requestId.current !== id) return;
       setError(err.message || 'Nem sikerült betölteni az adatokat.');
     } finally {
-      if (mounted.current && requestId.current === id) setLoading(false);
+      if (mounted.current && requestId.current === id) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, [enabled]);
 
@@ -61,7 +77,7 @@ export const useAsyncData = (fetcher, deps = [], { enabled = true, initialData =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run, ...deps]);
 
-  return { data, loading, error, reload: run, setData };
+  return { data, loading, refreshing, error, reload: run, setData };
 };
 
 /**
