@@ -10,7 +10,6 @@ const PUBLIC_LINKS = [
   { to: '/', label: 'Főoldal' },
   { to: '/egyesulet', label: 'Egyesületünk' },
   { to: '/munkacsoportok', label: 'Munkacsoportok' },
-  { to: '/viragos-koszeg', label: '🌸 Kőszeg Virágzik' },
   { to: '/hirek', label: 'Hírek' },
   { to: '/tagsag', label: 'Tagság' }
 ];
