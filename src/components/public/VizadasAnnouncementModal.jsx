@@ -60,10 +60,10 @@ export const VizadasAnnouncementModal = () => {
           <div className="absolute bottom-4 left-4 right-4 space-y-1 text-white">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-xs font-extrabold shadow-md">
               <Droplets className="h-3.5 w-3.5 text-emerald-200" />
-              POLGÁRMESTERI &amp; FŐKERTÉSZI FELHÍVÁS 🌳
+              POLGÁRMESTERI &amp; FŐKERTÉSZI FELHÍVÁS
             </div>
             <h3 className="font-display text-xl sm:text-2xl font-extrabold leading-tight text-white drop-shadow-md">
-              ÖNKENÉTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN!
+              ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN!
             </h3>
           </div>
         </div>
@@ -87,7 +87,7 @@ export const VizadasAnnouncementModal = () => {
               className="w-full text-base font-extrabold rounded-2xl py-4 px-6 flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl transition-all transform active:scale-95 border-b-4 border-emerald-800"
             >
               <Droplets className="h-6 w-6 text-emerald-200" />
-              <span>💧 Csatlakozom a Vízadáshoz! (Kattints ide)</span>
+              <span>Csatlakozom a Vízadáshoz! (Kattints ide)</span>
             </button>
 
             <button

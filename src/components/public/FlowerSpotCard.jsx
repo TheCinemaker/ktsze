@@ -19,7 +19,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
   const getWateringBadge = () => {
     if (!spot.last_watered_at) {
       return {
-        text: '🚨 Öntözni kellene! (Kétszer egy nap)',
+        text: 'Öntözni kellene! (Kétszer egy nap)',
         color: 'bg-rose-600 animate-pulse',
         detail: 'Sürgős vízadásra vár!'
       };
@@ -34,27 +34,27 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
     if (isToday) {
       if (spot.water_count_today >= 2 || diffHours < 6) {
         return {
-          text: `🟢 Ma már megöntözve (${timeStr})`,
+          text: `Ma már megöntözve (${timeStr})`,
           color: 'bg-emerald-600',
           detail: 'Üde & Friss növény'
         };
       } else {
         return {
-          text: `🟡 Ma 1x megöntözve (még 1x kellene)`,
+          text: `Ma 1x megöntözve (még 1x kellene)`,
           color: 'bg-amber-600',
           detail: 'Este még egy vízadást igényel'
         };
       }
     } else if (diffHours < 36) {
       return {
-        text: `🟡 Tegnap megöntözve (${timeStr})`,
+        text: `Tegnap megöntözve (${timeStr})`,
         color: 'bg-amber-600',
         detail: 'Ma még nem kapott vizet'
       };
     } else {
       const days = Math.floor(diffHours / 24);
       return {
-        text: `🚨 ${days} napja szomjas! Öntözni kellene!`,
+        text: `${days} napja szomjas! Öntözni kellene!`,
         color: 'bg-rose-600 animate-pulse',
         detail: 'Sürgős vízadásra vár!'
       };
@@ -176,7 +176,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
           {successMsg ? (
             <div className="p-4 rounded-2xl bg-emerald-100 border-2 border-emerald-400 text-emerald-950 text-sm font-extrabold text-center flex items-center justify-center gap-2 animate-bounce shadow-md">
               <CheckCircle2 className="h-6 w-6 text-emerald-700 shrink-0" />
-              <span>🌸 Köszönjük! Az öntözést elmentettük!</span>
+              <span>Köszönjük! Az öntözést elmentettük!</span>
             </div>
           ) : (
             <>
@@ -188,7 +188,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
                 className="w-full text-base sm:text-sm font-extrabold rounded-2xl py-4 sm:py-3 px-4 flex items-center justify-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg transition-all transform active:scale-95 border-b-4 border-emerald-800"
               >
                 <Droplets className="h-6 w-6 text-emerald-200 shrink-0" />
-                <span>🪣 Meglocsoltam! (1 kattintás)</span>
+                <span>Meglocsoltam! (1 kattintás)</span>
               </button>
 
               <button
@@ -227,10 +227,10 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
                   onChange={(e) => setActionType(e.target.value)}
                   className="input text-xs"
                 >
-                  <option value="locsolas">💧 Locsolás &amp; Bőséges Öntözés</option>
-                  <option value="gyomlalas">🌱 Gyomlálás &amp; Talajlazítás</option>
-                  <option value="ultetes">🌸 Újraültetés / Növénypótlás</option>
-                  <option value="tisztitas">🧹 Kaspó &amp; Környezet Takarítása</option>
+                  <option value="locsolas">Locsolás &amp; Bőséges Öntözés</option>
+                  <option value="gyomlalas">Gyomlálás &amp; Talajlazítás</option>
+                  <option value="ultetes">Újraültetés / Növénypótlás</option>
+                  <option value="tisztitas">Kaspó &amp; Környezet Takarítása</option>
                 </select>
               </div>
 
@@ -274,7 +274,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
               <div className="space-y-1">
                 <label className="font-bold text-ink-800 flex items-center gap-1 text-xs">
                   <Camera className="h-4 w-4 text-emerald-700" />
-                  <span>📸 Készíts szelfit / fotót az öntözésről!</span>
+                  <span>Készíts szelfit / fotót az öntözésről!</span>
                 </label>
                 <input
                   type="file"

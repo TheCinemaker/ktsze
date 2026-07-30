@@ -157,7 +157,7 @@ export const FlowerMapPage = () => {
           className="flex-1 font-extrabold text-xs py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-1.5 shadow-xs"
         >
           <Droplets className="h-4 w-4" />
-          ⚡ Ugrás a Fákhoz (Locsolás)
+          Ugrás a fákhoz (locsolás)
         </button>
 
         <button
@@ -176,14 +176,14 @@ export const FlowerMapPage = () => {
         <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-xs text-emerald-950 font-bold shadow-xs">
           <div className="flex items-center gap-2">
             <Droplets className="h-4 w-4 text-emerald-700 shrink-0" />
-            <span>🌳 ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN</span>
+            <span>ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN</span>
           </div>
           <button
             type="button"
             onClick={toggleBanner}
             className="text-xs text-emerald-800 hover:text-emerald-950 underline font-extrabold"
           >
-            ℹ️ Tájékoztató megnyitása
+            Tájékoztató megnyitása
           </button>
         </div>
       ) : (
@@ -191,7 +191,7 @@ export const FlowerMapPage = () => {
           <div className="flex justify-between items-start">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-700 text-white font-extrabold text-xs shadow-xs">
               <Droplets className="h-4 w-4 text-emerald-200" />
-              ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN 🌳🚿
+              ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN
             </div>
 
             <button
@@ -199,7 +199,7 @@ export const FlowerMapPage = () => {
               onClick={toggleBanner}
               className="text-xs font-bold text-ink-500 hover:text-ink-900 bg-sand-200/80 px-2.5 py-1 rounded-lg"
             >
-              ▲ Tájékoztató elrejtése
+              Tájékoztató elrejtése
             </button>
           </div>
 
@@ -222,7 +222,7 @@ export const FlowerMapPage = () => {
                   className="btn-primary text-xs font-extrabold rounded-xl py-3 px-5 flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
                 >
                   <Plus className="h-4 w-4" />
-                  🌳 Új Fa Regisztrálása (Utca &amp; Házszám)
+                  Új Fa Regisztrálása (Utca &amp; Házszám)
                 </button>
 
                 <a
@@ -231,7 +231,7 @@ export const FlowerMapPage = () => {
                   rel="noopener noreferrer"
                   className="btn-secondary text-xs font-bold rounded-xl py-3 px-4 flex items-center gap-2 border-blue-300 text-blue-900 bg-blue-50 hover:bg-blue-100"
                 >
-                  📢 Megosztom Facebookon (#VízadásKőszeg)
+                  Megosztom Facebookon (#VízadásKőszeg)
                 </a>
               </div>
             </div>
@@ -250,14 +250,14 @@ export const FlowerMapPage = () => {
       {/* 0.5. Főkertészi Öntözési Kisokos — Mikor és hogyan öntözzünk? */}
       <section className="p-5 sm:p-6 rounded-2xl bg-amber-50/80 border border-amber-200 text-ink-900 space-y-3 shadow-xs">
         <div className="flex items-center gap-2 text-amber-900 font-extrabold text-sm sm:text-base">
-          <span className="text-xl">☀️</span>
+          <Clock className="h-5 w-5 text-amber-700" />
           <h3>Főkertészi Öntözési Kisokos — mikor a legjobb öntözni?</h3>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3 text-xs sm:text-sm">
           <div className="p-3.5 rounded-xl bg-white border border-amber-200 space-y-1 shadow-2xs">
             <div className="font-extrabold text-emerald-800 flex items-center gap-1.5">
-              <span>🌅 Kora reggel (6:00 – 9:00)</span>
+              <span>Kora reggel (6:00 – 9:00)</span>
             </div>
             <p className="text-ink-700 text-xs leading-relaxed">
               A LEGJOBB időpont! A talaj még hűvös, a víz mélyre szivárog a gyökerekhez, és felkészíti a fát a napközbeni hőségre.
@@ -266,7 +266,7 @@ export const FlowerMapPage = () => {
 
           <div className="p-3.5 rounded-xl bg-white border border-amber-200 space-y-1 shadow-2xs">
             <div className="font-extrabold text-indigo-900 flex items-center gap-1.5">
-              <span>🌇 Késő este (18:00 – 21:00)</span>
+              <span>Késő este (18:00 – 21:00)</span>
             </div>
             <p className="text-ink-700 text-xs leading-relaxed">
               Kiváló választás! Éjszaka nincs párolgás, így a növény bőségesen fel tudja venni az öntözővizet a földből.
@@ -275,7 +275,7 @@ export const FlowerMapPage = () => {
 
           <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 space-y-1 shadow-2xs">
             <div className="font-extrabold text-rose-900 flex items-center gap-1.5">
-              <span>🚫 Tűző napon (11:00 – 16:00) NE!</span>
+              <span>Tűző napon (11:00 – 16:00) NE!</span>
             </div>
             <p className="text-rose-950 text-xs leading-relaxed">
               Déli tűző napon a víz 80%-a elpárolog, a vízcseppek pedig megégethetik a leveleket. Ilyenkor érdemes megvárni az estét!
@@ -306,7 +306,7 @@ export const FlowerMapPage = () => {
               className="btn-secondary btn-sm text-xs font-bold flex items-center gap-1.5 border-emerald-300 text-emerald-900 bg-emerald-50 hover:bg-emerald-100"
             >
               <MapPin className="h-4 w-4 text-emerald-700" />
-              {gpsLoading ? 'GPS Keresés…' : '📍 GPS Helyzetem'}
+              {gpsLoading ? 'GPS Keresés…' : 'GPS Helyzetem'}
             </button>
 
             <button
@@ -321,7 +321,7 @@ export const FlowerMapPage = () => {
         </div>
       </div>
 
-      {/* 2. 11. Rögzített Növények (Rögzített növények) */}
+      {/* 2. Rögzített Növények */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-2xl text-ink-900 font-extrabold">Rögzített növények</h2>
@@ -346,7 +346,7 @@ export const FlowerMapPage = () => {
         )}
       </section>
 
-      {/* 3. 10. Legfrissebb Gondozási & Öntözési Bejegyzések (Sűrített Kisképes Lista) */}
+      {/* 3. Legfrissebb Gondozások */}
       <section className="pt-6 border-t border-sand-300 space-y-4">
         <div className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-emerald-700" />
@@ -378,7 +378,7 @@ export const FlowerMapPage = () => {
                   </span>
                 </div>
                 <div className="text-[11px] font-semibold text-emerald-800 truncate">
-                  💧 Locsolás
+                  Locsolás
                 </div>
               </div>
             </div>
@@ -391,7 +391,7 @@ export const FlowerMapPage = () => {
         <Modal
           open={showAddSpotModal}
           onClose={() => setShowAddSpotModal(false)}
-          title="🌳 Új Fa Regisztrálása (Utca & Házszám)"
+          title="Új Fa Regisztrálása (Utca & Házszám)"
           description="Rögzítsd a fát a pontos utca és házszám megadásával, vagy koppints a GPS gombra!"
         >
           <form onSubmit={handleCreateSpot} className="space-y-4 text-xs">
@@ -411,9 +411,10 @@ export const FlowerMapPage = () => {
                       );
                     }
                   }}
-                  className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 hover:bg-emerald-100"
+                  className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 hover:bg-emerald-100 flex items-center gap-1"
                 >
-                  📍 4. Helyzetem rögzítése GPS-szel
+                  <MapPin className="h-3 w-3" />
+                  Helyzetem rögzítése GPS-szel
                 </button>
               </div>
               <input
@@ -451,11 +452,10 @@ export const FlowerMapPage = () => {
               />
             </div>
 
-            {/* 6. Kamera kép készítés */}
             <div className="space-y-1">
               <label className="font-bold text-ink-800 flex items-center gap-1.5 text-xs">
                 <Camera className="h-4 w-4 text-emerald-700" />
-                <span>📸 6. Készíts képet a fáról! (Mobil kamera)</span>
+                <span>Készíts képet a fáról! (Mobil kamera)</span>
               </label>
               <input
                 type="file"
@@ -493,7 +493,7 @@ export const FlowerMapPage = () => {
                 disabled={submittingSpot}
                 className="btn-primary text-xs font-extrabold py-3 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
               >
-                {submittingSpot ? 'Mentés…' : '🌳 Fa Rögzítése'}
+                {submittingSpot ? 'Mentés…' : 'Fa Rögzítése'}
               </button>
             </div>
           </form>
