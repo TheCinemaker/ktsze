@@ -109,12 +109,12 @@ export const BOARD_MEMBERS_BIO = {
   'drescher': {
     bio: 'Kőszeg számomra nem csupán egy város, hanem közösség, otthon és közös felelősség. Hiszek abban, hogy Kőszeg különleges történelmi, természeti és kulturális értékei olyan lehetőséget jelentenek, amelyre együtt, helyi összefogással lehet sikeres és fenntartható turizmust építeni.\n\nVállalkozóként és szálláshely-üzemeltetőként naponta találkozom a városba érkező vendégekkel, az igényeikkel, benyomásaikkal és visszajelzéseikkel. Pénzügyi tanácsadói munkám során pedig sokéves tapasztalatot szereztem vállalkozások támogatásában, ügyintézésben, szervezésben és érdekképviseletben.\n\nA Kőszegi Turisztikai Szövetség Egyesület elnökeként az a célom, hogy összefogjuk a turizmusban, vendéglátásban, szálláshely-szolgáltatásban, kultúrában, kereskedelemben és rendezvényszervezésben dolgozó helyi szereplőket. Olyan együttműködő közösséget szeretnénk építeni, amely nemcsak beszél a lehetőségekről, hanem közösen dolgozik is azok megvalósításán.\n\nFontosnak tartom a város tisztaságát, virágosítását, a programkínálat bővítését, az aktív és kerékpáros turizmus fejlesztését, valamint új közösségi és gasztronómiai rendezvények létrehozását. Célunk, hogy Kőszeg ne csupán egy rövid kirándulás helyszíne legyen, hanem olyan úti cél, ahová a vendégek szívesen visszatérnek, és amelyet jó szívvel ajánlanak másoknak is.\n\nMeggyőződésem, hogy a város jövőjét nem egyetlen személy vagy szervezet alakítja. A Kőszegi Turisztikai Szövetség nyitott minden építő ötletre, kezdeményezésre és együttműködésre.',
     motto: '„Kőszeg számomra nem csupán egy város, hanem közösség, otthon és közös felelősség. Ha nincs közös szervezetünk, akkor nincs közös hangunk sem.”',
-    photoUrl: null
+    photoUrl: '/drescher_gabor.jpg'
   },
   'elnok': {
     bio: 'Kőszeg számomra nem csupán egy város, hanem közösség, otthon és közös felelősség. Hiszek abban, hogy Kőszeg különleges történelmi, természeti és kulturális értékei olyan lehetőséget jelentenek, amelyre együtt, helyi összefogással lehet sikeres és fenntartható turizmust építeni.\n\nVállalkozóként és szálláshely-üzemeltetőként naponta találkozom a városba érkező vendégekkel, az igényeikkel, benyomásaikkal és visszajelzéseikkel. Pénzügyi tanácsadói munkám során pedig sokéves tapasztalatot szereztem vállalkozások támogatásában, ügyintézésben, szervezésben és érdekképviseletben.\n\nA Kőszegi Turisztikai Szövetség Egyesület elnökeként az a célom, hogy összefogjuk a turizmusban, vendéglátásban, szálláshely-szolgáltatásban, kultúrában, kereskedelemben és rendezvényszervezésben dolgozó helyi szereplőket. Olyan együttműködő közösséget szeretnénk építeni, amely nemcsak beszél a lehetőségekről, hanem közösen dolgozik is azok megvalósításán.',
     motto: '„Ha nincs közös szervezetünk, akkor nincs közös hangunk sem.”',
-    photoUrl: null
+    photoUrl: '/drescher_gabor.jpg'
   }
 };
 
