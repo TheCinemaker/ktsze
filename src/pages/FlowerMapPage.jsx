@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Droplets, Sparkles, Trophy, Search, MapPin, Calendar, Heart, ShieldCheck, Plus, Clock, Camera } from 'lucide-react';
-import { listFlowerSpots, listFlowerLogs, getFlowerStats, createFlowerSpot } from '../lib/db';
+import { Droplets, Search, MapPin, Plus, Clock, Camera } from 'lucide-react';
+import { listFlowerSpots, listFlowerLogs, createFlowerSpot } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { useAsyncData } from '../lib/useAsyncData';
 import { PageHeader, LoadingBlock, ErrorBlock, Modal } from '../components/ui';
@@ -13,7 +13,6 @@ export const FlowerMapPage = () => {
   const isAdmin = profile?.roles?.includes('admin');
 
   const { data: spots, loading: spotsLoading, error, reload } = useAsyncData(listFlowerSpots);
-  const { data: stats, reload: reloadStats } = useAsyncData(getFlowerStats);
   const { data: logs, reload: reloadLogs } = useAsyncData(() => listFlowerLogs());
 
   // FULL REALTIME ELŐFIZETÉS: Ha bárki meglocsol egy virágot, az az összes látogató telefonján azonnal élőben frissül!
@@ -22,18 +21,16 @@ export const FlowerMapPage = () => {
       .channel('flower_realtime_updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'flower_spots' }, () => {
         reload();
-        reloadStats();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'flower_logs' }, () => {
         reloadLogs();
-        reloadStats();
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [reload, reloadStats, reloadLogs]);
+  }, [reload, reloadLogs]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // all, thirsty, street
@@ -53,6 +50,8 @@ export const FlowerMapPage = () => {
   const [newAdopter, setNewAdopter] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPhoto, setNewPhoto] = useState('');
+  const [newLat, setNewLat] = useState(null);
+  const [newLng, setNewLng] = useState(null);
   const [submittingSpot, setSubmittingSpot] = useState(false);
 
   const toggleBanner = () => {
@@ -110,7 +109,6 @@ export const FlowerMapPage = () => {
 
   const handleRefreshData = () => {
     reload();
-    reloadStats();
     reloadLogs();
   };
 
@@ -120,10 +118,12 @@ export const FlowerMapPage = () => {
     try {
       await createFlowerSpot({
         title: newTitle,
-        location_name: newLocation,
+        location_name: newTitle,
         adopter_name: newAdopter,
         description: newDesc,
-        photo_url: newPhoto
+        photo_url: newPhoto,
+        latitude: newLat,
+        longitude: newLng
       });
       setShowAddSpotModal(false);
       setNewTitle('');
@@ -131,6 +131,8 @@ export const FlowerMapPage = () => {
       setNewAdopter('');
       setNewDesc('');
       setNewPhoto('');
+      setNewLat(null);
+      setNewLng(null);
       handleRefreshData();
     } catch (err) {
       alert('Hiba történt a fa hozzáadásakor: ' + err.message);
@@ -395,35 +397,43 @@ export const FlowerMapPage = () => {
           description="Rögzítsd a fát a pontos utca és házszám megadásával, vagy koppints a GPS gombra!"
         >
           <form onSubmit={handleCreateSpot} className="space-y-4 text-xs">
+            {/* GPS koordináta (opcionális) */}
             <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <label className="font-bold text-ink-800">Utca &amp; Házszám / Pontos Helyszín *</label>
+              <label className="font-bold text-ink-800">GPS koordináta (Opcionális — térképhez)</label>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     if (navigator.geolocation) {
                       navigator.geolocation.getCurrentPosition(
                         (pos) => {
-                          setNewTitle(`Kőszeg (GPS: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`);
-                          setNewLocation(`GPS: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
+                          setNewLat(pos.coords.latitude);
+                          setNewLng(pos.coords.longitude);
                         },
                         () => alert('GPS pozíció nem érhető el.')
                       );
                     }
                   }}
-                  className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 hover:bg-emerald-100 flex items-center gap-1"
+                  className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 hover:bg-emerald-100 flex items-center gap-1.5"
                 >
-                  <MapPin className="h-3 w-3" />
+                  <MapPin className="h-3.5 w-3.5" />
                   Helyzetem rögzítése GPS-szel
                 </button>
+                {newLat && newLng && (
+                  <span className="text-[11px] text-emerald-800 font-semibold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                    {newLat.toFixed(5)}, {newLng.toFixed(5)}
+                  </span>
+                )}
               </div>
+            </div>
+
+            {/* Utca & Házszám (kötelező) */}
+            <div className="space-y-1">
+              <label className="font-bold text-ink-800">Utca &amp; Házszám / Pontos Cím *</label>
               <input
                 type="text"
                 value={newTitle}
-                onChange={(e) => {
-                  setNewTitle(e.target.value);
-                  setNewLocation(e.target.value);
-                }}
+                onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Pl. Jurisics tér 8. (Városháza előtt) vagy Kecskeméti u. 14."
                 className="input text-xs font-bold"
                 required

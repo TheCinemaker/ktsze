@@ -1152,25 +1152,27 @@ export const listFlowerSpots = async () => {
       .from('flower_spots')
       .select('*')
       .order('created_at', { ascending: false });
-    if (!error && data && data.length > 0) return data;
+    if (!error && data) return data; // Üres tömb is VALID! Nem fallback-elünk localStorage-ra
   } catch (err) {
     console.warn('[db] Supabase flower_spots nem érhető el, tartalék használata:', err);
   }
   return getLocalFlowerSpots();
 };
 
-/** Egy virágos pont létrehozása (Admin) */
+/** Egy virágos pont létrehozása */
 export const createFlowerSpot = async (input) => {
   const newSpot = {
     title: input.title?.trim(),
-    location_name: input.location_name?.trim() || 'Kőszeg Belváros',
+    location_name: input.location_name?.trim() || input.title?.trim() || '',
     description: input.description?.trim() || '',
     photo_url: input.photo_url || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
-    adopter_name: input.adopter_name?.trim() || 'Nincs örökbefogadó',
+    adopter_name: input.adopter_name?.trim() || '',
     adopter_user_id: input.adopter_user_id || null,
     status: 'active',
     last_watered_at: new Date().toISOString(),
     water_count_this_month: 0,
+    latitude: input.latitude || null,
+    longitude: input.longitude || null,
     created_at: new Date().toISOString()
   };
 
@@ -1217,13 +1219,17 @@ export const deleteFlowerSpot = async (id) => {
   return true;
 };
 
-/** Öntözési naplóbejegyzések lekérése */
+/** Öntözési naplóbejegyzések lekérése — max 30 db, csökkenő sorrendben */
 export const listFlowerLogs = async (spotId = null) => {
   try {
-    let query = supabase.from('flower_logs').select('*').order('created_at', { ascending: false });
+    let query = supabase
+      .from('flower_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(30);
     if (spotId) query = query.eq('spot_id', spotId);
     const { data, error } = await query;
-    if (!error && data && data.length > 0) return data;
+    if (!error && data) return data; // Üres tömb is VALID! Nem fallback-elünk localStorage-ra
   } catch (err) {
     console.warn('[db] Supabase flower_logs nem érhető el:', err);
   }
