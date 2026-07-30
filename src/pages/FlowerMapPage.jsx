@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Droplets, Search, MapPin, Plus, Clock, Camera } from 'lucide-react';
+import { Droplets, Search, MapPin, Plus, Clock, Camera, Map, List } from 'lucide-react';
 import { listFlowerSpots, listFlowerLogs, createFlowerSpot, uploadFlowerPhoto } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { useAsyncData } from '../lib/useAsyncData';
 import { LoadingBlock, ErrorBlock, Modal } from '../components/ui';
 import { SEO } from '../components/ui/SEO';
 import { FlowerSpotCard } from '../components/public/FlowerSpotCard';
+import { FlowerSpotMap } from '../components/public/FlowerSpotMap';
 
 export const FlowerMapPage = () => {
   const {
@@ -60,6 +61,7 @@ export const FlowerMapPage = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // all, thirsty, street
+  const [viewMode, setViewMode] = useState('map'); // map, list
   const [showAddSpotModal, setShowAddSpotModal] = useState(false);
   const [bannerCollapsed, setBannerCollapsed] = useState(() => {
     try {
@@ -376,14 +378,45 @@ export const FlowerMapPage = () => {
         </div>
       </div>
 
-      {/* 2. Rögzített Növények */}
+      {/* 2. Rögzített Növények (Térkép / Lista Nézetváltóval) */}
       <section className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-2xl text-ink-900 font-extrabold">Rögzített növények</h2>
-          <span className="text-xs text-ink-500 font-semibold">
-            {filteredSpots.length} regisztrált növény
-            {spotsRefreshing && <span className="ml-2 text-emerald-700">frissítés…</span>}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-display text-2xl text-ink-900 font-extrabold">Rögzített növények</h2>
+            <span className="text-xs text-ink-500 font-semibold">
+              {filteredSpots.length} regisztrált növény
+              {spotsRefreshing && <span className="ml-2 text-emerald-700">frissítés…</span>}
+            </span>
+          </div>
+
+          {/* Nézetváltó Gombok: Térkép vs Lista */}
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-sand-200 border border-sand-300">
+            <button
+              type="button"
+              onClick={() => setViewMode('map')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
+                viewMode === 'map'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-ink-700 hover:text-ink-900 hover:bg-sand-100'
+              }`}
+            >
+              <Map className="h-4 w-4" />
+              Térkép nézet
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
+                viewMode === 'list'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-ink-700 hover:text-ink-900 hover:bg-sand-100'
+              }`}
+            >
+              <List className="h-4 w-4" />
+              Lista nézet
+            </button>
+          </div>
         </div>
 
         {spotsLoading && <LoadingBlock />}
@@ -395,9 +428,17 @@ export const FlowerMapPage = () => {
           </div>
         )}
 
-        {/* A kész lista egy háttérben elhasalt frissítés miatt sem tűnik el:
-            a hibát a fenti sáv mutatja, a fák maradnak a helyükön. */}
-        {!spotsLoading && filteredSpots.length > 0 && (
+        {/* INTERAKTÍV LEAFLET TÉRKÉP NÉZET */}
+        {!spotsLoading && viewMode === 'map' && (
+          <FlowerSpotMap
+            spots={filteredSpots}
+            userCoords={userCoords}
+            onLogAdded={handleRefreshData}
+          />
+        )}
+
+        {/* LISTA / KÁRTYA NÉZET */}
+        {!spotsLoading && (viewMode === 'list' || filteredSpots.length === 0) && (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredSpots.map((spot) => (
               <FlowerSpotCard key={spot.id} spot={spot} onLogAdded={handleRefreshData} />
