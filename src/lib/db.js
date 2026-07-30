@@ -1184,6 +1184,12 @@ export const deleteFlowerSpot = async (id) => {
   return true;
 };
 
+/** Öntözési bejegyzés törlése (moderációhoz). */
+export const deleteFlowerLog = async (id) => {
+  unwrap(await supabase.from('flower_logs').delete().eq('id', id).select('id'));
+  return true;
+};
+
 /** Öntözési naplóbejegyzések, legfrissebb elöl. */
 export const listFlowerLogs = async (spotId = null, limit = 20) => {
   let query = supabase

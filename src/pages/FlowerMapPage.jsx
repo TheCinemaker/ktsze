@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Droplets, Search, MapPin, Plus, Clock, Camera, Map, List } from 'lucide-react';
-import { listFlowerSpots, listFlowerLogs, createFlowerSpot, uploadFlowerPhoto } from '../lib/db';
+import { Droplets, Search, MapPin, Plus, Clock, Camera, Map, List, Trash2 } from 'lucide-react';
+import { listFlowerSpots, listFlowerLogs, createFlowerSpot, uploadFlowerPhoto, deleteFlowerLog } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { useAsyncData } from '../lib/useAsyncData';
 import { LoadingBlock, ErrorBlock, Modal } from '../components/ui';
 import { SEO } from '../components/ui/SEO';
 import { FlowerSpotCard } from '../components/public/FlowerSpotCard';
 import { FlowerSpotMap } from '../components/public/FlowerSpotMap';
+import { useAuth } from '../context/AuthContext';
 
 export const FlowerMapPage = () => {
+  const { profile } = useAuth();
+  const isAdmin = profile?.roles?.includes('admin');
   const {
     data: spots,
     loading: spotsLoading,
@@ -474,9 +477,30 @@ export const FlowerMapPage = () => {
                   <span className="font-bold text-ink-900 truncate text-[11px]">
                     {log.user_name && log.user_name !== 'Kőszegi Önkéntes' ? log.user_name : 'Önkéntes Vízadó'}
                   </span>
-                  <span className="text-[10px] text-ink-400 font-semibold shrink-0">
-                    {new Date(log.created_at).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] text-ink-400 font-semibold">
+                      {new Date(log.created_at).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (window.confirm('Admin: Törlöd ezt a bejegyzést?')) {
+                            try {
+                              await deleteFlowerLog(log.id);
+                              handleRefreshData();
+                            } catch (err) {
+                              alert('Törlési hiba: ' + err.message);
+                            }
+                          }
+                        }}
+                        className="text-rose-600 hover:text-rose-800 p-0.5"
+                        title="Bejegyzés törlése (Admin)"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="text-[11px] font-semibold text-emerald-800 truncate">
                   Locsolás

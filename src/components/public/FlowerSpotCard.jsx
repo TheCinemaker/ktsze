@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Droplets, MapPin, User, CheckCircle2, Camera, Plus } from 'lucide-react';
+import { Droplets, MapPin, User, CheckCircle2, Camera, Plus, Trash2 } from 'lucide-react';
 import { Modal } from '../ui';
-import { addFlowerLog, uploadFlowerPhoto } from '../../lib/db';
+import { addFlowerLog, uploadFlowerPhoto, deleteFlowerSpot } from '../../lib/db';
 import { useAuth } from '../../context/AuthContext';
 
 export const FlowerSpotCard = ({ spot, onLogAdded }) => {
   const { profile } = useAuth();
+  const isAdmin = profile?.roles?.includes('admin');
   const [showLogModal, setShowLogModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [actionType, setActionType] = useState('locsolas');
@@ -176,12 +177,36 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
                 <span className="truncate">{spot.location_name || spot.title}</span>
               </div>
 
-              {/* 13. Öntözési állapot jelvény */}
-              <div
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold shadow-lg text-white ${badge.color}`}
-              >
-                <Droplets className="h-4 w-4 shrink-0" />
-                <span>{badge.text}</span>
+              <div className="flex items-center gap-2 pointer-events-auto">
+                {/* Admin törlés gomb */}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (window.confirm('Admin: Biztosan törlöd ezt a rögzített fát?')) {
+                        try {
+                          await deleteFlowerSpot(spot.id);
+                          if (onLogAdded) onLogAdded();
+                        } catch (err) {
+                          alert('Törlési hiba: ' + err.message);
+                        }
+                      }
+                    }}
+                    className="p-1.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-md transition-transform active:scale-95"
+                    title="Fa törlése (Admin)"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+
+                {/* 13. Öntözési állapot jelvény */}
+                <div
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold shadow-lg text-white ${badge.color}`}
+                >
+                  <Droplets className="h-4 w-4 shrink-0" />
+                  <span>{badge.text}</span>
+                </div>
               </div>
             </div>
           </div>
