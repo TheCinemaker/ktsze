@@ -98,50 +98,108 @@ export const FlowerMapPage = () => {
         description="„Kőszeg virágzik - a város tisztul, szépül, él és újra vendéget vár.” Fogadj örökbe egy főtéri kaspót, vezesd az öntözési naplót és építsük együtt Kőszeg arculatát!"
       />
 
+      {/* 0. Hivatalos VÍZADÁS Felhívás Banner */}
+      <section className="rounded-3xl border border-emerald-300 bg-gradient-to-br from-emerald-50 via-white to-sand-100 p-6 sm:p-8 shadow-md overflow-hidden relative space-y-6">
+        <div className="grid gap-6 lg:grid-cols-12 items-center">
+          <div className="lg:col-span-8 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-700 text-white font-extrabold text-xs shadow-xs">
+              <Droplets className="h-4 w-4 text-emerald-200" />
+              ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN 🌳🚿
+            </div>
+
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-ink-900 leading-tight">
+              Segítsünk Kőszeg szomjazó fáinak a kánikulában!
+            </h2>
+
+            <div className="text-xs sm:text-sm text-ink-800 space-y-2 leading-relaxed bg-white/80 p-4 rounded-2xl border border-emerald-200 shadow-xs">
+              <p>
+                <strong>Pintér Gábor főkertész és Básthy Béla polgármester</strong> felhívása minden segítő szándékú kőszegihez: a házatok előtt, vagy közelében található fákat segítsétek öntözéssel a hőség idején!
+              </p>
+              <p>
+                💡 <strong>Szakkifejezett jótanács:</strong> Leginkább a fiatal, 15 cm alatti törzsátmérőjű fák igénylik a locsolást. A törzs körül kialakított 1–1,5 méter átmérőjű tányér segít a vizet helyben tartani. Alkalmanként <strong>30–50 liter vizet</strong> érdemes a tányérba leszivárogtatni!
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowAddSpotModal(true)}
+                className="btn-primary text-xs font-extrabold rounded-xl py-3 px-5 flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
+              >
+                <Plus className="h-4 w-4" />
+                🌳 Új Fa Regisztrálása &amp; Öntözése (Utca &amp; Házszám)
+              </button>
+
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : 'https://ktsze.hu/viragos-koszeg')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary text-xs font-bold rounded-xl py-3 px-4 flex items-center gap-2 border-blue-300 text-blue-900 bg-blue-50 hover:bg-blue-100"
+              >
+                📢 Megosztom Facebookon (#VízadásKőszeg)
+              </a>
+            </div>
+          </div>
+
+          <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center items-center">
+            <img
+              src="/vizadas_photo.jpg"
+              alt="Önkéntes faöntözés Vízadás Kőszeg"
+              className="rounded-2xl object-cover h-48 w-full shadow-md border-2 border-white"
+            />
+            <img
+              src="/vizadas_logo.jpg"
+              alt="Kőszeg Város Címere és Faöntözés"
+              className="rounded-2xl object-cover h-36 w-full shadow-xs border border-sand-200 bg-white"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* 1. Élő Öntözési Statisztikák & Ranglista */}
       <section className="grid gap-6 md:grid-cols-4">
         <div className="card p-6 border border-sand-300 bg-white space-y-2">
           <div className="flex items-center justify-between text-wine-700">
-            <span className="text-xs font-bold uppercase tracking-wider text-ink-500">Gondozott Pontok</span>
-            <Sparkles className="h-5 w-5" />
+            <span className="text-xs font-bold uppercase tracking-wider text-ink-500">Gondozott Fák &amp; Kaspók</span>
+            <Sparkles className="h-5 w-5 text-emerald-600" />
           </div>
           <div className="font-display text-3xl font-bold text-ink-900">{stats?.totalSpots || 0} db</div>
-          <p className="text-xs text-ink-600">Örökbefogadott kaspó &amp; virágláda</p>
+          <p className="text-xs text-ink-600">Nyilvántartott növény &amp; fafa</p>
         </div>
 
         <div className="card p-6 border border-sand-300 bg-white space-y-2">
           <div className="flex items-center justify-between text-positive-600">
-            <span className="text-xs font-bold uppercase tracking-wider text-ink-500">E Havi Öntözések</span>
-            <Droplets className="h-5 w-5" />
+            <span className="text-xs font-bold uppercase tracking-wider text-ink-500">E Havi Vízadások</span>
+            <Droplets className="h-5 w-5 text-blue-600" />
           </div>
           <div className="font-display text-3xl font-bold text-ink-900">{stats?.totalWateringsThisMonth || 0} alkalom</div>
-          <p className="text-xs text-ink-600">Dokumentált gondozás a hónapban</p>
+          <p className="text-xs text-ink-600">Dokumentált vízadás a hónapban</p>
         </div>
 
         <div className="card p-6 border border-sand-300 bg-white space-y-2">
           <div className="flex items-center justify-between text-gold-600">
-            <span className="text-xs font-bold uppercase tracking-wider text-ink-500">Kihelyezett Víz</span>
-            <Droplets className="h-5 w-5" />
+            <span className="text-xs font-bold uppercase tracking-wider text-ink-500">Kijuttatott Öntözővíz</span>
+            <Droplets className="h-5 w-5 text-emerald-600" />
           </div>
           <div className="font-display text-3xl font-bold text-ink-900">{stats?.totalLiters || 0} Liter</div>
-          <p className="text-xs text-ink-600">Összesen kijuttatott öntözővíz</p>
+          <p className="text-xs text-ink-600">Kőszeg szomjazó fáinak megmentésére</p>
         </div>
 
         <div className="card p-6 border border-wine-200 bg-wine-50/50 space-y-2">
           <div className="flex items-center justify-between text-wine-800">
-            <span className="text-xs font-bold uppercase tracking-wider text-wine-900">Legszorgalmasabb Öntöző</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-wine-900">Legszorgalmasabb Vízadó</span>
             <Trophy className="h-5 w-5 text-gold-500" />
           </div>
           <div className="font-display text-lg font-bold text-wine-900 truncate">
-            {stats?.leaderboard?.[0]?.name || 'Kőszegi Vállalkozók'}
+            {stats?.leaderboard?.[0]?.name || 'Kőszegi Polgárok'}
           </div>
           <p className="text-xs text-wine-700 font-medium">
-            {stats?.leaderboard?.[0]?.count ? `${stats.leaderboard[0].count} rögzített öntözés` : 'Példamutató városszépítés'}
+            {stats?.leaderboard?.[0]?.count ? `${stats.leaderboard[0].count} rögzített vízadás` : 'Példamutató városszépítés'}
           </p>
         </div>
       </section>
 
-      {/* Keresés & Admin Új Kaspó Hozzáadása */}
+      {/* Keresés Utca & Házszám Alapján & Új Fa Rögzítése */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-sand-100 border border-sand-300">
         <div className="relative flex-1 min-w-[240px]">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
@@ -149,21 +207,19 @@ export const FlowerMapPage = () => {
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Keresés helyszín, kaspó neve vagy örökbefogadó alapján…"
+            placeholder="Keresés Utca, Házszám vagy Öntöző neve alapján (pl. Jurisics tér 8.)…"
             className="input pl-9 text-xs"
           />
         </div>
 
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={() => setShowAddSpotModal(true)}
-            className="btn-primary btn-sm text-xs font-bold flex items-center gap-1.5 shadow-xs"
-          >
-            <Plus className="h-4 w-4" />
-            Új Kaspó / Virágágyás Rögzítése
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setShowAddSpotModal(true)}
+          className="btn-primary btn-sm text-xs font-extrabold flex items-center gap-1.5 shadow-xs bg-emerald-700 hover:bg-emerald-800 text-white"
+        >
+          <Plus className="h-4 w-4" />
+          + Új Fa / Kaspó Regisztrálása
+        </button>
       </div>
 
       {/* 2. Virágos Pontok Kártyái */}
@@ -236,46 +292,46 @@ export const FlowerMapPage = () => {
         </div>
       </section>
 
-      {/* Admin modal új kaspó felvételéhez */}
+      {/* Modal Új Fa vagy Kaspó felvételéhez Utca & Házszám alapján */}
       {showAddSpotModal && (
         <Modal
           open={showAddSpotModal}
           onClose={() => setShowAddSpotModal(false)}
-          title="Új Virágos Pont / Kaspó Rögzítése"
-          description="Adja meg a kaspó vagy virágláda helyét és örökbefogadóját!"
+          title="🌳 Új Fa / Kaspó Bejelentése (Utca & Házszám)"
+          description="Azonosítsd be a fát vagy kaspót a pontos utca és házszám megadásával, hogy a szomszédok és a kőszegiek is megtalálják és öntözhessék!"
         >
           <form onSubmit={handleCreateSpot} className="space-y-4 text-xs">
             <div className="space-y-1">
-              <label className="font-bold text-ink-800">Kaspó / Virágláda Megnevezése</label>
+              <label className="font-bold text-ink-800">Utca &amp; Házszám / Pontos Helyszín *</label>
               <input
                 type="text"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Pl. Fő tér 4. sz. Virágláda — Cukrászda előtt"
-                className="input text-xs"
+                placeholder="Pl. Jurisics tér 8. (Városháza előtt) vagy Kecskeméti u. 14."
+                className="input text-xs font-bold"
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="font-bold text-ink-800">Helyszín</label>
+                <label className="font-bold text-ink-800">Városrész / Övezet *</label>
                 <input
                   type="text"
                   value={newLocation}
                   onChange={(e) => setNewLocation(e.target.value)}
-                  placeholder="Pl. Fő tér déli oldal"
+                  placeholder="Pl. Belváros / Jurisics tér"
                   className="input text-xs"
                   required
                 />
               </div>
               <div className="space-y-1">
-                <label className="font-bold text-ink-800">Örökbefogadó Neve / Cége</label>
+                <label className="font-bold text-ink-800">Első Vízadó / Örökbefogadó Neve *</label>
                 <input
                   type="text"
                   value={newAdopter}
                   onChange={(e) => setNewAdopter(e.target.value)}
-                  placeholder="Pl. Kőszegi Cukrászda Kft."
+                  placeholder="Pl. Marika néni vagy Kovács family"
                   className="input text-xs"
                   required
                 />
