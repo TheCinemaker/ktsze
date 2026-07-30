@@ -10,6 +10,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
   const [loading, setLoading] = useState(false);
   const [actionType, setActionType] = useState('locsolas');
   const [waterLiters, setWaterLiters] = useState(15);
+  const [userName, setUserName] = useState(profile?.full_name || 'Kőszegi Önkéntes Vízadó');
   const [notes, setNotes] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
   const [successMsg, setSuccessMsg] = useState(false);
@@ -29,7 +30,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
     try {
       await addFlowerLog({
         spot_id: spot.id,
-        user_name: profile?.full_name || user?.email?.split('@')[0] || 'Kőszegi Önkéntes',
+        user_name: userName || 'Kőszegi Önkéntes Vízadó',
         action_type: actionType,
         water_liters: Number(waterLiters),
         notes: notes,
@@ -205,12 +206,14 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-ink-800">Gondozó Neve</label>
+                  <label className="font-bold text-ink-800">Gondozó Neve *</label>
                   <input
                     type="text"
-                    readOnly
-                    value={profile?.full_name || user?.email?.split('@')[0] || 'Kőszegi Önkéntes'}
-                    className="input text-xs bg-sand-100 font-semibold"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    placeholder="Pl. Marika néni"
+                    className="input text-xs font-bold"
+                    required
                   />
                 </div>
               </div>

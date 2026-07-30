@@ -274,7 +274,7 @@ export const FlowerMapPage = () => {
 
                 <div className="inline-block rounded-md bg-sand-100 text-wine-800 px-2 py-0.5 text-[11px] font-bold">
                   {log.action_type === 'locsolas'
-                    ? `💧 Locsolás (${log.water_liters || 15}L vízzel)`
+                    ? '💧 Locsolás & Vízadás'
                     : log.action_type === 'gyomlalas'
                     ? '🌱 Gyomlálás'
                     : '🌸 Virággondozás'}

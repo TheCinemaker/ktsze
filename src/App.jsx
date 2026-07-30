@@ -8,6 +8,7 @@ import { AuthCallback } from './components/auth/AuthCallback';
 import { LoadingBlock } from './components/ui';
 import { ScrollToTopButton } from './components/ui/ScrollToTopButton';
 import { CookieBanner } from './components/ui/CookieBanner';
+import { VizadasAnnouncementModal } from './components/public/VizadasAnnouncementModal';
 
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
@@ -117,6 +118,7 @@ export default function App() {
       <Footer />
       <ScrollToTopButton />
       <CookieBanner />
+      <VizadasAnnouncementModal />
     </div>
   );
 }
