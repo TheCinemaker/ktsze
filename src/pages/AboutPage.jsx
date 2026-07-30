@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Award, Crown, Mail, Phone, Building2, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Users, Award, Crown, Mail, Phone, Building2, CheckCircle2, ArrowRight, ShieldCheck, Newspaper, Target, Quote } from 'lucide-react';
 
-import { ORGANIZATION, formattedAddress, BOARD_MEMBERS_BIO } from '../config/organization';
+import { ORGANIZATION, formattedAddress, BOARD_MEMBERS_BIO, PRESS_RELEASE } from '../config/organization';
 import { listPublicBoardMembers } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
 import { PageHeader, Spinner, DetailRow, FormattedText } from '../components/ui';
@@ -232,7 +232,98 @@ export const AboutPage = () => {
         </div>
       </section>
 
-      {/* 2. Támogató Vállalkozások & Nyilvános Partnereink */}
+      {/* 2. Sajtószoba & Média Összefoglaló */}
+      <section className="pt-8 border-t border-sand-300 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="eyebrow text-wine-700">Média & Hivatalos Tájékoztatás</div>
+            <h2 className="mt-1 font-display text-2xl text-ink-900 flex items-center gap-2">
+              <Newspaper className="h-6 w-6 text-wine-600" />
+              Sajtóközlemény & Célkitűzések
+            </h2>
+            <p className="mt-1 text-sm text-ink-600 max-w-2xl">
+              Tartalmi összefoglaló a média részére a Kőszegi Turisztikai Szövetség Egyesület megalakulásáról és szakmai programjáról.
+            </p>
+          </div>
+
+          <span className="inline-block rounded-xl bg-wine-50 border border-wine-200 px-3.5 py-1.5 text-xs font-bold text-wine-800">
+            Kőszeg, {PRESS_RELEASE.date}
+          </span>
+        </div>
+
+        {/* Sajtóközlemény Kártya */}
+        <div className="card p-6 sm:p-8 bg-white border border-sand-300 space-y-6 shadow-sm">
+          <div className="space-y-3">
+            <h3 className="font-display text-2xl font-bold text-wine-900">{PRESS_RELEASE.title}</h3>
+            <p className="text-sm text-ink-700 leading-relaxed font-medium bg-sand-50 p-4 rounded-xl border border-sand-200">
+              {PRESS_RELEASE.lead}
+            </p>
+          </div>
+
+          {/* Elnöki Idézet */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-wine-900 via-wine-800 to-wine-900 text-white space-y-2 shadow-md">
+            <div className="flex items-center gap-2 text-gold-300 font-bold text-xs">
+              <Quote className="h-4 w-4" />
+              Alapgondolat
+            </div>
+            <blockquote className="font-display text-base italic font-semibold">
+              „{PRESS_RELEASE.quote.text}”
+            </blockquote>
+            <div className="text-right text-xs font-bold text-gold-300">— {PRESS_RELEASE.quote.author}</div>
+          </div>
+
+          {/* Célok 2 oszlopos rácsa */}
+          <div className="space-y-3 pt-2">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-wine-800 flex items-center gap-2">
+              <Target className="h-4 w-4 text-wine-600" />
+              Az egyesület 10 kiemelt célja
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              {PRESS_RELEASE.goals.map((goal, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-xs text-ink-800 p-2.5 rounded-lg bg-sand-50/70 border border-sand-200 font-medium">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>{goal}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Szakmai Irányok / Tanácsadó Partner */}
+          <div className="rounded-xl border border-wine-200 bg-wine-50/40 p-5 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-wine-700">Szakmai Tanácsadás & Iránymutatás</span>
+                <h4 className="font-display text-lg font-bold text-ink-900">{PRESS_RELEASE.expertAdvice.name}</h4>
+                <p className="text-xs font-semibold text-wine-800">{PRESS_RELEASE.expertAdvice.title} | <span className="text-gold-700">{PRESS_RELEASE.expertAdvice.honors}</span></p>
+              </div>
+            </div>
+            <p className="text-xs text-ink-600 leading-relaxed">{PRESS_RELEASE.expertAdvice.roles}</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+              {PRESS_RELEASE.expertAdvice.pillars.map((pillar, i) => (
+                <div key={i} className="bg-white p-3 rounded-lg border border-sand-300 space-y-1">
+                  <div className="text-xs font-bold text-wine-900">{pillar.title}</div>
+                  <div className="text-[11px] text-ink-600 leading-normal">{pillar.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Kőszeg Újrapozicionálása */}
+          <div className="pt-2 border-t border-sand-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-ink-700">Kőszeg turisztikai kulcsértékei:</span>
+              {PRESS_RELEASE.assets.map((asset, i) => (
+                <span key={i} className="inline-block rounded-full bg-sand-100 px-2.5 py-1 text-[11px] font-medium text-ink-800 border border-sand-300">
+                  {asset}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Támogató Vállalkozások & Nyilvános Partnereink */}
       <section className="pt-8 border-t border-sand-300 space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

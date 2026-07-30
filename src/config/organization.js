@@ -106,10 +106,68 @@ export const BOARD_MEMBERS_BIO = {
     phoneFormatted: null,
     email: 'farkas.peter@ibrahim.hu'
   },
+  'drescher': {
+    bio: 'Kőszeg számomra nem csupán egy város, hanem közösség, otthon és közös felelősség. Hiszek abban, hogy Kőszeg különleges történelmi, természeti és kulturális értékei olyan lehetőséget jelentenek, amelyre együtt, helyi összefogással lehet sikeres és fenntartható turizmust építeni.\n\nVállalkozóként és szálláshely-üzemeltetőként naponta találkozom a városba érkező vendégekkel, az igényeikkel, benyomásaikkal és visszajelzéseikkel. Pénzügyi tanácsadói munkám során pedig sokéves tapasztalatot szereztem vállalkozások támogatásában, ügyintézésben, szervezésben és érdekképviseletben.\n\nA Kőszegi Turisztikai Szövetség Egyesület elnökeként az a célom, hogy összefogjuk a turizmusban, vendéglátásban, szálláshely-szolgáltatásban, kultúrában, kereskedelemben és rendezvényszervezésben dolgozó helyi szereplőket. Olyan együttműködő közösséget szeretnénk építeni, amely nemcsak beszél a lehetőségekről, hanem közösen dolgozik is azok megvalósításán.\n\nFontosnak tartom a város tisztaságát, virágosítását, a programkínálat bővítését, az aktív és kerékpáros turizmus fejlesztését, valamint új közösségi és gasztronómiai rendezvények létrehozását. Célunk, hogy Kőszeg ne csupán egy rövid kirándulás helyszíne legyen, hanem olyan úti cél, ahová a vendégek szívesen visszatérnek, és amelyet jó szívvel ajánlanak másoknak is.\n\nMeggyőződésem, hogy a város jövőjét nem egyetlen személy vagy szervezet alakítja. A Kőszegi Turisztikai Szövetség nyitott minden építő ötletre, kezdeményezésre és együttműködésre.',
+    motto: '„Kőszeg számomra nem csupán egy város, hanem közösség, otthon és közös felelősség. Ha nincs közös szervezetünk, akkor nincs közös hangunk sem.”',
+    photoUrl: null
+  },
   'elnok': {
-    bio: 'A Kőszegi Turisztikai Szövetség Egyesület elnöke. A városi turisztikai összefogás, a helyi vállalkozói partnerségek, a turisztikai fejlesztési stratégiák és az egyesületi képviselet vezetője.',
-    motto: null,
+    bio: 'Kőszeg számomra nem csupán egy város, hanem közösség, otthon és közös felelősség. Hiszek abban, hogy Kőszeg különleges történelmi, természeti és kulturális értékei olyan lehetőséget jelentenek, amelyre együtt, helyi összefogással lehet sikeres és fenntartható turizmust építeni.\n\nVállalkozóként és szálláshely-üzemeltetőként naponta találkozom a városba érkező vendégekkel, az igényeikkel, benyomásaikkal és visszajelzéseikkel. Pénzügyi tanácsadói munkám során pedig sokéves tapasztalatot szereztem vállalkozások támogatásában, ügyintézésben, szervezésben és érdekképviseletben.\n\nA Kőszegi Turisztikai Szövetség Egyesület elnökeként az a célom, hogy összefogjuk a turizmusban, vendéglátásban, szálláshely-szolgáltatásban, kultúrában, kereskedelemben és rendezvényszervezésben dolgozó helyi szereplőket. Olyan együttműködő közösséget szeretnénk építeni, amely nemcsak beszél a lehetőségekről, hanem közösen dolgozik is azok megvalósításán.',
+    motto: '„Ha nincs közös szervezetünk, akkor nincs közös hangunk sem.”',
     photoUrl: null
   }
+};
+
+/**
+ * Tartalmi összefoglaló a média és a sajtó részére.
+ */
+export const PRESS_RELEASE = {
+  title: 'Megalakul a Kőszegi Turisztikai Szövetség Egyesület',
+  date: '2026. június 30.',
+  location: 'Kőszeg',
+  lead: 'A kőszegi turizmusban érdekelt vállalkozók, szállásadók, vendéglátók, szolgáltatók és helyi szereplők alakuló ülést tartanak a Kőszegi Turisztikai Szövetség Egyesület létrehozása érdekében. A találkozó az Írottkő Hotel kezdeményezésére jött létre, azzal a céllal, hogy a helyi turisztikai szereplők közös fórumot, érdekképviseletet és cselekvési keretet alakítsanak ki Kőszeg turisztikai helyzetének javítása érdekében.',
+  quote: {
+    text: 'Ha nincs közös szervezetünk, akkor nincs közös hangunk sem.',
+    author: 'Drescher Gábor, elnök'
+  },
+  goals: [
+    'A turisztikai vállalkozások érdekeinek szakmai képviselete',
+    'Kőszeg jó hírének és turisztikai vonzerejének helyreállítása',
+    'Közös marketing- és kommunikációs tevékenység kialakítása',
+    'Kőszeg pozitív országos megjelenésének megerősítése',
+    'Közös rendezvények, programok és turisztikai csomagajánlatok létrehozása',
+    'Városszépítő és közösségi kezdeményezések támogatása',
+    'Imázsfilmek, online tartalmak és kampányok készítése',
+    'Együttműködés az önkormányzattal és civil szervezetekkel',
+    'Pályázati és támogatási lehetőségek felkutatása',
+    'Szezonon kívüli vendégforgalom élénkítése és a visszatérő vendégek számának növelése'
+  ],
+  expertAdvice: {
+    name: 'Szekér Zoltán',
+    title: 'Turisztikai és Városmarketing Szakember',
+    honors: '3x Városmarketing Gyémánt Díj | Business Excellence Fődíjas',
+    roles: 'Dunamente Tourist Nonprofit Kft. ügyvezetője, korábban Esztergomi Turisztikai Nonprofit Kft. ügyvezetője és Aktív- és Ökoturisztikai Fejlesztési Központ kommunikációs igazgatója',
+    pillars: [
+      {
+        title: '1. Felmérés a helyi vállalkozók körében',
+        desc: 'Közös felmérés segítségével a célközönség (Budapest, Győr, Bécs), őszi-téli programok és közvetlen vállalkozói igények meghatározása.'
+      },
+      {
+        title: '2. Közös kommunikációs csatorna',
+        desc: 'Koordinált turisztikai felületek (visitkoszeg.hu & ktsze.hu), ahol a belváros, a vár, rendezvények, éttermek és szállások biztonságos, magabiztos üzenetei jelennek meg.'
+      },
+      {
+        title: '3. Mérhető turisztikai célok',
+        desc: 'Szezonon kívüli rendezvények, garantált programok, Google-értékelések javítása, csomagajánlatok és sajtóbejárások szervezése.'
+      }
+    ]
+  },
+  assets: [
+    'Történelmi belváros & műemléki környezet',
+    'Jurisics-vár',
+    'Természetközeliség & Írottkő túraútvonalak',
+    'Borvidéki & gasztronómiai értékek',
+    'Nyugodt, emberléptékű városi hangulat'
+  ]
 };
 
