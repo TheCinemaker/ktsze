@@ -288,27 +288,6 @@ export const AboutPage = () => {
             </div>
           </div>
 
-          {/* Szakmai Irányok / Tanácsadó Partner */}
-          <div className="rounded-xl border border-wine-200 bg-wine-50/40 p-5 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-wine-700">Szakmai Tanácsadás & Iránymutatás</span>
-                <h4 className="font-display text-lg font-bold text-ink-900">{PRESS_RELEASE.expertAdvice.name}</h4>
-                <p className="text-xs font-semibold text-wine-800">{PRESS_RELEASE.expertAdvice.title} | <span className="text-gold-700">{PRESS_RELEASE.expertAdvice.honors}</span></p>
-              </div>
-            </div>
-            <p className="text-xs text-ink-600 leading-relaxed">{PRESS_RELEASE.expertAdvice.roles}</p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-              {PRESS_RELEASE.expertAdvice.pillars.map((pillar, i) => (
-                <div key={i} className="bg-white p-3 rounded-lg border border-sand-300 space-y-1">
-                  <div className="text-xs font-bold text-wine-900">{pillar.title}</div>
-                  <div className="text-[11px] text-ink-600 leading-normal">{pillar.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Kőszeg Újrapozicionálása */}
           <div className="pt-2 border-t border-sand-200 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-2">

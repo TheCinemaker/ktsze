@@ -142,26 +142,6 @@ export const PRESS_RELEASE = {
     'Pályázati és támogatási lehetőségek felkutatása',
     'Szezonon kívüli vendégforgalom élénkítése és a visszatérő vendégek számának növelése'
   ],
-  expertAdvice: {
-    name: 'Szekér Zoltán',
-    title: 'Turisztikai és Városmarketing Szakember',
-    honors: '3x Városmarketing Gyémánt Díj | Business Excellence Fődíjas',
-    roles: 'Dunamente Tourist Nonprofit Kft. ügyvezetője, korábban Esztergomi Turisztikai Nonprofit Kft. ügyvezetője és Aktív- és Ökoturisztikai Fejlesztési Központ kommunikációs igazgatója',
-    pillars: [
-      {
-        title: '1. Felmérés a helyi vállalkozók körében',
-        desc: 'Közös felmérés segítségével a célközönség (Budapest, Győr, Bécs), őszi-téli programok és közvetlen vállalkozói igények meghatározása.'
-      },
-      {
-        title: '2. Közös kommunikációs csatorna',
-        desc: 'Koordinált turisztikai felületek (visitkoszeg.hu & ktsze.hu), ahol a belváros, a vár, rendezvények, éttermek és szállások biztonságos, magabiztos üzenetei jelennek meg.'
-      },
-      {
-        title: '3. Mérhető turisztikai célok',
-        desc: 'Szezonon kívüli rendezvények, garantált programok, Google-értékelések javítása, csomagajánlatok és sajtóbejárások szervezése.'
-      }
-    ]
-  },
   assets: [
     'Történelmi belváros & műemléki környezet',
     'Jurisics-vár',
