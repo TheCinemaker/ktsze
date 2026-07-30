@@ -147,7 +147,7 @@ export const FlowerMapPage = () => {
       />
 
       {/* MOBIL GYORS GOMB BAR (Viszi a usert egyenesen a fákhoz!) */}
-      <div className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-emerald-900 text-white shadow-lg sm:hidden sticky top-3 z-30">
+      <div className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-emerald-900 text-white shadow-lg sm:hidden sticky top-[68px] z-30">
         <button
           type="button"
           onClick={() => {
