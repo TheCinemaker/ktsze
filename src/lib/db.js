@@ -1196,41 +1196,18 @@ export const listFlowerLogs = async (spotId = null, limit = 20) => {
 };
 
 /**
- * Öntözés rögzítése.
- *
- * Egyetlen RPC hívás: a naplóbejegyzés és a kaspó számlálói együtt frissülnek,
- * a számlálókat az adatbázis a naplóból számolja (így a havi érték
- * hónapváltáskor magától nullázódik). Ha a 18-as migráció még nem futott le, a
- * régi, két kérésből álló útvonalra esünk vissza.
+ * Öntözés rögzítése a flower_logs és flower_spots táblákba.
  */
 export const addFlowerLog = async (input) => {
-  const { data, error } = await supabase.rpc('flower_log_watering', {
-    p_spot_id: input.spot_id,
-    p_user_name: input.user_name?.trim() || null,
-    p_action_type: input.action_type || 'locsolas',
-    p_water_liters: Number(input.water_liters) || 10,
-    p_notes: input.notes?.trim() || null,
-    p_photo_url: input.photo_url || null
-  });
-
-  if (!error) return data;
-
-  // PGRST202 / 42883 = nincs ilyen adatbázis-függvény
-  if (error.code !== 'PGRST202' && error.code !== '42883') {
-    throw new Error(describeError(error));
-  }
-
-  console.warn(
-    '[db] A flower_log_watering RPC nincs telepítve (futtasd le a supabase/18_flower_spots_full_schema.sql-t) — tartalék útvonal.'
-  );
-
   const createdAt = new Date().toISOString();
+  
+  // 1. Öntözési bejegyzés beszúrása a flower_logs táblába
   const createdLog = unwrap(
     await supabase
       .from('flower_logs')
       .insert({
         spot_id: input.spot_id,
-        user_name: input.user_name?.trim() || null,
+        user_name: input.user_name?.trim() || 'Kőszegi Önkéntes',
         action_type: input.action_type || 'locsolas',
         water_liters: Number(input.water_liters) || 10,
         notes: input.notes?.trim() || null,
@@ -1241,8 +1218,7 @@ export const addFlowerLog = async (input) => {
       .single()
   );
 
-  // A napló már megvan; ha a számláló frissítése nem megy át, azt nem
-  // hibaként dobjuk vissza — a következő betöltés helyrerakja.
+  // 2. Kaspó utolsó öntözési idejének frissítése a flower_spots táblában
   const { error: updateError } = await supabase
     .from('flower_spots')
     .update({
@@ -1250,6 +1226,7 @@ export const addFlowerLog = async (input) => {
       water_count_this_month: (input.water_count_this_month || 0) + 1
     })
     .eq('id', input.spot_id);
+
   if (updateError) console.warn('[db] A kaspó számlálójának frissítése nem sikerült:', updateError.message);
 
   return createdLog;
