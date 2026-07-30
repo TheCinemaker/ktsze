@@ -28,7 +28,324 @@ import {
   Checkbox,
   Spinner
 } from '../ui';
-import { UserPlus, Key, Copy, Check } from 'lucide-react';
+import { UserPlus, Key, Copy, Check, Send, CheckCircle2, Sparkles, Upload } from 'lucide-react';
+
+/* -------------------------------------------------------------------------- */
+/*  Tömeges Tag Regisztráció & Meghívó Modal                                  */
+/* -------------------------------------------------------------------------- */
+
+const parseMemberLines = (text) => {
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  return lines.map((line, idx) => {
+    let name = '';
+    let email = '';
+
+    const angleMatch = line.match(/^(.*?)\s*<([^>]+)>$/);
+    if (angleMatch) {
+      name = angleMatch[1].trim();
+      email = angleMatch[2].trim();
+    } else if (line.includes(',') || line.includes(';')) {
+      const parts = line.split(/[,;]/).map((p) => p.trim());
+      const emailIdx = parts.findIndex((p) => p.includes('@'));
+      if (emailIdx !== -1) {
+        email = parts[emailIdx];
+        name = parts.filter((_, i) => i !== emailIdx).join(' ');
+      } else {
+        name = parts[0] || '';
+        email = parts[1] || '';
+      }
+    } else if (line.includes('\t')) {
+      const parts = line.split('\t').map((p) => p.trim());
+      const emailIdx = parts.findIndex((p) => p.includes('@'));
+      if (emailIdx !== -1) {
+        email = parts[emailIdx];
+        name = parts.filter((_, i) => i !== emailIdx).join(' ');
+      }
+    } else if (line.includes('@')) {
+      const parts = line.split(/\s+/);
+      const emailPart = parts.find((p) => p.includes('@'));
+      email = emailPart || line;
+      name = parts.filter((p) => p !== emailPart).join(' ');
+    } else {
+      name = line;
+    }
+
+    name = name.replace(/^["']|["']$/g, '').trim();
+    email = email.replace(/^["']|["']$/g, '').trim().toLowerCase();
+
+    const isValid = Boolean(email && email.includes('@') && email.includes('.'));
+
+    return {
+      id: idx,
+      raw: line,
+      full_name: name || (email ? email.split('@')[0] : 'Tag'),
+      account_email: email,
+      isValid
+    };
+  });
+};
+
+const BulkRegisterModal = ({ open, onClose, onSaved }) => {
+  const toast = useToast();
+  const [rawText, setRawText] = useState('');
+  const [memberCategory, setMemberCategory] = useState('Rendes tag');
+  const [step, setStep] = useState('input');
+  const [parsedList, setParsedList] = useState([]);
+  const [progress, setProgress] = useState({ current: 0, total: 0, activeName: '' });
+  const [results, setResults] = useState([]);
+  const [copied, setCopied] = useState(false);
+
+  const handleTextChange = (e) => {
+    const val = e.target.value;
+    setRawText(val);
+    setParsedList(parseMemberLines(val));
+  };
+
+  const validItems = parsedList.filter((item) => item.isValid);
+  const invalidItems = parsedList.filter((item) => !item.isValid);
+
+  const handleStartBulkRegister = async () => {
+    if (validItems.length === 0) {
+      toast.error('Nincs egyetlen érvényes e-mail cím sem a megadott listában!');
+      return;
+    }
+
+    setStep('processing');
+    setProgress({ current: 0, total: validItems.length, activeName: '' });
+    const runResults = [];
+
+    for (let i = 0; i < validItems.length; i++) {
+      const item = validItems[i];
+      setProgress({
+        current: i + 1,
+        total: validItems.length,
+        activeName: `${item.full_name} (${item.account_email})`
+      });
+
+      const tempPassword = `Koszeg${Math.floor(1000 + Math.random() * 9000)}!`;
+      try {
+        const res = await registerMemberByAdmin({
+          full_name: item.full_name,
+          account_email: item.account_email,
+          member_category: memberCategory,
+          temp_password: tempPassword
+        });
+
+        runResults.push({
+          name: item.full_name,
+          email: item.account_email,
+          tempPassword: res.tempPassword || tempPassword,
+          emailSent: res.emailSent,
+          success: true
+        });
+      } catch (err) {
+        runResults.push({
+          name: item.full_name,
+          email: item.account_email,
+          tempPassword,
+          success: false,
+          error: err.message
+        });
+      }
+
+      await new Promise((r) => setTimeout(r, 350));
+    }
+
+    setResults(runResults);
+    setStep('done');
+    const successCount = runResults.filter((r) => r.success).length;
+    toast.success(`Tömeges regisztráció kész! ${successCount}/${runResults.length} tag sikeresen regisztrálva.`);
+    await onSaved();
+  };
+
+  const handleCloseAll = () => {
+    setRawText('');
+    setParsedList([]);
+    setResults([]);
+    setStep('input');
+    onClose();
+  };
+
+  const handleCopySummary = () => {
+    const lines = results.map(
+      (r) => `${r.name}\t${r.email}\t${r.success ? 'SIKERES' : 'HIBA: ' + r.error}\t${r.tempPassword}`
+    );
+    const summaryText = `Név\tE-mail\tStátusz\tIdeiglenes Jelszó\n` + lines.join('\n');
+    navigator.clipboard.writeText(summaryText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast.info('Összegző lista a vágólapra másolva!');
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={step === 'processing' ? () => {} : handleCloseAll}
+      title="Tömeges Tag Regisztráció & Meghívás"
+      description="Másold be a tagok e-mail címeit és nevét. A rendszer automatikusan fiókot hoz létre és kiküldi az üdvözlő e-maileket az ideiglenes jelszóval."
+    >
+      {step === 'input' && (
+        <div className="space-y-4">
+          <div>
+            <label className="label text-xs font-bold text-ink-800">
+              E-mail címek (és nevek) beillesztése *
+            </label>
+            <p className="text-xs text-ink-500 mb-1.5">
+              Soronként 1 cím. Elfogadott: <code>Kovács Péter, kovacs@gmail.com</code> vagy <code>Kovács Péter &lt;kovacs@gmail.com&gt;</code> vagy simán <code>kovacs@gmail.com</code>
+            </p>
+            <textarea
+              rows={6}
+              value={rawText}
+              onChange={handleTextChange}
+              placeholder="Kovács Péter, kovacs.peter@gmail.com&#10;Nagy Anna <nagy.anna@vallalkozas.hu>&#10;minta.elek@koszeg.hu"
+              className="input text-xs font-mono p-3 w-full rounded-xl"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="label text-xs font-bold text-ink-800">Tagsági kategória a teljes csoportnak</label>
+              <select
+                value={memberCategory}
+                onChange={(e) => setMemberCategory(e.target.value)}
+                className="input py-2 px-3 text-sm rounded-xl"
+              >
+                <option value="Rendes tag">Rendes tag</option>
+                <option value="Pártoló tag">Pártoló tag</option>
+                <option value="Elnökségi tag">Elnökségi tag</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <p className="text-xs text-ink-600 font-medium">
+                Sikeres regisztráció után mindegyik tag automatikusan megkapja az <strong>egyedi belépési adatait</strong> e-mailben!
+              </p>
+            </div>
+          </div>
+
+          {parsedList.length > 0 && (
+            <div className="rounded-xl border border-sand-400 bg-sand-50 p-3 space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold text-ink-800">
+                <span>Felismerve: {validItems.length} érvényes cím</span>
+                {invalidItems.length > 0 && (
+                  <span className="text-caution-700">{invalidItems.length} érvénytelen sorminta</span>
+                )}
+              </div>
+              <div className="max-h-36 overflow-y-auto space-y-1 text-xs font-mono">
+                {parsedList.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`p-1.5 rounded-lg flex justify-between items-center ${
+                      item.isValid ? 'bg-white border border-sand-300' : 'bg-caution-50 text-caution-900 border border-caution-300'
+                    }`}
+                  >
+                    <span className="truncate max-w-[220px]">
+                      <strong>{item.full_name}</strong>
+                    </span>
+                    <span className="text-ink-500 truncate max-w-[200px]">{item.account_email}</span>
+                    <span className={item.isValid ? 'text-positive-600 font-bold' : 'text-caution-600 font-bold'}>
+                      {item.isValid ? '✓ OK' : '✕ Érvénytelen'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-sand-200">
+            <button type="button" onClick={handleCloseAll} className="btn-secondary btn-sm">
+              Mégsem
+            </button>
+            <button
+              type="button"
+              onClick={handleStartBulkRegister}
+              disabled={validItems.length === 0}
+              className="btn-primary btn-sm font-bold flex items-center gap-1.5"
+            >
+              <Send className="h-4 w-4" />
+              {validItems.length} Tag Regisztrálása & Kiküldése
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 'processing' && (
+        <div className="space-y-5 py-4 text-center">
+          <Spinner className="mx-auto h-8 w-8 text-wine-700" />
+          <div className="space-y-1">
+            <h4 className="font-bold text-ink-900 text-base">Fiókok létrehozása és üdvözlő e-mailek küldése…</h4>
+            <p className="text-xs text-ink-600 font-mono">{progress.activeName}</p>
+          </div>
+
+          <div className="w-full bg-sand-200 rounded-full h-3 overflow-hidden">
+            <div
+              className="bg-wine-700 h-3 rounded-full transition-all duration-300"
+              style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
+            />
+          </div>
+
+          <p className="text-xs text-ink-500 font-bold">
+            {progress.current} / {progress.total} kész ({Math.round((progress.current / progress.total) * 100)}%)
+          </p>
+        </div>
+      )}
+
+      {step === 'done' && (
+        <div className="space-y-4">
+          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+            Tömeges feldolgozás befejeződött! Összesen {results.length} fiók feldolgozva.
+          </div>
+
+          <div className="max-h-60 overflow-y-auto space-y-1.5 text-xs font-mono">
+            {results.map((r, i) => (
+              <div
+                key={i}
+                className={`p-2 rounded-xl border flex items-center justify-between gap-2 ${
+                  r.success ? 'bg-white border-emerald-200' : 'bg-rose-50 border-rose-200 text-rose-900'
+                }`}
+              >
+                <div className="min-w-0">
+                  <div className="font-bold text-ink-900 truncate">{r.name}</div>
+                  <div className="text-ink-500 truncate">{r.email}</div>
+                  {r.error && <div className="text-rose-700 font-semibold">{r.error}</div>}
+                </div>
+                <div className="text-right flex-shrink-0">
+                  {r.success ? (
+                    <div>
+                      <span className="inline-block px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                        {r.emailSent ? '📧 Email Kiküldve' : '✓ Regisztrálva'}
+                      </span>
+                      <div className="text-[11px] text-wine-800 font-bold mt-0.5">{r.tempPassword}</div>
+                    </div>
+                  ) : (
+                    <span className="inline-block px-2 py-0.5 rounded bg-rose-200 text-rose-800 font-bold text-[10px]">
+                      Hiba
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-between items-center pt-3 border-t border-sand-200">
+            <button
+              type="button"
+              onClick={handleCopySummary}
+              className="btn-secondary btn-sm font-bold flex items-center gap-1.5 text-xs"
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? 'Kimásolva!' : 'Összegzés Másolása (Excel / TXT)'}
+            </button>
+
+            <button type="button" onClick={handleCloseAll} className="btn-primary btn-sm font-bold">
+              Kész / Bezárás
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+};
 
 /* -------------------------------------------------------------------------- */
 /*  Új Tag Kézi Regisztrálása (Elnökségi ideiglenes jelszóval)                  */
@@ -511,6 +828,7 @@ export const MemberManagement = () => {
   }, [list, query, groupFilter, groupsByProfile]);
 
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showBulkRegisterModal, setShowBulkRegisterModal] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const duesOf = (memberId) => duesList.find((d) => d.profile_id === memberId && d.year === currentYear);
@@ -553,11 +871,20 @@ export const MemberManagement = () => {
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
+            onClick={() => setShowBulkRegisterModal(true)}
+            className="btn-secondary btn-sm rounded-xl font-bold flex items-center gap-1.5 shadow-xs text-wine-800 border-wine-300 bg-wine-50/50 hover:bg-wine-100/50"
+          >
+            <Send className="h-4 w-4 text-wine-700" />
+            + Tömeges Meghívás (E-mail lista)
+          </button>
+
+          <button
+            type="button"
             onClick={() => setShowRegisterModal(true)}
             className="btn-primary btn-sm rounded-xl font-bold flex items-center gap-1.5 shadow-xs"
           >
             <UserPlus className="h-4 w-4" />
-            + Új Tag Regisztrálása
+            + 1 Új Tag Regisztrálása
           </button>
 
           <label htmlFor="member-group-filter" className="text-sm text-ink-600">
@@ -751,6 +1078,12 @@ export const MemberManagement = () => {
       <RegisterMemberModal
         open={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
+        onSaved={members.reload}
+      />
+
+      <BulkRegisterModal
+        open={showBulkRegisterModal}
+        onClose={() => setShowBulkRegisterModal(false)}
         onSaved={members.reload}
       />
 
