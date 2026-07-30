@@ -111,7 +111,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
       setTimeout(() => {
         setSuccessMsg(false);
         if (onLogAdded) onLogAdded();
-      }, 1800);
+      }, 3500); // 3.5 másodpercig látható marad, hogy Marika néni el tudja olvasni!
     } catch (err) {
       console.error('Locsolási hiba:', err);
     } finally {
