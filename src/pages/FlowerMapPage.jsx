@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Droplets, Search, MapPin, Plus, Clock, Camera, Map, List, Trash2 } from 'lucide-react';
+import { Droplets, Search, MapPin, Plus, Clock, Camera, Map, List, Trash2, Film } from 'lucide-react';
 import { listFlowerSpots, listFlowerLogs, createFlowerSpot, uploadFlowerPhoto, deleteFlowerLog } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { useAsyncData } from '../lib/useAsyncData';
@@ -7,6 +7,8 @@ import { LoadingBlock, ErrorBlock, Modal } from '../components/ui';
 import { SEO } from '../components/ui/SEO';
 import { FlowerSpotCard } from '../components/public/FlowerSpotCard';
 import { FlowerSpotMap } from '../components/public/FlowerSpotMap';
+import { VizadasStoriesModal } from '../components/public/VizadasStoriesModal';
+import { VizadasStoryCardModal } from '../components/public/VizadasStoryCardModal';
 import { useAuth } from '../context/AuthContext';
 
 export const FlowerMapPage = () => {
@@ -66,6 +68,8 @@ export const FlowerMapPage = () => {
   const [activeFilter, setActiveFilter] = useState('all'); // all, thirsty, street
   const [viewMode, setViewMode] = useState('map'); // map, list
   const [showAddSpotModal, setShowAddSpotModal] = useState(false);
+  const [showStoriesModal, setShowStoriesModal] = useState(false);
+  const [createdStoryData, setCreatedStoryData] = useState(null);
   const [bannerCollapsed, setBannerCollapsed] = useState(() => {
     try {
       return localStorage.getItem('ktsze_banner_collapsed') === 'true';
@@ -249,9 +253,9 @@ export const FlowerMapPage = () => {
       ) : (
         <section className="rounded-3xl border border-emerald-300 bg-gradient-to-br from-emerald-50 via-white to-sand-100 p-5 sm:p-8 shadow-md overflow-hidden relative space-y-4">
           <div className="flex justify-between items-start">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-700 text-white font-extrabold text-xs shadow-xs">
-              <Droplets className="h-4 w-4 text-emerald-200" />
-              ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-800 text-white font-extrabold text-xs shadow-xs border border-emerald-600">
+              <img src="/koszeg_cimer.png" alt="Kőszeg Város Címere" className="h-5 w-auto object-contain" />
+              <span>ÖNKÉNTES FAÖNTÖZÉS — „VÍZADÁS” KŐSZEGEN</span>
             </div>
 
             <button
@@ -359,6 +363,16 @@ export const FlowerMapPage = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Vízadás Stories / Reels Gomb */}
+            <button
+              type="button"
+              onClick={() => setShowStoriesModal(true)}
+              className="btn-secondary btn-sm text-xs font-extrabold flex items-center gap-1.5 border-rose-300 text-rose-950 bg-rose-50 hover:bg-rose-100 shadow-xs"
+            >
+              <Film className="h-4 w-4 text-rose-600" />
+              Vízadás Stories
+            </button>
+
             <button
               type="button"
               onClick={handleGetLocation}
@@ -651,6 +665,24 @@ export const FlowerMapPage = () => {
             </div>
           </form>
         </Modal>
+      )}
+
+      {/* FULLSCREEN INSTAGRAM / TIKTOK STÍLUSÚ VÍZADÁS STORIES MODAL */}
+      <VizadasStoriesModal
+        isOpen={showStoriesModal}
+        onClose={() => setShowStoriesModal(false)}
+        logs={logs || []}
+      />
+
+      {/* INSTAGRAM / FB STORY KÁRTYA GENERÁLÓ (KŐSZEG CÍMERREL) */}
+      {createdStoryData && (
+        <VizadasStoryCardModal
+          isOpen={Boolean(createdStoryData)}
+          onClose={() => setCreatedStoryData(null)}
+          photoUrl={createdStoryData.photoUrl}
+          userName={createdStoryData.userName}
+          locationName={createdStoryData.locationName}
+        />
       )}
     </div>
   );
