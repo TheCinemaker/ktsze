@@ -4,7 +4,7 @@ import { Modal } from '../ui';
 import { addFlowerLog, uploadFlowerPhoto, deleteFlowerSpot } from '../../lib/db';
 import { useAuth } from '../../context/AuthContext';
 
-export const FlowerSpotCard = ({ spot, onLogAdded }) => {
+export const FlowerSpotCard = ({ spot, onLogAdded, onStoryCreated }) => {
   const { profile } = useAuth();
   const isAdmin = profile?.roles?.includes('admin');
   const [showLogModal, setShowLogModal] = useState(false);

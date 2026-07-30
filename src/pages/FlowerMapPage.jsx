@@ -348,6 +348,31 @@ export const FlowerMapPage = () => {
         </div>
       </section>
 
+      {/* PROMOTIONAL CARD: VÍZADÁS STORIES & REELS */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-rose-900 via-rose-950 to-emerald-950 text-white shadow-lg border border-rose-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3 text-left">
+          <div className="p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 shrink-0">
+            <Film className="h-7 w-7 text-rose-300 animate-pulse" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-sm sm:text-base text-white">
+              Vízadás Stories &amp; Szelfi Reels
+            </h3>
+            <p className="text-xs text-rose-200 leading-snug">
+              Nézd meg Kőszeg polgárainak legújabb öntözési szelfijeit és élménybeszámolóit!
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowStoriesModal(true)}
+          className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white font-extrabold text-xs shadow-md transition-transform active:scale-95 shrink-0 flex items-center justify-center gap-2"
+        >
+          <span>📸 Stories Megnyitása</span>
+        </button>
+      </div>
+
       {/* Keresés Utca & Házszám Alapján & Új Fa Rögzítése */}
       <div id="flower-spots-section" className="p-4 sm:p-5 rounded-2xl bg-sand-100 border border-sand-300 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -458,7 +483,12 @@ export const FlowerMapPage = () => {
         {!spotsLoading && (viewMode === 'list' || filteredSpots.length === 0) && (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredSpots.map((spot) => (
-              <FlowerSpotCard key={spot.id} spot={spot} onLogAdded={handleRefreshData} />
+              <FlowerSpotCard
+                key={spot.id}
+                spot={spot}
+                onLogAdded={handleRefreshData}
+                onStoryCreated={(storyData) => setCreatedStoryData(storyData)}
+              />
             ))}
           </div>
         )}

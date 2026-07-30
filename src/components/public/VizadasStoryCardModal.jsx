@@ -11,7 +11,7 @@ export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, loc
   const displayName = userName?.trim() && userName !== 'Kőszegi Önkéntes' ? userName : 'Kőszegi Vízadó Polgár';
   const displayLocation = locationName || 'Kőszeg Belváros';
 
-  const handleDownloadImage = async () => {
+  const handleDownloadOrShareImage = async () => {
     if (!cardRef.current) return;
     setDownloading(true);
 
@@ -88,15 +88,37 @@ export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, loc
       ctx.font = 'bold 34px sans-serif';
       ctx.fillText('#VízadásKőszeg  #KőszegVirágzik  #KőszegVáros', 1080 / 2, 1720);
 
-      // Kép letöltése
-      const dataUrl = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.download = `vizadas-story-${Date.now()}.png`;
-      link.href = dataUrl;
-      link.click();
+      // Blobra konvertálás a közvetlen telefonos kép-megosztáshoz (Insta / FB / Galéria)
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
 
-      setDownloadSuccess(true);
-      setTimeout(() => setDownloadSuccess(false), 3000);
+        const file = new File([blob], `vizadas-story-${Date.now()}.png`, { type: 'image/png' });
+
+        // Ha a mobil böngésző támogatja a közvetlen kép megosztást Instagramra / FB Storyra
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'Vízadás Kőszegen'
+            });
+            setDownloadSuccess(true);
+            setTimeout(() => setDownloadSuccess(false), 3000);
+            return;
+          } catch {
+            // Megosztás megszakítva vagy nem engedélyezett — letöltünk
+          }
+        }
+
+        // Egyébként közvetlen letöltés fájlként
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `vizadas-story-${Date.now()}.png`;
+        link.href = dataUrl;
+        link.click();
+
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 3000);
+      }, 'image/png');
     } catch (err) {
       alert('Képgenerálási hiba: ' + err.message);
     } finally {
@@ -116,7 +138,7 @@ export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, loc
           <X className="h-5 w-5" />
         </button>
 
-        {/* Story Kártya Előnézet (Előnézet képernyőn) */}
+        {/* Story Kártya Előnézet */}
         <div ref={cardRef} className="p-4 rounded-2xl bg-gradient-to-b from-emerald-900 to-emerald-950 border border-emerald-700/60 space-y-3 shadow-inner">
           {/* Hivatalos Kőszegi Városi Címer */}
           <div className="flex flex-col items-center gap-1.5 pt-1">
@@ -148,44 +170,25 @@ export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, loc
           </div>
         </div>
 
-        {/* Gombok */}
-        <div className="space-y-2 pt-1">
+        {/* Gomb: Kép mentése & Megosztása FB / Instagram Story-ba */}
+        <div className="pt-1">
           <button
             type="button"
             disabled={downloading}
-            onClick={handleDownloadImage}
+            onClick={handleDownloadOrShareImage}
             className="w-full py-3.5 px-4 rounded-2xl font-extrabold text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center gap-2 shadow-lg transition-all transform active:scale-95 border-b-4 border-amber-700"
           >
             {downloadSuccess ? (
               <>
                 <Check className="h-5 w-5" />
-                <span>Story Kártya elmentve a telefonodra!</span>
+                <span>Story Kártya elmentve / megosztva!</span>
               </>
             ) : (
               <>
-                <Download className="h-5 w-5" />
-                <span>{downloading ? 'Kártya generálása…' : '📥 Letöltés Instagram / FB Storyba'}</span>
+                <Share2 className="h-5 w-5" />
+                <span>{downloading ? 'Story Kártya készítése…' : '📸 Story Kártya Mentése & Megosztása'}</span>
               </>
             )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: 'Vízadás Kőszegen',
-                  text: `Ma én is adtam vizet Kőszeg fáinak! #VízadásKőszeg`,
-                  url: window.location.href
-                });
-              } else {
-                alert('Hivatkozás másolva a vágólapra!');
-              }
-            }}
-            className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center gap-1.5"
-          >
-            <Share2 className="h-4 w-4" />
-            <span>Közvetlen megosztás</span>
           </button>
         </div>
       </div>
