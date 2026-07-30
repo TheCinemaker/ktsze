@@ -23,12 +23,22 @@ import { DiagnosticsPage } from './pages/DiagnosticsPage';
 import { WorkgroupsPage } from './pages/WorkgroupsPage';
 import { WorkgroupDetailPage } from './pages/WorkgroupDetailPage';
 
-// A zárt felületek külön csomagban töltődnek be. Egy látogatónak, aki csak a
-// nyilvános oldalakat nézi, nem kell letöltenie az elnökségi felület kódját.
-const MemberDashboardPage = lazy(() =>
+// Biztonságos lusta betöltés: ha új deployment miatt a böngésző 404-es hibát kap az régebbi JS chunkra, automatikusan frissíti az oldalt.
+const safeLazy = (importFn) =>
+  lazy(() =>
+    importFn().catch((error) => {
+      console.warn('[App] Modul betöltési hiba (új verzió élesítve?), oldal újratöltése…', error);
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+      throw error;
+    })
+  );
+
+const MemberDashboardPage = safeLazy(() =>
   import('./pages/MemberDashboardPage').then((m) => ({ default: m.MemberDashboardPage }))
 );
-const AdminDashboardPage = lazy(() =>
+const AdminDashboardPage = safeLazy(() =>
   import('./pages/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage }))
 );
 

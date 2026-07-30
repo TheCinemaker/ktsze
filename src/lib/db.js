@@ -8,7 +8,8 @@
 //    3. localStorage-ot NEM használunk. A böngésző csak megjelenít.
 // =============================================================================
 
-import { supabase, unwrap, describeError } from './supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+import { supabase, unwrap, describeError, supabaseUrl, supabaseAnonKey } from './supabaseClient';
 
 /** Ékezetes cím -> URL-barát slug. */
 export const slugify = (text) =>
@@ -85,8 +86,9 @@ const isEmbedError = (error) =>
 export const getProfile = async (userId) => {
   let embedded = await supabase.from('profiles').select(PROFILE_WITH_ROLES).eq('id', userId).maybeSingle();
 
-  // Ha a profil sor hiányzik (pl. külső regisztráció vagy törlés után), automatikusan pótoljuk (Self-Healing)
-  if (!embedded.data && !embedded.error) {
+  // Self-Healing: Ha a profil hiányzik vagy nincs hozzá rendelve semmilyen szerepkör a user_roles táblában, automatikusan pótoljuk a 'member' szerepkört!
+  const hasRoles = Array.isArray(embedded?.data?.user_roles) && embedded.data.user_roles.length > 0;
+  if ((!embedded.data || !hasRoles) && !embedded.error) {
     try {
       const { data: userData } = await supabase.auth.getUser();
       const user = userData?.user;
@@ -104,7 +106,7 @@ export const getProfile = async (userId) => {
         embedded = await supabase.from('profiles').select(PROFILE_WITH_ROLES).eq('id', userId).maybeSingle();
       }
     } catch (healErr) {
-      console.warn('[db] Automatikus profilpótlás hiba:', healErr);
+      console.warn('[db] Automatikus profil/szerepkör pótlás hiba:', healErr);
     }
   }
 
@@ -874,7 +876,13 @@ export const registerMemberByAdmin = async (input) => {
   let userId = null;
   const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/belepes` : 'https://ktsze.hu/belepes';
 
-  const { data: authData, error: authError } = await supabase.auth.signUp({
+  // Használjunk külön, persistentMunkamenet NÉLKÜLI Supabase kliens példányt a signUp-hoz!
+  // Így a signUp NEM írja felül a bejelentkezett admin helyi auth tokenjét a böngészőben.
+  const tempAuthClient = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+
+  const { data: authData, error: authError } = await tempAuthClient.auth.signUp({
     email,
     password,
     options: {
