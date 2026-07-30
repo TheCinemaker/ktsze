@@ -349,19 +349,22 @@ export const FlowerMapPage = () => {
         </div>
       </section>
 
-      {/* PROMOTIONAL CARD: VÍZADÁS STORIES & REELS */}
+      {/* PROMOTIONAL CARD: STORIES & SELFIE REELS */}
       <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-rose-900 via-rose-950 to-emerald-950 text-white shadow-lg border border-rose-700 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3 text-left">
           <div className="p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 shrink-0">
             <Film className="h-7 w-7 text-rose-300 animate-pulse" />
           </div>
-          <div>
+          <div className="space-y-0.5">
             <h3 className="font-extrabold text-sm sm:text-base text-white">
-              Vízadás Stories &amp; Szelfi Reels
+              Stories &amp; Selfie reels
             </h3>
             <p className="text-xs text-rose-200 leading-snug">
-              Nézd meg Kőszeg polgárainak legújabb öntözési szelfijeit és élménybeszámolóit!
+              Nézd meg Kőszeg polgárainak legújabb szelfijeit és élménybeszámolóit!
             </p>
+            <div className="text-[11px] font-semibold text-amber-300 pt-0.5">
+              💡 Szelfi feltöltéséhez válaszd a „Részletes gondozás &amp; szelfi” gombot a rögzített növényeknél!
+            </div>
           </div>
         </div>
 

@@ -291,10 +291,10 @@ export const FlowerSpotCard = ({ spot, onLogAdded, onStoryCreated, initialOpen =
               <button
                 type="button"
                 onClick={() => setShowLogModal(true)}
-                className="btn-secondary w-full text-xs font-bold rounded-xl py-2.5 flex items-center justify-center gap-1.5 text-ink-700 bg-sand-100 hover:bg-sand-200"
+                className="w-full text-xs font-extrabold rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-rose-950 bg-rose-50 hover:bg-rose-100 border border-rose-300 shadow-xs transition-all active:scale-95"
               >
-                <Plus className="h-4 w-4 text-ink-500" />
-                Részletek / Saját fotó csatolása
+                <Camera className="h-4 w-4 text-rose-600 shrink-0" />
+                <span>📸 Részletes gondozás &amp; Szelfi feltöltése</span>
               </button>
             </>
           )}
