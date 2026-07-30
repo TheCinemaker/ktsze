@@ -12,8 +12,8 @@ import { VizadasStoryCardModal } from '../components/public/VizadasStoryCardModa
 import { useAuth } from '../context/AuthContext';
 
 export const FlowerMapPage = () => {
-  const { profile } = useAuth();
-  const isAdmin = profile?.roles?.includes('admin');
+  const { profile, can } = useAuth();
+  const isAdmin = can('admin.access');
   const {
     data: spots,
     loading: spotsLoading,

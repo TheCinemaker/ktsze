@@ -7,9 +7,12 @@ export const VizadasStoriesModal = ({ isOpen, onClose, logs = [], onShareStory }
 
   if (!isOpen) return null;
 
-  // CSAK AZOK A BEJEGYZÉSEK JELENNEK MEG A REELS-BEN, AKIK RÉSZLETESEN KITÖLTÖTTÉK ÉS TETTEK FEL SZELFIT!
-  // Az 1-kattintásos fotó nélküli gyorsöntözések kiszűrésre kerülnek.
-  const storyLogs = (logs || []).filter((l) => Boolean(l.photo_url));
+  // CSAK AZOK A BEJEGYZÉSEK JELENNEK MEG A REELS-BEN, AKIK RÉSZLETESEN KITÖLTÖTTÉK ÉS TETTEK FEL SZELFIT, ÉS AZ ELMÚLT 24 ÓRÁBAN TÖRTÉNT!
+  const storyLogs = (logs || []).filter((l) => {
+    if (!l.photo_url) return false;
+    const diffHours = (Date.now() - new Date(l.created_at).getTime()) / (1000 * 60 * 60);
+    return diffHours < 24;
+  });
 
   const toggleLike = (e, logId) => {
     e.stopPropagation();
