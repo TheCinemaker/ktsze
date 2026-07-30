@@ -151,6 +151,43 @@ export const FlowerMapPage = () => {
         </div>
       </section>
 
+      {/* 0.5. Főkertészi Öntözési Kisokos — Mikor és hogyan öntözzünk? */}
+      <section className="p-5 sm:p-6 rounded-2xl bg-amber-50/80 border border-amber-200 text-ink-900 space-y-3 shadow-xs">
+        <div className="flex items-center gap-2 text-amber-900 font-extrabold text-sm sm:text-base">
+          <span className="text-xl">☀️</span>
+          <h3>Főkertészi Öntözési Kisokos — mikor a legjobb öntözni?</h3>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3 text-xs sm:text-sm">
+          <div className="p-3.5 rounded-xl bg-white border border-amber-200 space-y-1 shadow-2xs">
+            <div className="font-extrabold text-emerald-800 flex items-center gap-1.5">
+              <span>🌅 Kora reggel (6:00 – 9:00)</span>
+            </div>
+            <p className="text-ink-700 text-xs leading-relaxed">
+              A LEGJOBB időpont! A talaj még hűvös, a víz mélyre szivárog a gyökerekhez, és felkészíti a fát a napközbeni hőségre.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-white border border-amber-200 space-y-1 shadow-2xs">
+            <div className="font-extrabold text-indigo-900 flex items-center gap-1.5">
+              <span>🌇 Késő este (18:00 – 21:00)</span>
+            </div>
+            <p className="text-ink-700 text-xs leading-relaxed">
+              Kiváló választás! Éjszaka nincs párolgás, így a növény bőségesen fel tudja venni az öntözővizet a földből.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 space-y-1 shadow-2xs">
+            <div className="font-extrabold text-rose-900 flex items-center gap-1.5">
+              <span>🚫 Tűző napon (11:00 – 16:00) NE!</span>
+            </div>
+            <p className="text-rose-950 text-xs leading-relaxed">
+              Déli tűző napon a víz 80%-a elpárolog, a vízcseppek pedig megégethetik a leveleket. Ilyenkor érdemes megvárni az estét!
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* 1. Élő Öntözési Statisztikák & Ranglista */}
       <section className="grid gap-6 md:grid-cols-4">
         <div className="card p-6 border border-sand-300 bg-white space-y-2">

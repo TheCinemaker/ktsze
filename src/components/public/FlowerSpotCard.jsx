@@ -15,14 +15,44 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
   const [photoUrl, setPhotoUrl] = useState('');
   const [successMsg, setSuccessMsg] = useState(false);
 
-  const calculateHoursSinceWatered = () => {
-    if (!spot.last_watered_at) return 999;
-    const diffMs = Date.now() - new Date(spot.last_watered_at).getTime();
-    return Math.floor(diffMs / (1000 * 60 * 60));
+  const getWateringBadge = () => {
+    if (!spot.last_watered_at) {
+      return {
+        text: '🚨 Még nem volt öntözve',
+        color: 'bg-amber-600 animate-pulse',
+        detail: 'Vízadásra vár!'
+      };
+    }
+
+    const date = new Date(spot.last_watered_at);
+    const diffHours = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60));
+    const timeStr = date.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+    const hour = date.getHours();
+    const periodStr = hour >= 5 && hour < 11 ? 'reggel' : hour >= 18 && hour <= 22 ? 'este' : 'napközben';
+
+    if (diffHours < 24) {
+      return {
+        text: `🟢 Ma ${timeStr}-kor megöntözve (${periodStr})`,
+        color: 'bg-emerald-600',
+        detail: 'Üde & Friss növény'
+      };
+    } else if (diffHours < 48) {
+      return {
+        text: `🟡 Tegnap ${timeStr}-kor megöntözve`,
+        color: 'bg-amber-600',
+        detail: 'Hamarosan vízadást igényel'
+      };
+    } else {
+      const days = Math.floor(diffHours / 24);
+      return {
+        text: `🚨 ${days} napja szomjas!`,
+        color: 'bg-rose-600 animate-pulse',
+        detail: 'Sürgős vízadásra vár!'
+      };
+    }
   };
 
-  const hoursAgo = calculateHoursSinceWatered();
-  const isFresh = hoursAgo < 24;
+  const badge = getWateringBadge();
 
   const handleSubmitLog = async (e) => {
     e.preventDefault();
@@ -93,16 +123,10 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
 
             {/* Öntözési állapot jelvény */}
             <div
-              className={`absolute top-3 right-3 flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-extrabold shadow-lg text-white ${
-                isFresh ? 'bg-emerald-600' : 'bg-amber-600 animate-pulse'
-              }`}
+              className={`absolute top-3 right-3 flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-extrabold shadow-lg text-white ${badge.color}`}
             >
               <Droplets className="h-4 w-4" />
-              {hoursAgo < 1
-                ? '🟢 Épp most öntözve'
-                : hoursAgo < 24
-                ? `🟢 ${hoursAgo} órája öntözve`
-                : `🚨 ${Math.floor(hoursAgo / 24)} napja szomjas!`}
+              <span>{badge.text}</span>
             </div>
           </div>
 
