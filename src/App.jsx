@@ -42,12 +42,18 @@ const AdminDashboardPage = safeLazy(() =>
   import('./pages/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage }))
 );
 
-/** Oldalváltásnál ugorjunk a lap tetejére — a router ezt nem teszi meg magától. */
+import { trackPageView } from './lib/analytics';
+
+/** Oldalváltásnál ugorjunk a lap tetejére ÉS rögzítsük az analitikai látogatást. */
 const ScrollToTop = () => {
   const { pathname } = useLocation();
+  const { user } = useAuth();
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [pathname]);
+    trackPageView(pathname, null, user?.email || null);
+  }, [pathname, user]);
+
   return null;
 };
 
