@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Droplets, Sparkles, Trophy, Search, MapPin, Calendar, Heart, ShieldCheck, Plus, Clock } from 'lucide-react';
 import { listFlowerSpots, listFlowerLogs, getFlowerStats, createFlowerSpot } from '../lib/db';
+import { supabase } from '../lib/supabaseClient';
 import { useAsyncData } from '../lib/useAsyncData';
 import { PageHeader, LoadingBlock, ErrorBlock, Modal } from '../components/ui';
 import { SEO } from '../components/ui/SEO';
@@ -14,6 +15,25 @@ export const FlowerMapPage = () => {
   const { data: spots, loading: spotsLoading, error, reload } = useAsyncData(listFlowerSpots);
   const { data: stats, reload: reloadStats } = useAsyncData(getFlowerStats);
   const { data: logs, reload: reloadLogs } = useAsyncData(() => listFlowerLogs());
+
+  // FULL REALTIME ELŐFIZETÉS: Ha bárki meglocsol egy virágot, az az összes látogató telefonján azonnal élőben frissül!
+  useEffect(() => {
+    const channel = supabase
+      .channel('flower_realtime_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'flower_spots' }, () => {
+        reload();
+        reloadStats();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'flower_logs' }, () => {
+        reloadLogs();
+        reloadStats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [reload, reloadStats, reloadLogs]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddSpotModal, setShowAddSpotModal] = useState(false);
