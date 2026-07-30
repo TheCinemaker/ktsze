@@ -51,7 +51,7 @@ const createUserLocationIcon = () => {
   });
 };
 
-export const FlowerSpotMap = ({ spots = [], userCoords = null, onLogAdded }) => {
+export const FlowerSpotMap = ({ spots = [], userCoords = null, onLogAdded, onOpenLogModal }) => {
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markersRef = useRef([]);
@@ -130,10 +130,25 @@ export const FlowerSpotMap = ({ spots = [], userCoords = null, onLogAdded }) => 
         </div>
       `;
 
-      // 1-Tap Locsolás Gomb a PopUp-ban
+      const btnContainer = document.createElement('div');
+      btnContainer.className = 'space-y-1.5 pt-1';
+
+      // 1. Részletes Öntözés & Szelfi Feltöltése Gomb (HA RÁKATTINTANAK A TÉRKÉPEN)
+      if (onOpenLogModal) {
+        const detailBtn = document.createElement('button');
+        detailBtn.className = 'w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-2 px-3 rounded-xl shadow text-xs transition-all active:scale-95 flex items-center justify-center gap-1';
+        detailBtn.innerText = '📸 Részletes öntözés & Szelfi';
+        detailBtn.onclick = () => {
+          marker.closePopup();
+          onOpenLogModal(spot);
+        };
+        btnContainer.appendChild(detailBtn);
+      }
+
+      // 2. 1-Tap Gyors Öntözés Gomb
       const waterBtn = document.createElement('button');
-      waterBtn.className = 'w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2 px-3 rounded-xl shadow text-xs transition-all active:scale-95';
-      waterBtn.innerText = 'Meglocsoltam! (1 kattintás)';
+      waterBtn.className = 'w-full bg-sand-200 hover:bg-sand-300 text-ink-900 font-bold py-1.5 px-3 rounded-xl text-[11px] transition-all border border-sand-300';
+      waterBtn.innerText = 'Gyors vízadás (1 kattintás)';
       waterBtn.onclick = async () => {
         try {
           waterBtn.innerText = 'Mentés…';
@@ -147,21 +162,22 @@ export const FlowerSpotMap = ({ spots = [], userCoords = null, onLogAdded }) => 
             water_count_this_month: spot.water_count_this_month || 0
           });
           waterBtn.innerText = 'Köszönjük! Elmentve!';
-          waterBtn.className = 'w-full mt-2 bg-emerald-800 text-white font-extrabold py-2 px-3 rounded-xl shadow text-xs';
+          waterBtn.className = 'w-full bg-emerald-800 text-white font-extrabold py-1.5 px-3 rounded-xl text-[11px]';
           if (onLogAdded) onLogAdded();
           setTimeout(() => marker.closePopup(), 1500);
         } catch (err) {
           alert('Hiba: ' + err.message);
           waterBtn.disabled = false;
-          waterBtn.innerText = 'Meglocsoltam! (1 kattintás)';
+          waterBtn.innerText = 'Gyors vízadás (1 kattintás)';
         }
       };
 
-      popupDiv.appendChild(waterBtn);
+      btnContainer.appendChild(waterBtn);
+      popupDiv.appendChild(btnContainer);
       marker.bindPopup(popupDiv);
       markersRef.current.push(marker);
     });
-  }, [spots, onLogAdded]);
+  }, [spots, onLogAdded, onOpenLogModal]);
 
   // GPS felhasználói pozíció beállítása a térképen
   useEffect(() => {

@@ -4,10 +4,10 @@ import { Modal } from '../ui';
 import { addFlowerLog, uploadFlowerPhoto, deleteFlowerSpot } from '../../lib/db';
 import { useAuth } from '../../context/AuthContext';
 
-export const FlowerSpotCard = ({ spot, onLogAdded, onStoryCreated }) => {
+export const FlowerSpotCard = ({ spot, onLogAdded, onStoryCreated, initialOpen = false }) => {
   const { profile } = useAuth();
   const isAdmin = profile?.roles?.includes('admin');
-  const [showLogModal, setShowLogModal] = useState(false);
+  const [showLogModal, setShowLogModal] = useState(initialOpen);
   const [loading, setLoading] = useState(false);
   const [actionType, setActionType] = useState('locsolas');
   const [waterLiters, setWaterLiters] = useState(15);

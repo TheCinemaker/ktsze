@@ -66,10 +66,11 @@ export const FlowerMapPage = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // all, thirsty, street
-  const [viewMode, setViewMode] = useState('map'); // map, list
+  const [viewMode, setViewMode] = useState('list'); // list (alapértelmezett), map
   const [showAddSpotModal, setShowAddSpotModal] = useState(false);
   const [showStoriesModal, setShowStoriesModal] = useState(false);
   const [createdStoryData, setCreatedStoryData] = useState(null);
+  const [selectedSpotForModal, setSelectedSpotForModal] = useState(null);
   const [bannerCollapsed, setBannerCollapsed] = useState(() => {
     try {
       return localStorage.getItem('ktsze_banner_collapsed') === 'true';
@@ -476,6 +477,7 @@ export const FlowerMapPage = () => {
             spots={filteredSpots}
             userCoords={userCoords}
             onLogAdded={handleRefreshData}
+            onOpenLogModal={(spot) => setSelectedSpotForModal(spot)}
           />
         )}
 
@@ -713,6 +715,20 @@ export const FlowerMapPage = () => {
           photoUrl={createdStoryData.photoUrl}
           userName={createdStoryData.userName}
           locationName={createdStoryData.locationName}
+        />
+      )}
+
+      {/* TÉRKÉPRŐL MEGNYITOTT RÉSZLETES ÖNTÖZÉS MODAL */}
+      {selectedSpotForModal && (
+        <FlowerSpotCard
+          key={`map-modal-${selectedSpotForModal.id}`}
+          spot={selectedSpotForModal}
+          initialOpen={true}
+          onLogAdded={handleRefreshData}
+          onStoryCreated={(storyData) => {
+            setSelectedSpotForModal(null);
+            setCreatedStoryData(storyData);
+          }}
         />
       )}
     </div>
