@@ -21,7 +21,7 @@ export const FlowerMapPage = () => {
     error,
     reload
   } = useAsyncData(listFlowerSpots);
-  const { data: logs, reload: reloadLogs } = useAsyncData(() => listFlowerLogs());
+  const { data: logs, reload: reloadLogs } = useAsyncData(() => listFlowerLogs(null, 100));
 
   const handleRefreshData = useCallback(() => {
     reload();
@@ -142,7 +142,7 @@ export const FlowerMapPage = () => {
   };
 
   const flowerSpots = spots || [];
-  const flowerLogs = (logs || []).slice(0, 10);
+  const flowerLogs = (logs || []).slice(0, 20);
 
   // Szűrt fák listája
   const query = searchQuery.trim().toLowerCase();
