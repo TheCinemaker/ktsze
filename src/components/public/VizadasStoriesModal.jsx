@@ -30,6 +30,10 @@ export const VizadasStoriesModal = ({ isOpen, onClose, logs = [], onShareStory }
           scrollbar-width: none;
           scroll-behavior: smooth;
         }
+        .reels-slide {
+          scroll-snap-align: start;
+          scroll-snap-stop: always;
+        }
       `}</style>
 
       {/* Bezárás gomb */}
@@ -79,7 +83,7 @@ export const VizadasStoriesModal = ({ isOpen, onClose, logs = [], onShareStory }
               return (
                 <div 
                   key={log.id || idx}
-                  className="w-full h-full snap-start shrink-0 relative flex flex-col justify-between"
+                  className="reels-slide w-full h-full snap-start snap-always shrink-0 relative flex flex-col justify-between"
                 >
                   {/* Háttérkép */}
                   <img
@@ -184,7 +188,7 @@ export const VizadasStoriesModal = ({ isOpen, onClose, logs = [], onShareStory }
                           <Share2 className="h-5 w-5" />
                         </div>
                         <span className="text-[10px] text-white font-bold mt-1 drop-shadow-md">
-                          Kártya
+                          Megosztás
                         </span>
                       </button>
                     )}

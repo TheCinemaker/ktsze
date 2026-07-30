@@ -193,12 +193,12 @@ export const VizadasStoryCardModal = ({ isOpen, onClose, photoUrl, userName, loc
             {downloadSuccess ? (
               <>
                 <Check className="h-5 w-5" />
-                <span>Story Kártya elmentve / megosztva!</span>
+                <span>Story Kártya megosztva!</span>
               </>
             ) : (
               <>
                 <Share2 className="h-5 w-5" />
-                <span>{downloading ? 'Story Kártya készítése…' : '📸 Story Kártya Mentése & Megosztása'}</span>
+                <span>{downloading ? 'Story Kártya készítése…' : '📸 Story Kártya Megosztása'}</span>
               </>
             )}
           </button>
