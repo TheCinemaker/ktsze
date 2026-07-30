@@ -962,9 +962,14 @@ export const MemberManagement = () => {
             ))}
           </select>
 
-          <p className="text-sm text-ink-500">
-            {filtered.length} / {list.length} tag
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-wine-100 text-wine-800 border border-wine-200 px-3 py-1 text-xs font-bold">
+              👥 Összesen: {list.length} tag
+            </span>
+            <p className="text-sm text-ink-500">
+              ({filtered.length} megjelenítve)
+            </p>
+          </div>
         </div>
       </div>
 
@@ -982,6 +987,9 @@ export const MemberManagement = () => {
             <caption className="sr-only">Tagnyilvántartás</caption>
             <thead className="bg-sand-50">
               <tr className="border-b border-sand-400 text-left">
+                <th scope="col" className="w-12 px-3 py-3 text-center font-bold text-ink-500">
+                  #
+                </th>
                 <th scope="col" className="px-4 py-3 font-medium text-ink-600">
                   Tag
                 </th>
@@ -1005,12 +1013,15 @@ export const MemberManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((member) => {
+              {filtered.map((member, index) => {
                 const memberRoles = rolesOf(member);
                 const memberDues = duesOf(member.id);
 
                 return (
-                  <tr key={member.id} className="border-b border-sand-300 last:border-0">
+                  <tr key={member.id} className="border-b border-sand-300 last:border-0 hover:bg-sand-50/50">
+                    <td className="px-3 py-3 text-center font-mono text-xs font-bold text-ink-500 bg-sand-50/30">
+                      {index + 1}.
+                    </td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-ink-900">{member.full_name || '— nincs név —'}</div>
                       <div className="text-xs text-ink-500">{member.account_email}</div>
