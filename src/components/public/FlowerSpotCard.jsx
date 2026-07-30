@@ -10,42 +10,51 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
   const [loading, setLoading] = useState(false);
   const [actionType, setActionType] = useState('locsolas');
   const [waterLiters, setWaterLiters] = useState(15);
-  const [userName, setUserName] = useState(profile?.full_name || 'Kőszegi Önkéntes Vízadó');
+  const [userName, setUserName] = useState(''); // 8. Alapértelmezetten ÜRES!
   const [notes, setNotes] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
   const [successMsg, setSuccessMsg] = useState(false);
 
+  // 13. Napi 2x öntözési státusz kiszámítása az időbélyegekből
   const getWateringBadge = () => {
     if (!spot.last_watered_at) {
       return {
-        text: '🚨 Még nem volt öntözve',
-        color: 'bg-amber-600 animate-pulse',
-        detail: 'Vízadásra vár!'
+        text: '🚨 Öntözni kellene! (Kétszer egy nap)',
+        color: 'bg-rose-600 animate-pulse',
+        detail: 'Sürgős vízadásra vár!'
       };
     }
 
     const date = new Date(spot.last_watered_at);
     const diffHours = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60));
     const timeStr = date.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
-    const hour = date.getHours();
-    const periodStr = hour >= 5 && hour < 11 ? 'reggel' : hour >= 18 && hour <= 22 ? 'este' : 'napközben';
+    const isToday = new Date().toDateString() === date.toDateString();
 
-    if (diffHours < 24) {
+    // Ha ma már volt locsolás
+    if (isToday) {
+      if (spot.water_count_today >= 2 || diffHours < 6) {
+        return {
+          text: `🟢 Ma már megöntözve (${timeStr})`,
+          color: 'bg-emerald-600',
+          detail: 'Üde & Friss növény'
+        };
+      } else {
+        return {
+          text: `🟡 Ma 1x megöntözve (még 1x kellene)`,
+          color: 'bg-amber-600',
+          detail: 'Este még egy vízadást igényel'
+        };
+      }
+    } else if (diffHours < 36) {
       return {
-        text: `🟢 Ma ${timeStr}-kor megöntözve (${periodStr})`,
-        color: 'bg-emerald-600',
-        detail: 'Üde & Friss növény'
-      };
-    } else if (diffHours < 48) {
-      return {
-        text: `🟡 Tegnap ${timeStr}-kor megöntözve`,
+        text: `🟡 Tegnap megöntözve (${timeStr})`,
         color: 'bg-amber-600',
-        detail: 'Hamarosan vízadást igényel'
+        detail: 'Ma még nem kapott vizet'
       };
     } else {
       const days = Math.floor(diffHours / 24);
       return {
-        text: `🚨 ${days} napja szomjas!`,
+        text: `🚨 ${days} napja szomjas! Öntözni kellene!`,
         color: 'bg-rose-600 animate-pulse',
         detail: 'Sürgős vízadásra vár!'
       };
@@ -57,49 +66,54 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
   const handleSubmitLog = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setSuccessMsg(true); // 7. AZONNAL TOAST!
     try {
       await addFlowerLog({
         spot_id: spot.id,
-        user_name: userName || 'Kőszegi Önkéntes Vízadó',
+        user_name: userName.trim() || 'Kőszegi Önkéntes',
         action_type: actionType,
         water_liters: Number(waterLiters),
         notes: notes,
         photo_url: photoUrl || spot.photo_url,
         water_count_this_month: spot.water_count_this_month || 0
       });
-      setSuccessMsg(true);
       setTimeout(() => {
         setSuccessMsg(false);
         setShowLogModal(false);
         setNotes('');
+        setPhotoUrl('');
         if (onLogAdded) onLogAdded();
-      }, 1200);
+      }, 1500);
     } catch (err) {
       alert('Hiba történt a mentés során: ' + err.message);
+      setSuccessMsg(false);
     } finally {
       setLoading(false);
     }
   };
 
+  // 7. AZONNALI INSTANT TOAST A MEGLOCSOLTAM GOMBRA! (0ms várakozás!)
   const handleQuickWater = async () => {
+    if (loading || successMsg) return;
     setLoading(true);
+    setSuccessMsg(true); // Instant visszajelzés azonnal!
+
     try {
       await addFlowerLog({
         spot_id: spot.id,
-        user_name: profile?.full_name || user?.email?.split('@')[0] || 'Kőszegi Virágangyal',
+        user_name: userName.trim() || profile?.full_name || '',
         action_type: 'locsolas',
-        water_liters: 10,
-        notes: 'Gyors 1-kattintásos öntözés',
+        water_liters: 30,
+        notes: 'Gyors 1-kattintásos vízadás',
         photo_url: spot.photo_url,
         water_count_this_month: spot.water_count_this_month || 0
       });
-      setSuccessMsg(true);
       setTimeout(() => {
         setSuccessMsg(false);
         if (onLogAdded) onLogAdded();
       }, 1800);
     } catch (err) {
-      alert('Hiba történt az öntözés rögzítésekor: ' + err.message);
+      console.error('Locsolási hiba:', err);
     } finally {
       setLoading(false);
     }
@@ -116,17 +130,21 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
               alt={spot.title}
               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-md bg-white/95 text-ink-900 backdrop-blur-xs">
-              <MapPin className="h-3.5 w-3.5 text-wine-600" />
-              {spot.location_name}
-            </div>
 
-            {/* Öntözési állapot jelvény */}
-            <div
-              className={`absolute top-3 right-3 flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-extrabold shadow-lg text-white ${badge.color}`}
-            >
-              <Droplets className="h-4 w-4" />
-              <span>{badge.text}</span>
+            {/* 12. Nem összefolyó, egymás alatti BADGE-EK a képen */}
+            <div className="absolute top-3 left-3 right-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pointer-events-none">
+              <div className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-md bg-white/95 text-ink-900 backdrop-blur-xs">
+                <MapPin className="h-3.5 w-3.5 text-emerald-700 shrink-0" />
+                <span className="truncate">{spot.location_name || spot.title}</span>
+              </div>
+
+              {/* 13. Öntözési állapot jelvény */}
+              <div
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold shadow-lg text-white ${badge.color}`}
+              >
+                <Droplets className="h-4 w-4 shrink-0" />
+                <span>{badge.text}</span>
+              </div>
             </div>
           </div>
 
@@ -254,17 +272,31 @@ export const FlowerSpotCard = ({ spot, onLogAdded }) => {
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-ink-800 flex items-center gap-1">
-                  <Camera className="h-3.5 w-3.5 text-wine-600" />
-                  Fotó URL (Opcionális bizonyító fotó)
+                <label className="font-bold text-ink-800 flex items-center gap-1 text-xs">
+                  <Camera className="h-4 w-4 text-emerald-700" />
+                  <span>📸 Készíts szelfit / fotót az öntözésről!</span>
                 </label>
                 <input
-                  type="url"
-                  value={photoUrl}
-                  onChange={(e) => setPhotoUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="input text-xs"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setPhotoUrl(reader.result);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="input text-xs p-2.5 w-full rounded-xl border border-sand-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-emerald-100 file:text-emerald-900"
                 />
+                {photoUrl && (
+                  <div className="mt-2 relative h-28 w-full rounded-xl overflow-hidden border border-emerald-300 shadow-xs">
+                    <img src={photoUrl} alt="Szelfi / öntözési fotó" className="h-full w-full object-cover" />
+                  </div>
+                )}
               </div>
 
               <div className="pt-3 flex justify-end gap-2 border-t border-sand-200">

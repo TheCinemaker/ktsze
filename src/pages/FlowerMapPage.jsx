@@ -284,49 +284,6 @@ export const FlowerMapPage = () => {
         </div>
       </section>
 
-      {/* 1. Élő Öntözési Statisztikák & Ranglista */}
-      <section className="grid gap-6 md:grid-cols-4">
-        <div className="card p-6 border border-sand-300 bg-white space-y-2">
-          <div className="flex items-center justify-between text-wine-700">
-            <span className="text-xs font-bold uppercase tracking-wider text-ink-500">Gondozott Fák &amp; Kaspók</span>
-            <Sparkles className="h-5 w-5 text-emerald-600" />
-          </div>
-          <div className="font-display text-3xl font-bold text-ink-900">{stats?.totalSpots || 0} db</div>
-          <p className="text-xs text-ink-600">Nyilvántartott növény &amp; fafa</p>
-        </div>
-
-        <div className="card p-6 border border-sand-300 bg-white space-y-2">
-          <div className="flex items-center justify-between text-positive-600">
-            <span className="text-xs font-bold uppercase tracking-wider text-ink-500">E Havi Vízadások</span>
-            <Droplets className="h-5 w-5 text-blue-600" />
-          </div>
-          <div className="font-display text-3xl font-bold text-ink-900">{stats?.totalWateringsThisMonth || 0} alkalom</div>
-          <p className="text-xs text-ink-600">Dokumentált vízadás a hónapban</p>
-        </div>
-
-        <div className="card p-6 border border-sand-300 bg-white space-y-2">
-          <div className="flex items-center justify-between text-gold-600">
-            <span className="text-xs font-bold uppercase tracking-wider text-ink-500">Kijuttatott Öntözővíz</span>
-            <Droplets className="h-5 w-5 text-emerald-600" />
-          </div>
-          <div className="font-display text-3xl font-bold text-ink-900">{stats?.totalLiters || 0} Liter</div>
-          <p className="text-xs text-ink-600">Kőszeg szomjazó fáinak megmentésére</p>
-        </div>
-
-        <div className="card p-6 border border-wine-200 bg-wine-50/50 space-y-2">
-          <div className="flex items-center justify-between text-wine-800">
-            <span className="text-xs font-bold uppercase tracking-wider text-wine-900">Legszorgalmasabb Vízadó</span>
-            <Trophy className="h-5 w-5 text-gold-500" />
-          </div>
-          <div className="font-display text-lg font-bold text-wine-900 truncate">
-            {stats?.leaderboard?.[0]?.name || 'Kőszegi Polgárok'}
-          </div>
-          <p className="text-xs text-wine-700 font-medium">
-            {stats?.leaderboard?.[0]?.count ? `${stats.leaderboard[0].count} rögzített vízadás` : 'Példamutató városszépítés'}
-          </p>
-        </div>
-      </section>
-
       {/* Keresés Utca & Házszám Alapján & Új Fa Rögzítése */}
       <div id="flower-spots-section" className="p-4 sm:p-5 rounded-2xl bg-sand-100 border border-sand-300 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -362,50 +319,13 @@ export const FlowerMapPage = () => {
             </button>
           </div>
         </div>
-
-        {/* Utca & Állapot Gyorsgombok (Quick Filter Pills) */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
-          <span className="text-[11px] font-bold text-ink-500 mr-1">Gyorsszűrő:</span>
-          <button
-            type="button"
-            onClick={() => { setActiveFilter('all'); setSearchQuery(''); }}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-              activeFilter === 'all' && !searchQuery ? 'bg-emerald-700 text-white' : 'bg-white border border-sand-300 text-ink-700 hover:bg-sand-200'
-            }`}
-          >
-            🌐 Összes Fa ({flowerSpots.length})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveFilter('thirsty')}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-              activeFilter === 'thirsty' ? 'bg-rose-600 text-white animate-pulse' : 'bg-rose-50 border border-rose-200 text-rose-900 hover:bg-rose-100'
-            }`}
-          >
-            🚨 Szomjas fák (Sürgős)
-          </button>
-
-          {['Jurisics tér', 'Fő tér', 'Kecskeméti u.', 'Rákóczi u.'].map((street) => (
-            <button
-              key={street}
-              type="button"
-              onClick={() => { setActiveFilter('all'); setSearchQuery(street); }}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                searchQuery === street ? 'bg-ink-900 text-white' : 'bg-white border border-sand-300 text-ink-700 hover:bg-sand-200'
-              }`}
-            >
-              📍 {street}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* 2. Virágos Pontok Kártyái */}
+      {/* 2. 11. Rögzített Növények (Rögzített növények) */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-2xl text-ink-900">Örökbefogadott Virágos Pontjaink</h2>
-          <span className="text-xs text-ink-500 font-semibold">{filteredSpots.length} kijelölt pont</span>
+          <h2 className="font-display text-2xl text-ink-900 font-extrabold">Rögzített növények</h2>
+          <span className="text-xs text-ink-500 font-semibold">{filteredSpots.length} regisztrált növény</span>
         </div>
 
         {spotsLoading && <LoadingBlock />}
@@ -413,7 +333,7 @@ export const FlowerMapPage = () => {
 
         {!spotsLoading && !error && filteredSpots.length === 0 && (
           <div className="rounded-2xl border border-dashed border-sand-400 p-8 text-center text-sm text-ink-600">
-            Nem található a keresésnek megfelelő virágos pont.
+            Nem található a keresésnek megfelelő rögzített növény.
           </div>
         )}
 
@@ -426,112 +346,116 @@ export const FlowerMapPage = () => {
         )}
       </section>
 
-      {/* 3. Legfrissebb Öntözési Naplóbejegyzések (Idővonal) */}
-      <section className="pt-8 border-t border-sand-300 space-y-6">
+      {/* 3. 10. Legfrissebb Gondozási & Öntözési Bejegyzések (Sűrített Kisképes Lista) */}
+      <section className="pt-6 border-t border-sand-300 space-y-4">
         <div className="flex items-center gap-2">
-          <Clock className="h-6 w-6 text-wine-600" />
-          <h2 className="font-display text-2xl text-ink-900">Legfrissebb Gondozási &amp; Öntözési Bejegyzések</h2>
+          <Clock className="h-5 w-5 text-emerald-700" />
+          <h3 className="font-display text-lg font-bold text-ink-900">Legfrissebb Gondozások</h3>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3">
           {flowerLogs.map((log) => (
-            <div key={log.id} className="p-4 rounded-2xl bg-white border border-sand-300 flex gap-4 items-start shadow-xs">
+            <div key={log.id} className="p-3 rounded-xl bg-white border border-sand-200 flex items-center gap-3 shadow-2xs">
               {log.photo_url ? (
                 <img
                   src={log.photo_url}
                   alt={log.user_name}
-                  className="h-16 w-16 rounded-xl object-cover border border-sand-200 shrink-0"
+                  className="h-10 w-10 rounded-lg object-cover border border-sand-200 shrink-0"
                 />
               ) : (
-                <div className="h-16 w-16 rounded-xl bg-wine-100 flex items-center justify-center text-wine-700 shrink-0 font-bold">
-                  <Droplets className="h-7 w-7" />
+                <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-800 shrink-0 font-bold">
+                  <Droplets className="h-5 w-5" />
                 </div>
               )}
 
-              <div className="space-y-1 text-xs text-ink-800 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-ink-900 truncate">{log.user_name}</span>
-                  <span className="text-[11px] text-ink-500 font-semibold">
-                    {new Date(log.created_at).toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              <div className="min-w-0 flex-1 text-xs space-y-0.5">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-bold text-ink-900 truncate text-[11px]">
+                    {log.user_name && log.user_name !== 'Kőszegi Önkéntes' ? log.user_name : 'Önkéntes Vízadó'}
+                  </span>
+                  <span className="text-[10px] text-ink-400 font-semibold shrink-0">
+                    {new Date(log.created_at).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-
-                <div className="inline-block rounded-md bg-sand-100 text-wine-800 px-2 py-0.5 text-[11px] font-bold">
-                  {log.action_type === 'locsolas'
-                    ? '💧 Locsolás & Vízadás'
-                    : log.action_type === 'gyomlalas'
-                    ? '🌱 Gyomlálás'
-                    : '🌸 Virággondozás'}
+                <div className="text-[11px] font-semibold text-emerald-800 truncate">
+                  💧 Locsolás
                 </div>
-
-                {log.notes && <p className="text-ink-600 italic leading-snug truncate">{log.notes}</p>}
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Modal Új Fa vagy Kaspó felvételéhez Utca & Házszám alapján */}
+      {/* Modal Új Fa felvételéhez Utca & Házszám alapján */}
       {showAddSpotModal && (
         <Modal
           open={showAddSpotModal}
           onClose={() => setShowAddSpotModal(false)}
-          title="🌳 Új Fa / Kaspó Bejelentése (Utca & Házszám)"
-          description="Azonosítsd be a fát vagy kaspót a pontos utca és házszám megadásával, hogy a szomszédok és a kőszegiek is megtalálják és öntözhessék!"
+          title="🌳 Új Fa Regisztrálása (Utca & Házszám)"
+          description="Rögzítsd a fát a pontos utca és házszám megadásával, vagy koppints a GPS gombra!"
         >
           <form onSubmit={handleCreateSpot} className="space-y-4 text-xs">
             <div className="space-y-1">
-              <label className="font-bold text-ink-800">Utca &amp; Házszám / Pontos Helyszín *</label>
+              <div className="flex justify-between items-center">
+                <label className="font-bold text-ink-800">Utca &amp; Házszám / Pontos Helyszín *</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                          setNewTitle(`Kőszeg (GPS: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`);
+                          setNewLocation(`GPS: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
+                        },
+                        () => alert('GPS pozíció nem érhető el.')
+                      );
+                    }
+                  }}
+                  className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 hover:bg-emerald-100"
+                >
+                  📍 4. Helyzetem rögzítése GPS-szel
+                </button>
+              </div>
               <input
                 type="text"
                 value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
+                onChange={(e) => {
+                  setNewTitle(e.target.value);
+                  setNewLocation(e.target.value);
+                }}
                 placeholder="Pl. Jurisics tér 8. (Városháza előtt) vagy Kecskeméti u. 14."
                 className="input text-xs font-bold"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="font-bold text-ink-800">Városrész / Övezet *</label>
-                <input
-                  type="text"
-                  value={newLocation}
-                  onChange={(e) => setNewLocation(e.target.value)}
-                  placeholder="Pl. Belváros / Jurisics tér"
-                  className="input text-xs"
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="font-bold text-ink-800">Első Vízadó / Örökbefogadó Neve *</label>
-                <input
-                  type="text"
-                  value={newAdopter}
-                  onChange={(e) => setNewAdopter(e.target.value)}
-                  placeholder="Pl. Marika néni vagy Kovács family"
-                  className="input text-xs"
-                  required
-                />
-              </div>
-            </div>
-
             <div className="space-y-1">
-              <label className="font-bold text-ink-800">Leírás &amp; Növények Fajtája</label>
-              <textarea
-                rows="2"
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-                placeholder="Pl. Piros muskátli és fehér petúnia kompozíció"
+              <label className="font-bold text-ink-800">Öntöző / Gondozó Neve (Opcionális)</label>
+              <input
+                type="text"
+                value={newAdopter}
+                onChange={(e) => setNewAdopter(e.target.value)}
+                placeholder="Hagyd üresen vagy beírhatod a neved..."
                 className="input text-xs"
               />
             </div>
 
             <div className="space-y-1">
+              <label className="font-bold text-ink-800">Leírás &amp; Fa Fajtája (Opcionális)</label>
+              <textarea
+                rows="2"
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+                placeholder="Pl. Fiatal gömbjuhar fa az úttest mellett"
+                className="input text-xs"
+              />
+            </div>
+
+            {/* 6. Kamera kép készítés */}
+            <div className="space-y-1">
               <label className="font-bold text-ink-800 flex items-center gap-1.5 text-xs">
                 <Camera className="h-4 w-4 text-emerald-700" />
-                <span>📸 Kép Készítése a Fáról / Képgaléria Válostó (Mobil kamera)</span>
+                <span>📸 6. Készíts képet a fáról! (Mobil kamera)</span>
               </label>
               <input
                 type="file"
@@ -547,7 +471,7 @@ export const FlowerMapPage = () => {
                     reader.readAsDataURL(file);
                   }
                 }}
-                className="input text-xs p-3 w-full rounded-xl border border-sand-300 file:mr-3 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-emerald-100 file:text-emerald-900 hover:file:bg-emerald-200"
+                className="input text-xs p-3 w-full rounded-xl border border-sand-300 file:mr-3 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-emerald-100 file:text-emerald-900"
               />
               {newPhoto && (
                 <div className="mt-2 relative h-36 w-full rounded-2xl overflow-hidden border-2 border-emerald-300 shadow-md">
@@ -569,7 +493,7 @@ export const FlowerMapPage = () => {
                 disabled={submittingSpot}
                 className="btn-primary text-xs font-extrabold py-3 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
               >
-                {submittingSpot ? 'Mentés…' : '🌳 Fa / Kaspó Rögzítése'}
+                {submittingSpot ? 'Mentés…' : '🌳 Fa Rögzítése'}
               </button>
             </div>
           </form>
