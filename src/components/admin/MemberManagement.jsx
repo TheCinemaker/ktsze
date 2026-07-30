@@ -868,27 +868,101 @@ export const MemberManagement = () => {
     return map;
   }, [wgMemberships.data]);
 
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'completed', 'pending'
+  const [sendingReminders, setSendingReminders] = useState(false);
+
+  const isProfileCompleted = (m) => {
+    if (m.phone || m.home_address || m.service_location_name || m.custom_title || m.business_activity) {
+      return true;
+    }
+    if (m.updated_at && m.created_at) {
+      const updated = new Date(m.updated_at).getTime();
+      const created = new Date(m.created_at).getTime();
+      if (updated - created > 60000) return true;
+    }
+    return false;
+  };
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return list.filter((m) => {
+      // Státusz szűrés
+      const completed = isProfileCompleted(m);
+      if (statusFilter === 'completed' && !completed) return false;
+      if (statusFilter === 'pending' && completed) return false;
+
+      // Munkacsoport szűrés
       if (groupFilter === 'none') {
         if ((groupsByProfile.get(m.id) || []).length > 0) return false;
       } else if (groupFilter !== 'all') {
         const mine = groupsByProfile.get(m.id) || [];
         if (!mine.some((g) => g.id === groupFilter)) return false;
       }
+
       if (!q) return true;
       return [m.full_name, m.account_email, m.service_location_name, m.custom_title]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(q));
     });
-  }, [list, query, groupFilter, groupsByProfile]);
+  }, [list, query, groupFilter, statusFilter, groupsByProfile]);
 
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showBulkRegisterModal, setShowBulkRegisterModal] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const duesOf = (memberId) => duesList.find((d) => d.profile_id === memberId && d.year === currentYear);
+
+  const pendingMembers = useMemo(() => list.filter((m) => !isProfileCompleted(m)), [list]);
+  const completedMembersCount = list.length - pendingMembers.length;
+
+  const handleSendRemindersToPending = async () => {
+    if (pendingMembers.length === 0) {
+      toast.info('Nincs egyetlen belépésre várakozó tag sem!');
+      return;
+    }
+
+    if (!window.confirm(`Biztosan kiküldesz egy emlékeztető e-mailt a még nem belépett ${pendingMembers.length} tag részére?`)) {
+      return;
+    }
+
+    setSendingReminders(true);
+    let sentCount = 0;
+    try {
+      for (let i = 0; i < pendingMembers.length; i++) {
+        const member = pendingMembers[i];
+        const welcomeHtml = `
+          <div style="font-family: sans-serif; line-height: 1.6; color: #1e1b26; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e0d8; border-radius: 16px; background-color: #faf7f1;">
+            <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #701a2e;">
+              <h2 style="color: #701a2e; margin: 0; font-size: 20px;">Kőszegi Turisztikai Szövetség Egyesület</h2>
+              <p style="font-size: 13px; color: #666; margin-top: 4px;">Emlékeztető — Lépj be a Tagi Portálra!</p>
+            </div>
+            <div style="padding: 24px 0; font-size: 15px; color: #2d2838;">
+              <p>Kedves <strong>${member.full_name || 'Tagunk'}</strong>!</p>
+              <p>Szeretnénk emlékeztetni, hogy elkészült a fiókod a Kőszegi Turisztikai Szövetség Egyesület zárt tagi portálján.</p>
+              <p>Kérjük, lépj be a megadott e-mail címeddel és az ideiglenes jelszavaddal, majd ellenőrizd és egészítsd ki az adataidat!</p>
+              <div style="background-color: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #e5e0d8; margin: 20px 0; text-align: center;">
+                <a href="https://ktsze.hu/belepes" style="display: inline-block; background-color: #701a2e; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 24px; border-radius: 10px;">🌐 Belépés a Tagi Portálra</a>
+              </div>
+            </div>
+          </div>
+        `;
+
+        await sendNewsletterViaResend({
+          fromEmail: 'Koszegi Turisztikai Szovetseg <info@ktsze.hu>',
+          recipients: [{ name: member.full_name, email: member.account_email }],
+          subject: '[KTSZE] Emlékeztető: Lépj be a zárt tagi portálra!',
+          htmlContent: welcomeHtml
+        });
+        sentCount++;
+        await new Promise((r) => setTimeout(r, 600));
+      }
+      toast.success(`Sikeresen kiküldtünk ${sentCount} emlékeztető e-mailt!`);
+    } catch (err) {
+      toast.error('Hiba az emlékeztetők küldésekor: ' + err.message);
+    } finally {
+      setSendingReminders(false);
+    }
+  };
 
   const handleDelete = async () => {
     setDeletePending(true);
@@ -926,6 +1000,18 @@ export const MemberManagement = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {pendingMembers.length > 0 && (
+            <button
+              type="button"
+              disabled={sendingReminders}
+              onClick={handleSendRemindersToPending}
+              className="btn-secondary btn-sm rounded-xl font-bold flex items-center gap-1.5 shadow-xs text-amber-900 border-amber-300 bg-amber-50 hover:bg-amber-100"
+            >
+              <Send className="h-4 w-4 text-amber-700" />
+              {sendingReminders ? 'Küldés…' : `✉️ Emlékeztető (${pendingMembers.length} Várakozónak)`}
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setShowBulkRegisterModal(true)}
@@ -943,6 +1029,22 @@ export const MemberManagement = () => {
             <UserPlus className="h-4 w-4" />
             + 1 Új Tag Regisztrálása
           </button>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="member-status-filter" className="text-sm text-ink-600 font-medium">
+              Státusz:
+            </label>
+            <select
+              id="member-status-filter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="input w-auto py-1.5 text-sm rounded-xl font-bold"
+            >
+              <option value="all">Mindegyik ({list.length})</option>
+              <option value="completed">🟢 Kitöltött / Aktív ({completedMembersCount})</option>
+              <option value="pending">🟡 Belépésre vár ({pendingMembers.length})</option>
+            </select>
+          </div>
 
           <label htmlFor="member-group-filter" className="text-sm text-ink-600">
             Munkacsoport:
@@ -966,9 +1068,6 @@ export const MemberManagement = () => {
             <span className="rounded-full bg-wine-100 text-wine-800 border border-wine-200 px-3 py-1 text-xs font-bold">
               👥 Összesen: {list.length} tag
             </span>
-            <p className="text-sm text-ink-500">
-              ({filtered.length} megjelenítve)
-            </p>
           </div>
         </div>
       </div>
@@ -991,7 +1090,7 @@ export const MemberManagement = () => {
                   #
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium text-ink-600">
-                  Tag
+                  Tag &amp; Státusz
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium text-ink-600">
                   Kategória
@@ -1016,6 +1115,7 @@ export const MemberManagement = () => {
               {filtered.map((member, index) => {
                 const memberRoles = rolesOf(member);
                 const memberDues = duesOf(member.id);
+                const completed = isProfileCompleted(member);
 
                 return (
                   <tr key={member.id} className="border-b border-sand-300 last:border-0 hover:bg-sand-50/50">
@@ -1023,7 +1123,18 @@ export const MemberManagement = () => {
                       {index + 1}.
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-ink-900">{member.full_name || '— nincs név —'}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-ink-900">{member.full_name || '— nincs név —'}</div>
+                        {completed ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 text-[10px] font-bold">
+                            🟢 Kitöltve
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 text-[10px] font-bold">
+                            🟡 Belépésre Vár
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-ink-500">{member.account_email}</div>
                       {member.custom_title && (
                         <div className="mt-0.5 text-xs text-wine-600">{member.custom_title}</div>
