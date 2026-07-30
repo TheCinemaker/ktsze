@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Wallet, UserPlus } from 'lucide-react';
+import { Wallet, UserPlus, FileText, ArrowRight } from 'lucide-react';
 
 import { ORGANIZATION } from '../config/organization';
 import { listDuesRates } from '../lib/db';
@@ -154,6 +154,21 @@ export const MembershipPage = () => (
               <p className="mt-0.5 font-mono text-sm text-wine-600">{ORGANIZATION.bankAccount}</p>
             </div>
           )}
+
+          {/* Hivatalos Alapszabály link */}
+          <div className="mt-6 border-t border-sand-400 pt-5 space-y-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-wine-800 flex items-center gap-1.5">
+              <FileText className="h-4 w-4 text-wine-600" />
+              Hivatalos Dokumentumok
+            </h3>
+            <p className="text-xs text-ink-600">
+              Az egyesület bírósági bejegyzésű Alapszabálya és városszépítő programfüzete nyilvánosan megtekinthető:
+            </p>
+            <Link to="/dokumentumok" className="btn-secondary btn-sm w-full text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-wine-50">
+              Alapszabály Megtekintése
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </div>
       </aside>
     </div>

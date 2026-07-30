@@ -29,10 +29,10 @@ export const ORGANIZATION = {
   email: 'avar.szilveszter@gmail.com',
   phone: '+36 70 636 4745',
 
-  // --- Székhely ---
-  addressPostalCode: '',
-  addressCity: '',
-  addressStreet: '',
+  // --- Székhely (Hivatalos alapszabály szerint) ---
+  addressPostalCode: '9730',
+  addressCity: 'Kőszeg',
+  addressStreet: 'Freh Alfonz utca 1.',
 
   // --- Hivatalos azonosítók ---
   taxNumber: '',            // adószám
