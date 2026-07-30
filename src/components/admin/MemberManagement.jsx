@@ -872,15 +872,14 @@ export const MemberManagement = () => {
   const [sendingReminders, setSendingReminders] = useState(false);
 
   const isProfileCompleted = (m) => {
-    if (m.phone || m.home_address || m.service_location_name || m.custom_title || m.business_activity) {
-      return true;
-    }
-    if (m.updated_at && m.created_at) {
-      const updated = new Date(m.updated_at).getTime();
-      const created = new Date(m.created_at).getTime();
-      if (updated - created > 60000) return true;
-    }
-    return false;
+    if (!m) return false;
+    const phone = (m.phone || '').trim();
+    const address = (m.home_address || '').trim();
+    const service = (m.service_location_name || '').trim();
+    const activity = (m.business_activity || '').trim();
+
+    // CSAK akkor számít kitöltöttnek/aktívnak, ha a tag legalább telefonszámot, lakcímet, szolgáltatást vagy tevékenységet megadott!
+    return Boolean(phone || address || service || activity);
   };
 
   const filtered = useMemo(() => {
