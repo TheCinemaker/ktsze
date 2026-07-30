@@ -175,19 +175,62 @@ export const FlowerMapPage = () => {
     filteredSpots.sort((a, b) => distanceFrom(a) - distanceFrom(b));
   }
 
+  const geocodeAddress = async (addressText) => {
+    try {
+      // Tisztítjuk a zárójeleket, pl. "Rákóczi u. 6. (bolt előtt)" -> "Rákóczi u. 6."
+      const cleanText = addressText.split('(')[0].trim();
+      const searchString = cleanText.toLowerCase().includes('kőszeg') 
+        ? cleanText 
+        : `${cleanText}, Kőszeg`;
+
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchString)}&format=json&limit=1`;
+      const res = await fetch(url, {
+        headers: {
+          'Accept-Language': 'hu',
+          'User-Agent': 'KTSZE-Vizadas-App'
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          return {
+            lat: parseFloat(data[0].lat),
+            lng: parseFloat(data[0].lon)
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('[Geocoding] Hiba a cím feloldásakor:', err);
+    }
+    return null;
+  };
+
   const handleCreateSpot = async (e) => {
     e.preventDefault();
     setSubmittingSpot(true);
     setSpotError('');
     try {
+      let finalLat = newLat;
+      let finalLng = newLng;
+
+      // Ha nincs GPS koordináta rögzítve, megpróbáljuk geokódolni az utca/házszám alapján
+      if (finalLat === null || finalLng === null) {
+        const coords = await geocodeAddress(newTitle);
+        if (coords) {
+          finalLat = coords.lat;
+          finalLng = coords.lng;
+        }
+      }
+
       await createFlowerSpot({
         title: newTitle,
         location_name: newTitle,
         adopter_name: newAdopter,
         description: newDesc,
         photo_url: newPhoto,
-        latitude: newLat,
-        longitude: newLng
+        latitude: finalLat,
+        longitude: finalLng
       });
       setShowAddSpotModal(false);
       setNewTitle('');

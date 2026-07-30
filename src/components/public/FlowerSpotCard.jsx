@@ -18,6 +18,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded, onStoryCreated, initialOpen =
   const [photoError, setPhotoError] = useState('');
   const [successMsg, setSuccessMsg] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [sharePending, setSharePending] = useState(false);
 
   const mapsUrl =
     Number.isFinite(spot.latitude) && Number.isFinite(spot.longitude)
@@ -88,8 +89,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded, onStoryCreated, initialOpen =
 
   const badge = getWateringBadge();
 
-  const handleSubmitLog = async (e) => {
-    e.preventDefault();
+  const handleSubmitLog = async (shareAfterSave = false) => {
     setLoading(true);
     setErrorMsg('');
     try {
@@ -109,7 +109,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded, onStoryCreated, initialOpen =
       setSuccessMsg(true);
       if (onLogAdded) onLogAdded();
 
-      if (photoUrl && onStoryCreated) {
+      if (shareAfterSave && photoUrl && onStoryCreated) {
         onStoryCreated({
           photoUrl: photoUrl,
           userName: userName.trim() || 'Kőszegi Vízadó Polgár',
@@ -316,7 +316,7 @@ export const FlowerSpotCard = ({ spot, onLogAdded, onStoryCreated, initialOpen =
               <p className="text-xs text-ink-600">Köszönjük, hogy gondoskodsz Kőszeg virágairól!</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmitLog} className="space-y-4 text-xs">
+            <form onSubmit={(e) => { e.preventDefault(); handleSubmitLog(sharePending); }} className="space-y-4 text-xs">
               <div className="space-y-1">
                 <label className="font-bold text-ink-800">Tevékenység Típusa</label>
                 <select
@@ -399,18 +399,41 @@ export const FlowerSpotCard = ({ spot, onLogAdded, onStoryCreated, initialOpen =
                 <button
                   type="button"
                   onClick={() => setShowLogModal(false)}
-                  className="btn-secondary text-xs font-bold"
+                  className="btn-secondary text-xs font-bold py-2.5 px-4 rounded-xl"
                 >
                   Mégse
                 </button>
-                <button
-                  type="submit"
-                  disabled={loading || photoUploading}
-                  className="btn-primary text-xs font-bold flex items-center gap-1.5"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  {loading ? 'Mentés…' : 'Rögzítés a Naplóba'}
-                </button>
+                {photoUrl ? (
+                  <>
+                    <button
+                      type="submit"
+                      disabled={loading || photoUploading}
+                      onClick={() => setSharePending(false)}
+                      className="btn-secondary border-emerald-500 text-emerald-950 text-xs font-bold py-2.5 px-4 rounded-xl"
+                    >
+                      {loading && !sharePending ? 'Mentés…' : 'Csak Mentés'}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading || photoUploading}
+                      onClick={() => setSharePending(true)}
+                      className="btn-primary text-xs font-bold flex items-center gap-1.5 py-3 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      {loading && sharePending ? 'Mentés…' : 'Mentés & Megosztás'}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={loading || photoUploading}
+                    onClick={() => setSharePending(false)}
+                    className="btn-primary text-xs font-bold flex items-center gap-1.5 py-3 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    {loading ? 'Mentés…' : 'Rögzítés a Naplóba'}
+                  </button>
+                )}
               </div>
             </form>
           )}
