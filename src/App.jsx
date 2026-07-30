@@ -42,6 +42,7 @@ const AdminDashboardPage = safeLazy(() =>
   import('./pages/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage }))
 );
 
+import { useAuth } from './context/AuthContext';
 import { trackPageView } from './lib/analytics';
 
 /** Oldalváltásnál ugorjunk a lap tetejére ÉS rögzítsük az analitikai látogatást. */
