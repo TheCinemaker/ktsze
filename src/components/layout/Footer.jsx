@@ -21,6 +21,9 @@ export const Footer = () => {
 
           {/* Gyorshivatkozások & Jogi elemek */}
           <nav aria-label="Lábléc navigáció" className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold text-ink-700">
+            <Link to="/viragos-koszeg" className="hover:text-wine-700 font-bold text-wine-800 transition-colors">
+              🌸 Kőszeg Virágzik
+            </Link>
             <Link to="/dokumentumok" className="hover:text-wine-700 transition-colors">
               Hivatalos Dokumentumok
             </Link>

@@ -1101,4 +1101,119 @@ export const deleteBoardIdea = async (id) => {
   return true;
 };
 
+// =============================================================================
+//  "Vízadás" — önkéntes faöntözési térkép és napló
+//
+//  Séma: supabase/18_flower_spots_full_schema.sql
+//
+//  Két szabály, amit ez a szekció korábban megszegett:
+//    1. NINCS localStorage tartalék. Ha a mentés elhasal, azt a felhasználónak
+//       látnia kell — a "csak nálam létező fa" rosszabb, mint egy hibaüzenet.
+//    2. A fotó a flower-photos bucketbe megy, és csak az URL kerül a táblába.
+//       A base64 data URI soronként MB-okat jelent, és a lista minden
+//       betöltéskor letölti mindet.
+// =============================================================================
+
+/** A napló listájához pontosan ennyi kell — a `select('*')` felesleges terhelés. */
+const FLOWER_LOG_COLUMNS = 'id,created_at,spot_id,user_name,action_type,water_liters,notes,photo_url';
+
+/**
+ * Fa-fotó feltöltése a publikus bucketbe. Belépés nem kell hozzá.
+ * @returns {Promise<string>} a kép publikus URL-je
+ */
+export const uploadFlowerPhoto = async (file) => {
+  const extension = (file.name?.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+  const path = `fak/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from('flower-photos')
+    .upload(path, file, { contentType: file.type || undefined, cacheControl: '31536000' });
+
+  if (error) throw new Error(`A fotó feltöltése nem sikerült: ${describeError(error)}`);
+
+  const { data } = supabase.storage.from('flower-photos').getPublicUrl(path);
+  return data.publicUrl;
+};
+
+/** Összes fa lekérése (üres tömb is valid válasz). */
+export const listFlowerSpots = async () =>
+  unwrap(
+    await supabase
+      .from('flower_spots')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(500)
+  ) || [];
+
+/** Új fa rögzítése — cím kötelező, GPS opcionális. */
+export const createFlowerSpot = async (input) => {
+  const title = input.title?.trim();
+  if (!title) throw new Error('A pontos cím (utca, házszám) megadása kötelező.');
+
+  return unwrap(
+    await supabase
+      .from('flower_spots')
+      .insert({
+        title,
+        // A helymegjelölés maga a cím — nincs kitalált városrész elé fűzve.
+        location_name: input.location_name?.trim() || title,
+        description: input.description?.trim() || null,
+        photo_url: input.photo_url || null,
+        adopter_name: input.adopter_name?.trim() || null,
+        adopter_user_id: input.adopter_user_id || null,
+        status: 'active',
+        // Az új fa NEM megöntözött: a badge így rögtön a vízadásra hív.
+        last_watered_at: null,
+        water_count_this_month: 0,
+        water_count_today: 0,
+        latitude: Number.isFinite(input.latitude) ? input.latitude : null,
+        longitude: Number.isFinite(input.longitude) ? input.longitude : null
+      })
+      .select()
+      .single()
+  );
+};
+
+/** Fa adatainak módosítása (tartalomkezelői jog kell hozzá). */
+export const updateFlowerSpot = async (id, patch) =>
+  unwrap(await supabase.from('flower_spots').update(patch).eq('id', id).select().single());
+
+/** Fa törlése (tartalomkezelői jog kell hozzá). */
+export const deleteFlowerSpot = async (id) => {
+  unwrap(await supabase.from('flower_spots').delete().eq('id', id).select('id'));
+  return true;
+};
+
+/** Öntözési bejegyzés törlése (moderációhoz). */
+export const deleteFlowerLog = async (id) => {
+  unwrap(await supabase.from('flower_logs').delete().eq('id', id).select('id'));
+  return true;
+};
+
+/** Öntözési naplóbejegyzések, legfrissebb elöl. */
+export const listFlowerLogs = async (spotId = null, limit = 20) => {
+  let query = supabase
+    .from('flower_logs')
+    .select(FLOWER_LOG_COLUMNS)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (spotId) query = query.eq('spot_id', spotId);
+  return unwrap(await query) || [];
+};
+
+/**
+ * Öntözés rögzítése a flower_logs és flower_spots táblákba.
+ */
+export const addFlowerLog = async (input) => {
+  return unwrap(
+    await supabase.rpc('flower_log_watering', {
+      p_spot_id: input.spot_id,
+      p_user_name: input.user_name?.trim() || 'Kőszegi Önkéntes',
+      p_action_type: input.action_type || 'locsolas',
+      p_water_liters: Number(input.water_liters) || 10,
+      p_notes: input.notes?.trim() || null,
+      p_photo_url: input.photo_url || null
+    })
+  );
+};
 

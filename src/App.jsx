@@ -8,6 +8,7 @@ import { AuthCallback } from './components/auth/AuthCallback';
 import { LoadingBlock } from './components/ui';
 import { ScrollToTopButton } from './components/ui/ScrollToTopButton';
 import { CookieBanner } from './components/ui/CookieBanner';
+import { VizadasAnnouncementModal } from './components/public/VizadasAnnouncementModal';
 
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
@@ -41,6 +42,9 @@ const MemberDashboardPage = safeLazy(() =>
 const AdminDashboardPage = safeLazy(() =>
   import('./pages/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage }))
 );
+const FlowerMapPage = safeLazy(() =>
+  import('./pages/FlowerMapPage').then((m) => ({ default: m.FlowerMapPage }))
+);
 
 import { useAuth } from './context/AuthContext';
 import { trackPageView } from './lib/analytics';
@@ -73,6 +77,7 @@ export default function App() {
           <Route path="/egyesulet" element={<AboutPage />} />
           <Route path="/munkacsoportok" element={<WorkgroupsPage />} />
           <Route path="/munkacsoportok/:slug" element={<WorkgroupDetailPage />} />
+          <Route path="/viragos-koszeg" element={<FlowerMapPage />} />
           <Route path="/hirek" element={<NewsPage />} />
           <Route path="/hirek/:slug" element={<NewsDetailPage />} />
           <Route path="/dokumentumok" element={<DocumentsPage />} />
@@ -113,6 +118,7 @@ export default function App() {
       <Footer />
       <ScrollToTopButton />
       <CookieBanner />
+      <VizadasAnnouncementModal />
     </div>
   );
 }
