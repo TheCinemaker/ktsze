@@ -60,9 +60,17 @@ export const NewsletterBroadcaster = () => {
     if (file.size > 8 * 1024 * 1024) return toast.error('A kép legfeljebb 8 MB lehet.');
     try {
       toast.info('Kép feltöltése...');
-      const formData = new FormData();
-      formData.append('file', file);
-      const response = await fetch('/.netlify/functions/upload-newsletter-image', { method: 'POST', body: formData });
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+        reader.onerror = () => reject(new Error('Nem sikerült beolvasni a képfájlt.'));
+        reader.readAsDataURL(file);
+      });
+      const response = await fetch('/.netlify/functions/upload-newsletter-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name, contentType: file.type, data: base64 })
+      });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'A kép feltöltése sikertelen.');
       editorRef.current?.focus();
