@@ -61,19 +61,40 @@ export const NewsletterBroadcaster = () => {
     return `<div style="font-family:Arial,sans-serif;line-height:1.6;direction:ltr;text-align:left;color:#1e1b26;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e0d8;border-radius:16px;background:#faf7f1;"><div style="text-align:center;padding-bottom:20px;border-bottom:2px solid #701a2e;"><h2 style="color:#701a2e;margin:0;font-size:20px;">Kőszegi Turisztikai Szövetség Egyesület</h2><p style="font-size:12px;color:#666;margin-top:4px;">Hivatalos Egyesületi Tájékoztató &amp; Hírlevél</p></div><div style="padding:24px 0;font-size:15px;color:#2d2838;">${safeContent}</div><div style="border-top:1px solid #e5e0d8;padding-top:16px;text-align:center;font-size:11px;color:#888;"><p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.hu" style="color:#701a2e;">ktsze.hu</a></p></div></div>`;
   }, [content]);
 
-  const syncEditor = () => {
-    if (!editorRef.current) return;
-    editorRef.current.setAttribute('dir', 'ltr');
-    editorRef.current.style.setProperty('direction', 'ltr', 'important');
-    editorRef.current.style.setProperty('text-align', 'left', 'important');
-    setContent(editorRef.current.innerHTML);
+  const editorRef = useRef(null);
+  const imageInputRef = useRef(null);
+
+  const insertAtCursor = (text) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || !editor.contains(sel.anchorNode)) {
+      editor.appendChild(document.createTextNode(text));
+      syncEditor();
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(document.createTextNode(text));
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    syncEditor();
   };
-  const exec = (command, value = null) => { editorRef.current?.focus(); document.execCommand(command, false, value); syncEditor(); };
+
+  const exec = (command, value = null) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    document.execCommand(command, false, value);
+    syncEditor();
+  };
 
   const insertImage = async (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) return toast.error('Csak JPG, PNG vagy WebP kép tölthető fel.');
-    if (file.size > 8 * 1024 * 1024) return toast.error('A kép legfeljebb 8 MB lehet.');
+    if (file.size > 4 * 1024 * 1024) return toast.error('A kép legfeljebb 4 MB lehet.');
     try {
       toast.info('Kép feltöltése...');
       const base64 = await new Promise((resolve, reject) => {
@@ -90,7 +111,7 @@ export const NewsletterBroadcaster = () => {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'A kép feltöltése sikertelen.');
       editorRef.current?.focus();
-      document.execCommand('insertHTML', false, `<p style="text-align:center;margin:20px 0;"><img src="${data.url}" alt="${escapeHtml(file.name)}" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:8px;" /></p>`);
+      document.execCommand('insertHTML', false, `<p style="text-align:center;margin:20px 0;direction:ltr;"><img src="${data.url}" alt="${escapeHtml(file.name)}" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:8px;" /></p>`);
       syncEditor();
       toast.success('Kép beszúrva.');
     } catch (err) { toast.error(err.message); }
@@ -101,34 +122,6 @@ export const NewsletterBroadcaster = () => {
     if (url && /^https?:\/\//i.test(url)) exec('createLink', url);
   };
 
-  const send = async (recipients, isTest = false) => {
-    const result = await sendNewsletterViaResend({ fromEmail, recipients, subject, htmlContent: htmlBody });
-    if (!isTest) setLastReport(result);
-    return result;
-  };
-
-  const handleSendNewsletter = async (e) => {
-    e.preventDefault();
-    if (!targetRecipients.length) return toast.error('Nincs egyetlen elérhető címzett sem.');
-    if (!window.confirm(`Biztosan kiküldöd a hírlevelet ${targetRecipients.length} címzettnek?`)) return;
-    try {
-      setSending(true); setLastReport(null);
-      const result = await send(targetRecipients);
-      if (result.success > 0) toast.success(`Hírlevél sikeresen kiküldve ${result.success} címzettnek!`);
-      if (result.failed > 0) toast.error(`${result.failed} címzett küldése sikertelen.`);
-    } catch (err) { toast.error(err.message); } finally { setSending(false); }
-  };
-
-  const handleTestSend = async () => {
-    const emails = parseEmails(testEmail);
-    if (emails.length !== 1) return toast.error('A tesztküldéshez pontosan egy érvényes e-mail címet adj meg.');
-    try {
-      setTestSending(true);
-      const result = await send([{ name: 'Teszt címzett', email: emails[0] }], true);
-      if (result.success > 0) toast.success(`Teszt email elküldve ide: ${emails[0]}`);
-      else toast.error(result.errors?.[0] || 'A tesztküldés sikertelen.');
-    } catch (err) { toast.error(err.message); } finally { setTestSending(false); }
-  };
 
   if (membersData.loading) return <Spinner />;
   const previewHtml = htmlBody.replace(/<span data-name-placeholder="true">{{NAME}}<\/span>/g, 'Kedves Teszt Címzett!');
@@ -165,8 +158,17 @@ export const NewsletterBroadcaster = () => {
               <span className="flex-1" />
               <button type="button" onClick={() => setShowPreview(true)} className="px-2.5 py-1.5 rounded-lg hover:bg-white text-sm flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> Előnézet</button>
             </div>
-            <div dir="ltr" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'isolate', writingMode: 'horizontal-tb' }}>
-              <div ref={editorRef} contentEditable suppressContentEditableWarning onInput={syncEditor} onKeyDown={(e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.stopPropagation(); }} dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} dir="ltr" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext', writingMode: 'horizontal-tb', textAlignLast: 'left' }} className="min-h-[280px] input rounded-t-none rounded-b-xl p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-wine-200 text-left" />
+            <div className="relative">
+              <textarea
+                ref={editorRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                dir="ltr"
+                spellCheck="true"
+                className="min-h-[280px] input rounded-t-none rounded-b-xl p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-wine-200 text-left"
+                style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext', writingMode: 'horizontal-tb' }}
+                placeholder="Írd ide az email szövegét..."
+              />
             </div>
             <p className="text-[11px] text-ink-500 mt-1.5">Képeket közvetlenül ide szúrhatsz be. A feltöltött képek weben elérhető tárhelyre kerülnek, így az email kliensek is be tudják tölteni őket.</p>
           </div>
