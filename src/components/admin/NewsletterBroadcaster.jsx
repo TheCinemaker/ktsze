@@ -53,7 +53,6 @@ export const NewsletterBroadcaster = () => {
 
   const syncEditor = () => { if (editorRef.current) setContent(editorRef.current.innerHTML); };
   const exec = (command, value = null) => { editorRef.current?.focus(); document.execCommand(command, false, value); syncEditor(); };
-      .replace(/\[\[IMAGE:(https?:\/\/[^\]]+)\]\]/g, '<p style="text-align:center;margin:20px 0;direction:ltr;"><img src="$1" alt="Flyer" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:8px;" /></p>');
   const insertImage = async (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) return toast.error('Csak JPG, PNG vagy WebP kép tölthető fel.');
