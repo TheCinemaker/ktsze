@@ -165,7 +165,7 @@ export const NewsletterBroadcaster = () => {
               <span className="flex-1" />
               <button type="button" onClick={() => setShowPreview(true)} className="px-2.5 py-1.5 rounded-lg hover:bg-white text-sm flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> Előnézet</button>
             </div>
-            <div ref={editorRef} contentEditable suppressContentEditableWarning onInput={syncEditor} dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} dir="ltr" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'isolate', writingMode: 'horizontal-tb' }} className="min-h-[280px" input rounded-t-none rounded-b-xl p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-wine-200 text-left" />
+            <div ref={editorRef} contentEditable suppressContentEditableWarning onInput={syncEditor} dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} dir="ltr" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'isolate', writingMode: 'horizontal-tb' }} className="min-h-[280px] input rounded-t-none rounded-b-xl p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-wine-200 text-left" />
             <p className="text-[11px] text-ink-500 mt-1.5">Képeket közvetlenül ide szúrhatsz be. A feltöltött képek weben elérhető tárhelyre kerülnek, így az email kliensek is be tudják tölteni őket.</p>
           </div>
           <div className="flex flex-wrap items-end justify-between gap-4 pt-3 border-t border-sand-200">
