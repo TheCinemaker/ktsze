@@ -21,7 +21,13 @@ export const NewsletterBroadcaster = () => {
   const [selectedWorkgroupId, setSelectedWorkgroupId] = useState('');
   const [manualEmails, setManualEmails] = useState('');
   const [subject, setSubject] = useState('[KTSZE] Tájékoztató a Kőszegi Turisztikai Szövetség tagjainak');
-  const [content, setContent] = useState(`Kedves {{NAME}}!\n\nEzúton tájékoztatunk a Kőszegi Turisztikai Szövetség Egyesület legfrissebb híreiről és aktuális feladatairól.\n\nÜdvözlettel,\nKőszegi Turisztikai Szövetség Egyesület Elnöksége`);
+  const [content, setContent] = useState(`Kedves {{NAME}}!
+
+Ezúton tájékoztatunk a Kőszegi Turisztikai Szövetség Egyesület legfrissebb híreiről és aktuális feladatairól.
+
+Üdvözlettel,
+Kőszegi Turisztikai Szövetség Egyesület Elnöksége`);
+
   const [sending, setSending] = useState(false);
   const [testSending, setTestSending] = useState(false);
   const [testEmail, setTestEmail] = useState('');
