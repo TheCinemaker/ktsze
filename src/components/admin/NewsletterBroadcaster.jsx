@@ -57,7 +57,9 @@ export const NewsletterBroadcaster = () => {
   }, [membersData.data, membershipsData.data, audienceFilter, selectedWorkgroupId, manualEmails]);
 
   const htmlBody = useMemo(() => {
-    const safeContent = content.replace(/\n/g, '<br>').replace(/{{NAME}}/g, '<span data-name-placeholder="true">{{NAME}}</span>');
+    const safeContent = content
+      .replace(/\n/g, '<br>')
+      .replace(/{{NAME}}/g, '<span data-name-placeholder="true">{{NAME}}</span>');
     return `<div style="font-family:Arial,sans-serif;line-height:1.6;direction:ltr;text-align:left;color:#1e1b26;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e0d8;border-radius:16px;background:#faf7f1;"><div style="text-align:center;padding-bottom:20px;border-bottom:2px solid #701a2e;"><h2 style="color:#701a2e;margin:0;font-size:20px;">Kőszegi Turisztikai Szövetség Egyesület</h2><p style="font-size:12px;color:#666;margin-top:4px;">Hivatalos Egyesületi Tájékoztató &amp; Hírlevél</p></div><div style="padding:24px 0;font-size:15px;color:#2d2838;">${safeContent}</div><div style="border-top:1px solid #e5e0d8;padding-top:16px;text-align:center;font-size:11px;color:#888;"><p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.hu" style="color:#701a2e;">ktsze.hu</a></p></div></div>`;
   }, [content]);
 
@@ -83,12 +85,27 @@ export const NewsletterBroadcaster = () => {
     syncEditor();
   };
 
-  const exec = (command, value = null) => {
+  const wrapSelection = (before, after = before) => {
     const editor = editorRef.current;
     if (!editor) return;
-    editor.focus();
-    document.execCommand(command, false, value);
-    syncEditor();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const selected = content.slice(start, end);
+    const replacement = before + selected + after;
+    setContent(content.slice(0, start) + replacement + content.slice(end));
+    requestAnimationFrame(() => {
+      editor.focus();
+      editor.setSelectionRange(start + before.length, start + before.length + selected.length);
+    });
+  };
+
+  const exec = (command) => {
+    if (command === 'bold') return wrapSelection('<strong>', '</strong>');
+    if (command === 'italic') return wrapSelection('<em>', '</em>');
+    if (command === 'underline') return wrapSelection('<u>', '</u>');
+    if (command === 'formatBlock') return wrapSelection('<h2>', '</h2>');
+    if (command === 'insertUnorderedList') return wrapSelection('<ul><li>', '</li></ul>');
+    if (command === 'createLink') return wrapSelection('<a href="' + command + '">', '</a>');
   };
 
   const insertImage = async (file) => {
@@ -119,7 +136,15 @@ export const NewsletterBroadcaster = () => {
 
   const insertLink = () => {
     const url = window.prompt('Link URL-je:', 'https://');
-    if (url && /^https?:\/\//i.test(url)) exec('createLink', url);
+    if (url && /^https?:\/\//i.test(url)) {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const selected = content.slice(start, end) || url;
+      const replacement = `<a href="${url}" target="_blank" rel="noopener noreferrer">${selected}</a>`;
+      setContent(content.slice(0, start) + replacement + content.slice(end));
+    }
   };
 
 
