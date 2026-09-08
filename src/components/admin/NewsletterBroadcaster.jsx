@@ -59,7 +59,8 @@ export const NewsletterBroadcaster = () => {
   const htmlBody = useMemo(() => {
     const safeContent = content
       .replace(/\n/g, '<br>')
-      .replace(/{{NAME}}/g, '<span data-name-placeholder="true">{{NAME}}</span>');
+      .replace(/{{NAME}}/g, '<span data-name-placeholder="true">{{NAME}}</span>')
+      .replace(/\[\[IMAGE:(https?:\\/\\/[^\]]+)\]\]/g, '<p style="text-align:center;margin:20px 0;direction:ltr;"><img src="$1" alt="Flyer" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:8px;" /></p>');
     return `<div style="font-family:Arial,sans-serif;line-height:1.6;direction:ltr;text-align:left;color:#1e1b26;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e0d8;border-radius:16px;background:#faf7f1;"><div style="text-align:center;padding-bottom:20px;border-bottom:2px solid #701a2e;"><h2 style="color:#701a2e;margin:0;font-size:20px;">Kőszegi Turisztikai Szövetség Egyesület</h2><p style="font-size:12px;color:#666;margin-top:4px;">Hivatalos Egyesületi Tájékoztató &amp; Hírlevél</p></div><div style="padding:24px 0;font-size:15px;color:#2d2838;">${safeContent}</div><div style="border-top:1px solid #e5e0d8;padding-top:16px;text-align:center;font-size:11px;color:#888;"><p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.hu" style="color:#701a2e;">ktsze.hu</a></p></div></div>`;
   }, [content]);
 
@@ -127,9 +128,16 @@ export const NewsletterBroadcaster = () => {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'A kép feltöltése sikertelen.');
-      editorRef.current?.focus();
-      document.execCommand('insertHTML', false, `<p style="text-align:center;margin:20px 0;direction:ltr;"><img src="${data.url}" alt="${escapeHtml(file.name)}" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:8px;" /></p>`);
-      syncEditor();
+      const editor = editorRef.current;
+      if (!editor) return;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const token = `[[IMAGE:${data.url}]]`;
+      setContent(content.slice(0, start) + token + content.slice(end));
+      requestAnimationFrame(() => {
+        editor.focus();
+        editor.setSelectionRange(start + token.length, start + token.length);
+      });
       toast.success('Kép beszúrva.');
     } catch (err) { toast.error(err.message); }
   };
