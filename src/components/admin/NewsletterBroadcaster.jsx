@@ -48,7 +48,7 @@ export const NewsletterBroadcaster = () => {
 
   const htmlBody = useMemo(() => {
     const safeContent = content.replace(/\n/g, '<br>').replace(/{{NAME}}/g, '<span data-name-placeholder="true">{{NAME}}</span>');
-    return `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#1e1b26;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e0d8;border-radius:16px;background:#faf7f1;"><div style="text-align:center;padding-bottom:20px;border-bottom:2px solid #701a2e;"><h2 style="color:#701a2e;margin:0;font-size:20px;">Kőszegi Turisztikai Szövetség Egyesület</h2><p style="font-size:12px;color:#666;margin-top:4px;">Hivatalos Egyesületi Tájékoztató &amp; Hírlevél</p></div><div style="padding:24px 0;font-size:15px;color:#2d2838;">${safeContent}</div><div style="border-top:1px solid #e5e0d8;padding-top:16px;text-align:center;font-size:11px;color:#888;"><p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.hu" style="color:#701a2e;">ktsze.hu</a></p></div></div>`;
+    return `<div style="font-family:Arial,sans-serif;line-height:1.6;direction:ltr;text-align:left;color:#1e1b26;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e0d8;border-radius:16px;background:#faf7f1;"><div style="text-align:center;padding-bottom:20px;border-bottom:2px solid #701a2e;"><h2 style="color:#701a2e;margin:0;font-size:20px;">Kőszegi Turisztikai Szövetség Egyesület</h2><p style="font-size:12px;color:#666;margin-top:4px;">Hivatalos Egyesületi Tájékoztató &amp; Hírlevél</p></div><div style="padding:24px 0;font-size:15px;color:#2d2838;">${safeContent}</div><div style="border-top:1px solid #e5e0d8;padding-top:16px;text-align:center;font-size:11px;color:#888;"><p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.hu" style="color:#701a2e;">ktsze.hu</a></p></div></div>`;
   }, [content]);
 
   const syncEditor = () => { if (editorRef.current) setContent(editorRef.current.innerHTML); };
@@ -149,7 +149,7 @@ export const NewsletterBroadcaster = () => {
               <span className="flex-1" />
               <button type="button" onClick={() => setShowPreview(true)} className="px-2.5 py-1.5 rounded-lg hover:bg-white text-sm flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> Előnézet</button>
             </div>
-            <div ref={editorRef} contentEditable suppressContentEditableWarning onInput={syncEditor} dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} className="min-h-[280px] input rounded-t-none rounded-b-xl p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-wine-200" />
+            <div ref={editorRef} contentEditable suppressContentEditableWarning onInput={syncEditor} dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} dir="ltr" style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }} className="min-h-[280px] input rounded-t-none rounded-b-xl p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-wine-200 text-left" />
             <p className="text-[11px] text-ink-500 mt-1.5">Képeket közvetlenül ide szúrhatsz be. A feltöltött képek weben elérhető tárhelyre kerülnek, így az email kliensek is be tudják tölteni őket.</p>
           </div>
           <div className="flex flex-wrap items-end justify-between gap-4 pt-3 border-t border-sand-200">
