@@ -27,8 +27,9 @@ export const RequireAuth = ({ permission, children }) => {
     return <Navigate to="/belepes" replace state={{ from: location.pathname }} />;
   }
 
-  // A jogosultság a profilhoz csatolt szerepkörökből jön — várjuk meg.
-  if (permission && profileLoading) {
+  // A jogosultság a profilhoz csatolt szerepkörökből jön — csak az első betöltéskor várunk,
+  // háttérbeli frissülésnél nem dobjuk ki a meglévő felületet.
+  if (permission && profileLoading && !profile) {
     return <LoadingBlock label="Jogosultságok ellenőrzése…" />;
   }
 

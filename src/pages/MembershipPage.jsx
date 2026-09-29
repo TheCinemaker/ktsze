@@ -155,19 +155,35 @@ export const MembershipPage = () => (
             </div>
           )}
 
-          {/* Hivatalos Alapszabály link */}
-          <div className="mt-6 border-t border-sand-400 pt-5 space-y-2">
+          {/* Hivatalos Dokumentumok & Letölthető Jelentkezési Lapok */}
+          <div className="mt-6 border-t border-sand-400 pt-5 space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-wine-800 flex items-center gap-1.5">
               <FileText className="h-4 w-4 text-wine-600" />
-              Hivatalos Dokumentumok
+              Letölthető Tagfelvételi Kérelmek
             </h3>
             <p className="text-xs text-ink-600">
-              Az egyesület bírósági bejegyzésű Alapszabálya és városszépítő programfüzete nyilvánosan megtekinthető:
+              Nyomtatható és kézzel vagy géppel kitölthető hivatalos felvételi kérelmek (PDF formatumban):
             </p>
-            <Link to="/dokumentumok" className="btn-secondary btn-sm w-full text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-wine-50">
-              Alapszabály Megtekintése
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            <div className="space-y-2">
+              <a
+                href="/documents/ktsze-tagfelveteli-kerelem-termeszetes-szemely.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary btn-sm w-full text-xs font-semibold flex items-center justify-between gap-1.5 hover:bg-wine-50"
+              >
+                <span>📄 Természetes személy (PDF)</span>
+                <ArrowRight className="h-3.5 w-3.5 text-wine-600" />
+              </a>
+              <a
+                href="/documents/ktsze-tagfelveteli-kerelem-jogi-szemely.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary btn-sm w-full text-xs font-semibold flex items-center justify-between gap-1.5 hover:bg-wine-50"
+              >
+                <span>🏢 Jogi személy / Cég (PDF)</span>
+                <ArrowRight className="h-3.5 w-3.5 text-wine-600" />
+              </a>
+            </div>
           </div>
         </div>
       </aside>
