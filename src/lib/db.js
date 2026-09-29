@@ -982,7 +982,7 @@ export const registerMemberByAdmin = async (input) => {
 //  Resend Hírlevél Küldő Integráció
 // -----------------------------------------------------------------------------
 
-export const sendNewsletterViaResend = async ({ fromEmail, recipients, subject, htmlContent }) => {
+export const sendNewsletterViaResend = async ({ fromEmail, recipients, subject, htmlContent, attachments }) => {
   try {
     const response = await fetch('/.netlify/functions/send-newsletter', {
       method: 'POST',
@@ -993,7 +993,8 @@ export const sendNewsletterViaResend = async ({ fromEmail, recipients, subject, 
         fromEmail,
         recipients,
         subject,
-        htmlContent
+        htmlContent,
+        attachments
       })
     });
 

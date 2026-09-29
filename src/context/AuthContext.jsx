@@ -39,14 +39,18 @@ export const AuthProvider = ({ children }) => {
   // jelszót kell adnia — a belépőoldal erre külön űrlapot mutat.
   const [passwordRecovery, setPasswordRecovery] = useState(false);
 
-  const loadProfile = useCallback(async (userId) => {
+  const loadProfile = useCallback(async (userId, isBackground = false) => {
     if (!userId) {
       setProfile(null);
       setRoles([]);
       setProfileError(null);
       return null;
     }
-    setProfileLoading(true);
+    // Csak akkor mutatunk töltőképernyőt, ha még nincs betöltött profilunk.
+    // Háttérben történő token frissüléskor (pl. lapfül váltáskor) nem zökkentjük ki a felhasználót.
+    if (!isBackground) {
+      setProfileLoading(true);
+    }
     setProfileError(null);
     try {
       const data = await getProfile(userId);
@@ -77,7 +81,7 @@ export const AuthProvider = ({ children }) => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return;
       setSession(data.session ?? null);
-      if (data.session?.user) await loadProfile(data.session.user.id);
+      if (data.session?.user) await loadProfile(data.session.user.id, false);
       if (active) setInitializing(false);
     });
 
@@ -89,8 +93,9 @@ export const AuthProvider = ({ children }) => {
       if (event === 'SIGNED_OUT') setPasswordRecovery(false);
 
       if (nextSession?.user) {
-        // Ne blokkoljuk a callbacket await-tel — a supabase-js ezt nem szereti.
-        loadProfile(nextSession.user.id);
+        // Lapváltáskor / fókusz visszatérésekor háttérben frissítjük a profiladatokat,
+        // így a nyitott űrlapok és mezők nem törlődnek és nem indul el az oldal újratöltése.
+        loadProfile(nextSession.user.id, true);
       } else {
         setProfile(null);
         setRoles([]);
