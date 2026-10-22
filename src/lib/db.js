@@ -1362,14 +1362,13 @@ export const submitAdventIdea = async (ideaData) => {
     status: 'uj'
   };
 
-  const { data, error } = await supabase
-    .from('advent_ideas')
-    .insert([payload])
-    .select()
-    .single();
+  // FONTOS: NINCS .select() a beszúrás után. A beküldő (akár kijelentkezett anon)
+  // csak INSERT joggal rendelkezik; a visszaolvasás SELECT-jogot igényelne, amit
+  // szándékosan csak az elnökség kap. A .select() miatt kapnánk "permission denied".
+  const { error } = await supabase.from('advent_ideas').insert([payload]);
 
   if (error) throw new Error(describeError(error));
-  return data;
+  return true;
 };
 
 // A beküldött ötletek NEM nyilvánosak — nincs publikus listázó. A beküldő oldal
