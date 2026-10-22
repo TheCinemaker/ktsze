@@ -1372,11 +1372,12 @@ export const submitAdventIdea = async (ideaData) => {
   return data;
 };
 
+/**
+ * Publikus/kóddal elérhető lista — SECURITY DEFINER RPC-n át, CSAK nem-személyes
+ * mezőkkel (nincs e-mail/telefon). A nyers táblát az RLS csak az elnökségnek adja.
+ */
 export const listAdventIdeas = async () => {
-  const { data, error } = await supabase
-    .from('advent_ideas')
-    .select('id, created_at, submitter_name, title, category, target_weekend, description, price_or_cost, willing_to_sponsor, status')
-    .order('created_at', { ascending: false });
+  const { data, error } = await supabase.rpc('public_advent_ideas');
 
   if (error) {
     console.warn('[listAdventIdeas] Error or table missing:', error);
