@@ -129,9 +129,9 @@ export const AboutPage = () => {
                       </blockquote>
                     )}
 
-                    <p className="line-clamp-5 flex-1 text-sm leading-relaxed text-ink-600">
+                    <div className="max-h-44 flex-1 overflow-y-auto whitespace-pre-line pr-1 text-sm leading-relaxed text-ink-600 custom-scrollbar">
                       {member.bio || DEFAULT_BIO}
-                    </p>
+                    </div>
 
                     {/* Elérhetőség */}
                     {(member.public_email || member.public_phone) && (
