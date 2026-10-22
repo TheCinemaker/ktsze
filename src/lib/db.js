@@ -250,19 +250,42 @@ const BOARD_FALLBACK = [
 /**
  * Nyilvános elnökségi tagok.
  *
- * Elsődleges forrás a DB: a public_board_members() SECURITY DEFINER RPC, amely
- * kijelentkezve is működik, és csak a kifejezetten publikus mezőket adja vissza
- * (lásd supabase/21_board_members.sql). Ha a DB még üres (nincs board_public=true
- * profil) vagy az RPC nem elérhető, a PII-mentes BOARD_FALLBACK jelenik meg.
+ * Elsődleges forrás a DB: a public_board_members() SECURITY DEFINER RPC
+ * (board_public=true profilok, lásd supabase/21_board_members.sql). A DB adatai
+ * az elsődlegesek; a PII-mentes BOARD_FALLBACK-ból CSAK azokat fűzzük hozzá,
+ * akik a DB-ben (még) nincsenek — így egyetlen elnökségi tag sem marad le, amíg
+ * nincs mindenkinek board_public=true profilja (pl. akinek még nincs fiókja).
+ * Amint egy tag bekerül a DB-be, az ő DB-adata lép a tartalék helyére.
  */
 export const listPublicBoardMembers = async () => {
+  let dbRows = [];
   try {
     const rows = unwrap(await supabase.rpc('public_board_members'));
-    if (Array.isArray(rows) && rows.length > 0) return rows;
+    if (Array.isArray(rows)) dbRows = rows;
   } catch (err) {
     console.warn('[db] public_board_members RPC nem elérhető, tartalékra váltás:', err);
   }
-  return BOARD_FALLBACK;
+
+  const key = (n) => (n || '').toLowerCase();
+  const alreadyInDb = (fb) =>
+    dbRows.some((r) =>
+      key(fb.full_name)
+        .split(' ')
+        .some((part) => part.length > 3 && key(r.full_name).includes(part))
+    );
+
+  const merged = [...dbRows];
+  BOARD_FALLBACK.forEach((fb, i) => {
+    if (!alreadyInDb(fb)) merged.push({ ...fb, board_order: fb.board_order ?? i + 1 });
+  });
+
+  // Elnök elöl (board_order 1), utána a sorrend szerint, végül név szerint.
+  return merged.sort((a, b) => {
+    const ao = a.board_order ?? 99;
+    const bo = b.board_order ?? 99;
+    if (ao !== bo) return ao - bo;
+    return (a.full_name || '').localeCompare(b.full_name || '', 'hu');
+  });
 };
 
 /**

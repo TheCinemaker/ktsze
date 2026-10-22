@@ -1,0 +1,110 @@
+================================================================================
+KTSZE.HU — LEVELEZÉS BEÁLLÍTÁSI ÉS ÜZEMELTETÉSI ÚTMUTATÓ (CLOUDFLARE + RESEND + GMAIL)
+================================================================================
+
+Ez a rendszer 100%-ban ingyenes, nincs szükség fizetős Google Workspace-re 
+vagy tárhelyes e-mail fiókokra.
+
+MŰKÖDÉSI ELV:
+  1. FOGADÁS: valaki ír az @ktsze.hu címre -> Cloudflare Email Routing azonnal 
+     továbbítja a megadott személyes/munkahelyi címre (pl. Gmail-re).
+  2. KÜLDÉS: a meglévő Gmailből írsz/válaszolsz, de a feladó @ktsze.hu lesz. 
+     A levelet a Resend hitelesített SMTP szervere lövi ki, így garantáltan nem megy Spambe.
+
+--------------------------------------------------------------------------------
+1. CLOUDFLARE BEÁLLÍTÁSOK (Domain & Fogadás)
+--------------------------------------------------------------------------------
+Névszerverek (Tárhely.eu-nál beállítva):
+  - bailey.ns.cloudflare.com
+  - dante.ns.cloudflare.com
+
+Email Routing (Fogadás és továbbítás):
+  Helye: Cloudflare Dashboard -> ktsze.hu -> Email -> Email Routing
+
+  A) Destination addresses (Célcímek):
+     - Itt kell megadni azokat a címeket, ahová a levelek érkeznek.
+     - Mindegyik címre a Cloudflare küld egy egyszeri ellenőrző linket ("Verify email").
+     - Csak a zöld "Verified" címekre lehet átirányítást kötni!
+     - Címek:
+       * admin.ktsze@gmail.com
+       * avar.szilveszter@gmail.com
+       * drescher.gabor@gmail.com
+       * szalok.adrienn@irottko.hu
+       * robisteak@gmail.com
+       * ibrahim.kavezo@gmail.com
+
+  B) Routing rules (Átirányítási szabályok):
+     - Create routing rule:
+       * info@ktsze.hu       -> admin.ktsze@gmail.com
+       * s.avar@ktsze.hu     -> avar.szilveszter@gmail.com
+       * g.drescher@ktsze.hu -> drescher.gabor@gmail.com
+       * a.szalok@ktsze.hu   -> szalok.adrienn@irottko.hu
+       * r.voros@ktsze.hu    -> robisteak@gmail.com
+       * p.farkas@ktsze.hu   -> ibrahim.kavezo@gmail.com
+
+  C) Fontos DNS SPF rekord (Cloudflare -> DNS -> Records):
+     Ha nem így van, erre a TXT rekordra kell cserélni a meglévőt:
+     Név:    ktsze.hu
+     Típus:  TXT
+     Érték:  v=spf1 include:_spf.mx.cloudflare.net include:resend.com ~all
+
+--------------------------------------------------------------------------------
+2. RESEND BEÁLLÍTÁSOK (Küldő motor & SMTP)
+--------------------------------------------------------------------------------
+Weboldal: https://resend.com
+
+  A) Ha új API kulcs kell a belépéshez (mivel nem olvasható ki újra):
+     1. Menj a "API Keys" menüre (resend.com/api-keys).
+     2. Kattints a "Create API Key" gombra.
+     3. Név: pl. "Gmail SMTP Szilveszter"
+     4. Permission: "Full access" vagy "Sending access"
+     5. Másold ki az új kulcsot (így kezdődik: re_...).
+
+  B) SMTP Szerver Adatok (ezt kell beírni a levelezőkbe):
+     - SMTP Szerver:    smtp.resend.com
+     - Port:           465 (SSL) vagy 587 (TLS)
+     - Felhasználónév: resend  (szó szerint ez a szó, kisbetűvel!)
+     - Jelszó:         A generált Resend API kulcs (re_...)
+
+--------------------------------------------------------------------------------
+3. GMAIL BEÁLLÍTÁS (Hogyan tudsz küldeni a saját @ktsze.hu címedről)
+--------------------------------------------------------------------------------
+Ezt mindenki a saját Gmail fiókjában tudja megcsinálni (pl. admin.ktsze, avar.szilveszter):
+
+  1. Lépj be a Gmailbe számítógépen.
+  2. Jobb felső sarok: Fogaskerék -> "Az összes beállítás megtekintése".
+  3. Menj a "Fiókok és importálás" fülre.
+  4. A "Levélküldés más címről" résznél kattints:
+     -> "További saját e-mail cím hozzáadása"
+  5. 1. Ablak:
+     - Név: tetszőleges (pl. "Avar Szilveszter | KTSZE" vagy "KTSZE Info")
+     - E-mail cím: a saját @ktsze.hu címed (pl. info@ktsze.hu vagy s.avar@ktsze.hu)
+     - "Álnévként kezelendő": VEDD KI A PIPÁT!
+     - Kattints a "Következő lépés"-re.
+  6. 2. Ablak:
+     - SMTP-szerver: smtp.resend.com
+     - Port: 465
+     - Felhasználónév: resend
+     - Jelszó: a Resend API kulcsod (re_...)
+     - Biztonságos kapcsolat SSL használatával (bejelölve)
+     - Kattints: "Fiók hozzáadása".
+  7. Megerősítés:
+     - A Gmail küld egy számkódot a @ktsze.hu-s címedre.
+     - Mivel a Cloudflare már továbbítja a leveleket, ez a kód másodperceken 
+       belül megérkezik a rendes Gmail beérkező leveleid közé.
+     - Írd be a kódot a felugró ablakba -> Ellenőrzés. KÉSZ!
+
+  8. EXTRA KÉNYELMI BEÁLLÍTÁS (hogy automatikusan a jó címről válaszolj):
+     Ugyanitt a Gmail "Fiókok és importálás" fülön a 
+     "Levélre való válaszoláskor" résznél válaszd ezt:
+     -> [x] "Válasz arról a címről, amelyre az üzenet érkezett"
+
+--------------------------------------------------------------------------------
+4. GYORS CHECKLIST ÚJ TAG / ELNÖKSÉGI TAG HOZZÁADÁSAKOR
+--------------------------------------------------------------------------------
+  1. Cloudflare -> Destination addresses -> Add address (az illető privát e-mailje).
+  2. Megkéred, hogy a telefonján/gépén kattintson a Cloudflare megerősítő linkjére.
+  3. Cloudflare -> Routing rules -> Create rule (pl. nev@ktsze.hu -> privát cím).
+  4. (Opcionális) Ha küldeni is akar @ktsze.hu-sként: Resendben adsz neki egy 
+     API kulcsot, és a fenti 3. pont szerint beállítja a Gmailjében.
+================================================================================
