@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Award, Crown, Mail, Phone, Building2, CheckCircle2, ArrowRight, ShieldCheck, Newspaper, Target, Quote } from 'lucide-react';
+import { Users, Crown, Mail, Phone, Building2, CheckCircle2, ArrowRight, Newspaper, Target, Quote } from 'lucide-react';
 
 import { ORGANIZATION, formattedAddress, PRESS_RELEASE } from '../config/organization';
 import { listPublicBoardMembers } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
-import { PageHeader, Spinner, DetailRow, FormattedText } from '../components/ui';
+import { PageHeader, Spinner, DetailRow } from '../components/ui';
 import { SEO } from '../components/ui/SEO';
 
 const DEFAULT_BIO =
@@ -91,81 +91,68 @@ export const AboutPage = () => {
               {boardMembers.map((member) => (
                 <article
                   key={member.id}
-                  className="card overflow-hidden flex flex-col justify-between p-0 transition-all duration-300 hover:shadow-xl border border-sand-300 bg-white group h-[520px]"
+                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-sand-300 bg-white shadow-card transition-all duration-300 hover:border-gold-300 hover:shadow-lift"
                 >
-                  {/* Egységes, elegáns 1/4 méretű portré kép */}
-                  <div className="relative h-40 sm:h-44 w-full bg-sand-200 overflow-hidden flex items-center justify-center border-b border-sand-300 shrink-0">
-                    {member.avatar_url ? (
-                      <img
-                        src={member.avatar_url}
-                        alt={member.full_name}
-                        className="h-full max-h-full max-w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center space-y-1.5 text-wine-800/70">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-wine-100 text-wine-800 text-xl font-bold font-display shadow-inner">
+                  {/* Fejléc: portré + tisztség */}
+                  <div className="flex items-center gap-4 bg-gradient-to-b from-sand-100 to-white px-5 pt-5 pb-4">
+                    <div className="shrink-0">
+                      {member.avatar_url ? (
+                        <img
+                          src={member.avatar_url}
+                          alt={member.full_name}
+                          className="h-20 w-20 rounded-full object-cover shadow-sm ring-2 ring-gold-300/70"
+                        />
+                      ) : (
+                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-wine-100 font-display text-xl font-bold text-wine-800 ring-2 ring-gold-300/70">
                           {member.full_name?.split(' ').map((n) => n[0]).join('').slice(0, 2) || 'TK'}
                         </div>
-                        <span className="text-[11px] font-semibold text-ink-500">Portré feltöltésre vár</span>
-                      </div>
-                    )}
-                    <div className="absolute top-2.5 right-2.5 rounded-full bg-wine-700/90 text-white p-1.5 shadow-md">
-                      <Award className="h-3.5 w-3.5" aria-hidden="true" />
+                      )}
                     </div>
-                  </div>
-
-                  {/* Tartalom & Bemutatkozás */}
-                  <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                    <div className="space-y-2">
-                      <span className="inline-block rounded-full bg-wine-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-wine-800">
-                        {member.custom_title || 'Elnökségi Tag'}
+                    <div className="min-w-0">
+                      <span className="inline-block rounded-full bg-wine-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-wine-800">
+                        {member.custom_title || 'Elnökségi tag'}
                       </span>
-                      <h3 className="font-display text-xl font-bold text-ink-900">
-                        {member.full_name}
-                      </h3>
+                      <h3 className="mt-1.5 font-display text-lg font-bold text-ink-900">{member.full_name}</h3>
                       {(member.service_location_name || member.business_activity) && (
-                        <p className="text-xs font-medium text-wine-700">
+                        <p className="truncate text-xs font-medium text-wine-700">
                           {member.service_location_name || member.business_activity}
                         </p>
                       )}
-
-                      {member.motto && (
-                        <blockquote className="text-xs italic font-medium text-wine-900 bg-sand-100 p-2.5 rounded-lg border-l-2 border-wine-600 my-2">
-                          {member.motto}
-                        </blockquote>
-                      )}
-
-                      <div className="text-xs leading-relaxed text-ink-600 pt-2 border-t border-sand-200 h-32 overflow-y-auto pr-1 custom-scrollbar">
-                        <FormattedText>{member.bio || DEFAULT_BIO}</FormattedText>
-                      </div>
                     </div>
+                  </div>
 
-                    {/* Elérhetőség — csak a nyilvánosan vállalt adatok */}
+                  {/* Törzs */}
+                  <div className="flex flex-1 flex-col gap-3 px-5 pb-5">
+                    {member.motto && (
+                      <blockquote className="rounded-lg border-l-2 border-gold-400 bg-sand-50 px-3 py-2 text-xs italic text-wine-900">
+                        {member.motto}
+                      </blockquote>
+                    )}
+
+                    <p className="line-clamp-5 flex-1 text-sm leading-relaxed text-ink-600">
+                      {member.bio || DEFAULT_BIO}
+                    </p>
+
+                    {/* Elérhetőség */}
                     {(member.public_email || member.public_phone) && (
-                      <div className="pt-3 border-t border-sand-200 space-y-1.5">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Elérhetőség:</div>
+                      <div className="mt-auto space-y-1.5 border-t border-sand-200 pt-3">
                         {member.public_email && (
-                          <div>
-                            <a
-                              href={`mailto:${member.public_email}`}
-                              className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
-                            >
-                              <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                              {member.public_email}
-                            </a>
-                          </div>
+                          <a
+                            href={`mailto:${member.public_email}`}
+                            className="flex items-center gap-2 text-xs font-medium text-wine-700 transition-colors hover:text-wine-900"
+                          >
+                            <Mail className="h-4 w-4 shrink-0 text-gold-500" aria-hidden="true" />
+                            <span className="truncate">{member.public_email}</span>
+                          </a>
                         )}
-
                         {member.public_phone && (
-                          <div>
-                            <a
-                              href={telHref(member.public_phone)}
-                              className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
-                            >
-                              <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                              {member.public_phone}
-                            </a>
-                          </div>
+                          <a
+                            href={telHref(member.public_phone)}
+                            className="flex items-center gap-2 text-xs font-medium text-wine-700 transition-colors hover:text-wine-900"
+                          >
+                            <Phone className="h-4 w-4 shrink-0 text-gold-500" aria-hidden="true" />
+                            {member.public_phone}
+                          </a>
                         )}
                       </div>
                     )}

@@ -57,9 +57,8 @@ export const ORGANIZATION = {
   registryCaseNumber: '1800/Pk.60029/2026',   // bírósági ügyszám
 
   // --- Pénzügy ---
-  // Csak akkor írd be, ha ez tényleg az egyesület számlaszáma.
-  bankName: '',
-  bankAccount: '',
+  bankName: 'OTP Bank',
+  bankAccount: '11747082-21429969-00000000',
 
   // --- Online jelenlét ---
   websiteUrl: '',

@@ -5,7 +5,7 @@ import { LogIn, UserPlus, MailCheck, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { HeaderLogo } from '../components/layout/HeaderLogo';
-import { TextInput, Select, Spinner, LoadingBlock } from '../components/ui';
+import { TextInput, Select, Checkbox, Spinner, LoadingBlock } from '../components/ui';
 
 /*
   A korábbi verzió három súlyos hibája, amit ez a fájl megszüntet:
@@ -142,6 +142,7 @@ const RegisterForm = ({ onSwitch, onNeedsConfirmation }) => {
     service_street: '',
     service_house_number: ''
   });
+  const [consent, setConsent] = useState(false);
   const [pending, setPending] = useState(false);
 
   const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
@@ -152,6 +153,11 @@ const RegisterForm = ({ onSwitch, onNeedsConfirmation }) => {
 
     if (form.password !== form.passwordConfirm) {
       toast.error('A két jelszó nem egyezik.');
+      return;
+    }
+
+    if (!consent) {
+      toast.error('A regisztrációhoz el kell fogadnod az Adatkezelési tájékoztatót.');
       return;
     }
 
@@ -259,6 +265,26 @@ const RegisterForm = ({ onSwitch, onNeedsConfirmation }) => {
           </div>
         </fieldset>
       )}
+
+      <Checkbox
+        checked={consent}
+        onChange={(e) => setConsent(e.target.checked)}
+        label={
+          <>
+            Elolvastam és elfogadom az{' '}
+            <a
+              href="/adatvedelem"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="font-semibold text-wine-700 underline hover:text-wine-900"
+            >
+              Adatkezelési tájékoztatót
+            </a>
+            , és hozzájárulok adataim egyesületi nyilvántartás céljából történő kezeléséhez.
+          </>
+        }
+      />
 
       <p className="text-xs text-ink-500">
         A regisztráció fiókot hoz létre, de önmagában nem jelent egyesületi tagságot — azt az elnökség hagyja jóvá.
