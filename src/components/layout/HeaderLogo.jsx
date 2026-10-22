@@ -19,13 +19,13 @@ export const LogoMark = ({ className = 'h-9 w-9' }) => (
 );
 
 export const HeaderLogo = ({ variant = 'full', className = '' }) => (
-  <span className={`flex select-none items-center gap-2.5 ${className}`}>
-    <LogoMark className="h-9 w-9 shrink-0" />
+  <span className={`flex select-none items-center gap-2 ${className}`}>
+    <LogoMark className="h-8 w-8 shrink-0" />
 
     {variant === 'full' && (
       <span className="flex flex-col leading-none">
-        <span className="font-display text-base font-semibold tracking-tight text-wine-600">Kőszegi</span>
-        <span className="mt-1 text-[0.7rem] font-medium uppercase tracking-[0.13em] text-ink-600">
+        <span className="font-display text-sm font-semibold tracking-tight text-wine-600">Kőszegi</span>
+        <span className="mt-0.5 text-[0.62rem] font-medium uppercase tracking-[0.12em] text-ink-600">
           Turisztikai Szövetség
         </span>
       </span>

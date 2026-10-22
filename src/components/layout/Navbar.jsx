@@ -64,7 +64,7 @@ export const Navbar = () => {
 
   return (
     <>
-      <header className={`sticky top-0 z-40 border-b border-sand-300/80 bg-white/90 backdrop-blur-xl transition-all duration-300 ${scrolled ? 'py-1 shadow-md' : 'py-2 shadow-xs'}`}>
+      <header className={`sticky top-0 z-40 border-b border-sand-300/80 bg-white/90 backdrop-blur-xl transition-all duration-300 ${scrolled ? 'py-0.5 shadow-md' : 'py-1 shadow-xs'}`}>
         {/* Billentyűzetes navigációhoz: átugrás a tartalomra */}
         <a
           href="#main"
@@ -74,7 +74,7 @@ export const Navbar = () => {
         </a>
 
         <nav className="container-page" aria-label="Fő navigáció">
-          <div className={`flex items-center justify-between gap-2 xl:gap-4 transition-all duration-300 ${scrolled ? 'h-14' : 'h-16'}`}>
+          <div className={`flex items-center justify-between gap-2 xl:gap-4 transition-all duration-300 ${scrolled ? 'h-11' : 'h-12'}`}>
             <Link to="/" className="shrink-0 rounded-lg transition-transform hover:scale-105" aria-label="Főoldal">
               <HeaderLogo />
             </Link>

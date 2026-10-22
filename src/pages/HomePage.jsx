@@ -66,62 +66,53 @@ const QUICK_LINKS = [
 
 const HeroSection = () => (
   <section className="relative overflow-hidden bg-gradient-to-b from-sand-200 via-sand-100 to-sand-50">
-    <div className="relative z-10 container-page max-w-3xl pt-14 pb-36 sm:pt-20 sm:pb-44">
-      <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-card ring-1 ring-gold-300/60">
-          <LogoMark className="h-7 w-7" />
+    <div className="relative z-10 container-page max-w-3xl pt-9 pb-24 sm:pt-12 sm:pb-28">
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-card ring-1 ring-gold-300/60">
+          <LogoMark className="h-6 w-6" />
         </span>
         <Eyebrow>{ORGANIZATION.tagline}</Eyebrow>
       </div>
 
-      <h1 className="mt-6 font-display text-4xl leading-[1.08] text-wine-900 sm:text-5xl lg:text-6xl">
-        Együtt Kőszeg<br className="hidden sm:block" /> turizmusáért
+      <h1 className="mt-4 font-display text-3xl leading-[1.1] text-wine-900 sm:text-4xl lg:text-5xl">
+        Együtt Kőszeg turizmusáért
       </h1>
 
-      <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-600">
-        A kőszegi szálláshelyek, vendéglátók, borászok és kulturális szolgáltatók szakmai
-        összefogása — a város turisztikai vonzerejéért és a minőségi vendégélményért.
-      </p>
-
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Link to="/tagsag" className="btn-gold btn-md shadow-lift">
-          Csatlakozom az egyesülethez
+      <div className="mt-5 flex flex-wrap gap-3">
+        <Link to="/tagsag" className="btn-gold btn-sm shadow-xs">
+          Csatlakozom
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
-        <Link to="/egyesulet" className="btn btn-md border-wine-300 bg-white text-wine-700 hover:bg-wine-50">
-          Rólunk &amp; Vezetőség
+        <Link to="/egyesulet" className="btn btn-sm border-wine-300 bg-white text-wine-700 hover:bg-wine-50">
+          Rólunk
         </Link>
       </div>
     </div>
 
-    {/* Rajzolt kőszegi látkép a hero alján — teljes szélességű dekoratív sáv */}
-    <KoszegSkyline className="pointer-events-none absolute inset-x-0 bottom-0 h-36 w-full sm:h-48" />
+    {/* Rajzolt kőszegi látkép a hero alján — visszafogott dekoratív sáv */}
+    <KoszegSkyline className="pointer-events-none absolute inset-x-0 bottom-0 h-20 w-full sm:h-28" />
   </section>
 );
 
 const Purposes = () => (
-  <section className="section bg-sand-50">
-    <div className="container-page space-y-10">
+  <section className="bg-sand-50 py-12 sm:py-14">
+    <div className="container-page space-y-6">
       <div className="max-w-2xl">
         <Eyebrow>Amiért dolgozunk</Eyebrow>
-        <h2 className="mt-3 font-display text-3xl text-ink-900 sm:text-4xl">Céljaink</h2>
-        <p className="mt-3 text-base text-ink-600">
-          Az egyesület az alapszabályban rögzített célok mentén, a helyi turisztikai szereplők
-          összefogásával dolgozik Kőszegért.
-        </p>
+        <h2 className="mt-2 font-display text-2xl text-ink-900">Céljaink</h2>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {PURPOSES.map(({ icon: Icon, title, text }) => (
           <article
             key={title}
-            className="group rounded-xl border border-sand-300 bg-white p-6 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-gold-300 hover:shadow-lift"
+            className="group rounded-xl border border-sand-300 bg-white p-5 shadow-card transition-all duration-200 hover:border-gold-300 hover:shadow-lift"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-gold-300 bg-gold-50 text-wine-700">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-gold-300 bg-gold-50 text-wine-700">
               <Icon className="h-5 w-5" aria-hidden="true" />
             </div>
-            <h3 className="mt-5 font-display text-lg text-ink-900">{title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-ink-600">{text}</p>
+            <h3 className="mt-4 font-display text-base text-ink-900">{title}</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink-600">{text}</p>
           </article>
         ))}
       </div>
@@ -133,21 +124,21 @@ const PresidentQuote = () => (
   <section className="relative overflow-hidden bg-wine-900 text-white">
     {/* Kőszegi címer halvány vízjelként */}
     <div
-      className="pointer-events-none absolute -right-8 top-1/2 hidden -translate-y-1/2 opacity-[0.07] md:block"
+      className="pointer-events-none absolute -right-6 top-1/2 hidden -translate-y-1/2 opacity-[0.06] md:block"
       aria-hidden="true"
     >
-      <img src="/koszeg_cimer.png" alt="" className="h-72 w-auto" />
+      <img src="/koszeg_cimer.png" alt="" className="h-52 w-auto" />
     </div>
 
-    <div className="relative container-page py-16 sm:py-20">
+    <div className="relative container-page py-12 sm:py-14">
       <div className="max-w-3xl">
-        <Quote className="h-9 w-9 text-gold-400" aria-hidden="true" />
-        <blockquote className="mt-5 font-display text-2xl italic leading-relaxed text-sand-50 sm:text-3xl">
+        <Quote className="h-7 w-7 text-gold-400" aria-hidden="true" />
+        <blockquote className="mt-3 font-display text-xl italic leading-relaxed text-sand-50 sm:text-2xl">
           „{PRESS_RELEASE.quote.text}"
         </blockquote>
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-4 flex items-center gap-3">
           <span className="h-px w-10 bg-gold-400" aria-hidden="true" />
-          <span className="text-sm font-semibold uppercase tracking-[0.12em] text-gold-300">
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-gold-300">
             {PRESS_RELEASE.quote.author}
           </span>
         </div>
@@ -325,10 +316,10 @@ const QuickLinks = () => (
 export const HomePage = () => (
   <>
     <HeroSection />
-    <Purposes />
-    <PresidentQuote />
     <LatestNews />
     <Workgroups />
+    <Purposes />
+    <PresidentQuote />
     <MembershipCta />
     <QuickLinks />
   </>
