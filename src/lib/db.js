@@ -1340,3 +1340,88 @@ export const addFlowerLog = async (input) => {
   );
 };
 
+// -----------------------------------------------------------------------------
+//  Zárt Adventi Ötletbörze (advent_ideas)
+// -----------------------------------------------------------------------------
+
+export const submitAdventIdea = async (ideaData) => {
+  const payload = {
+    access_code: ideaData.access_code?.trim() || '99118822',
+    submitter_name: ideaData.submitter_name?.trim(),
+    submitter_email: ideaData.submitter_email?.trim(),
+    submitter_phone: ideaData.submitter_phone?.trim() || null,
+    title: ideaData.title?.trim(),
+    category: ideaData.category || 'Programötlet',
+    target_weekend: ideaData.target_weekend || 'Mindkettő',
+    description: ideaData.description?.trim(),
+    contact_name: ideaData.contact_name?.trim() || null,
+    contact_phone: ideaData.contact_phone?.trim() || null,
+    contact_email: ideaData.contact_email?.trim() || null,
+    price_or_cost: ideaData.price_or_cost?.trim() || null,
+    willing_to_sponsor: Boolean(ideaData.willing_to_sponsor),
+    status: 'uj'
+  };
+
+  const { data, error } = await supabase
+    .from('advent_ideas')
+    .insert([payload])
+    .select()
+    .single();
+
+  if (error) throw new Error(describeError(error));
+  return data;
+};
+
+export const listAdventIdeas = async () => {
+  const { data, error } = await supabase
+    .from('advent_ideas')
+    .select('id, created_at, submitter_name, title, category, target_weekend, description, price_or_cost, willing_to_sponsor, status')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.warn('[listAdventIdeas] Error or table missing:', error);
+    return [];
+  }
+  return data || [];
+};
+
+/** Elnökségi nézet: MINDEN részletes adattal (telefonszám, kapcsolat, ár, stb.) */
+export const listAllAdventIdeasForAdmin = async () => {
+  const { data, error } = await supabase
+    .from('advent_ideas')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.warn('[listAllAdventIdeasForAdmin] Error or table missing:', error);
+    return [];
+  }
+  return data || [];
+};
+
+/** Státusz módosítása az elnökség által (pl. 'uj', 'egyeztetes', 'elfogadva', 'archiv') */
+export const updateAdventIdeaStatus = async (id, status) => {
+  const { data, error } = await supabase
+    .from('advent_ideas')
+    .update({ status })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(describeError(error));
+  return data;
+};
+
+/** Ötlet törlése az elnökség által */
+export const deleteAdventIdea = async (id) => {
+  const { error } = await supabase
+    .from('advent_ideas')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(describeError(error));
+  return true;
+};
+
+
+

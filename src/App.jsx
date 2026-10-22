@@ -24,6 +24,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { DiagnosticsPage } from './pages/DiagnosticsPage';
 import { WorkgroupsPage } from './pages/WorkgroupsPage';
 import { WorkgroupDetailPage } from './pages/WorkgroupDetailPage';
+import { AdventIdeaPage } from './pages/AdventIdeaPage';
 
 // Biztonságos lusta betöltés: ha új deployment miatt a böngésző 404-es hibát kap az régebbi JS chunkra, automatikusan frissíti az oldalt.
 const safeLazy = (importFn) =>
@@ -84,6 +85,7 @@ export default function App() {
           <Route path="/hatarozatok" element={<ResolutionsPage />} />
           <Route path="/tagsag" element={<MembershipPage />} />
           <Route path="/kapcsolat" element={<ContactPage />} />
+          <Route path="/advent-otletborze" element={<AdventIdeaPage />} />
           <Route path="/belepes" element={<LoginPage />} />
           <Route path="/adatvedelem" element={<PrivacyPolicyPage />} />
 

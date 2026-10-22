@@ -1,11 +1,55 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Mail, Send, CheckCircle2, AlertTriangle, Users, Sparkles, Paperclip, FileText, Trash2, Link as LinkIcon, Download } from 'lucide-react';
+import { Mail, Send, CheckCircle2, Paperclip, FileText, Trash2, Link as LinkIcon, Eye, Edit3 } from 'lucide-react';
 import { listMembers, listWorkgroups, listAllWorkgroupMemberships, sendNewsletterViaResend } from '../../lib/db';
 import { useAsyncData } from '../../lib/useAsyncData';
 import { useToast } from '../../context/ToastContext';
-import { Spinner, EmptyState } from '../ui';
+import { Spinner } from '../ui';
 
 const DRAFT_KEY = 'ktsze_newsletter_draft_v1';
+
+/** Szöveg formázása HTML e-mailhez: markdown linkek, URL-ek, e-mailek, telefonok és formázások automatikus linkelése */
+const formatEmailBody = (text) => {
+  if (!text) return '';
+  let out = text;
+
+  // 1. Címsorok: ### Címsor
+  out = out.replace(/^###\s+(.+)$/gm, '<h3 style="color: #701a2e; margin: 20px 0 8px 0; font-size: 17px; font-weight: bold;">$1</h3>');
+
+  // 2. Félkövér: **szöveg**
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+  // 3. Dőlt: *szöveg*
+  out = out.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+
+  // 4. Markdown linkek: [Szöveg](https://...)
+  out = out.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #701a2e; font-weight: bold; text-decoration: underline;">$1</a>'
+  );
+
+  // 5. Szabadon álló URL-ek (amik nincsenek még <a> tagben)
+  out = out.replace(
+    /(^|[\s(])(https?:\/\/[^\s<)]+)/g,
+    '$1<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #701a2e; font-weight: bold; text-decoration: underline;">$2</a>'
+  );
+
+  // 6. E-mail címek
+  out = out.replace(
+    /(^|[\s(])([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,
+    '$1<a href="mailto:$2" style="color: #701a2e; font-weight: bold; text-decoration: underline;">$2</a>'
+  );
+
+  // 7. Magyar telefonszámok (+36 vagy 06...) -> kattintható híváslink mobilra
+  out = out.replace(
+    /(^|[\s(])((?:\+36|06)[\s-]?\d{1,2}[\s-]?\d{3}[\s-]?\d{3,4})/g,
+    (match, prefix, phone) => {
+      const cleanTel = phone.replace(/[\s-]/g, '').replace(/^06/, '+36');
+      return `${prefix}<a href="tel:${cleanTel}" style="color: #701a2e; font-weight: bold; text-decoration: underline;">${phone}</a>`;
+    }
+  );
+
+  return out;
+};
 
 export const NewsletterBroadcaster = () => {
   const toast = useToast();
@@ -26,6 +70,8 @@ export const NewsletterBroadcaster = () => {
   const [sending, setSending] = useState(false);
   const [lastReport, setLastReport] = useState(null);
   const [draftSavedTime, setDraftSavedTime] = useState(null);
+  const [previewMode, setPreviewMode] = useState(false);
+
 
   // Vázlat betöltése indításkor
   useEffect(() => {
@@ -196,7 +242,7 @@ export const NewsletterBroadcaster = () => {
             <p style="font-size: 12px; color: #666; margin-top: 4px;">Hivatalos Egyesületi Tájékoztató & Hírlevél</p>
           </div>
           <div style="padding: 24px 0; font-size: 15px; white-space: pre-line; color: #2d2838;">
-            ${content}
+            ${formatEmailBody(content)}
           </div>
           <div style="border-top: 1px solid #e5e0d8; pt: 16px; text-align: center; font-size: 11px; color: #888;">
             <p>© ${new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | <a href="https://ktsze.hu" style="color: #701a2e; text-decoration: underline;">ktsze.hu</a></p>
@@ -396,19 +442,55 @@ export const NewsletterBroadcaster = () => {
             )}
           </div>
 
-          {/* Tartalom Szerkesztő */}
+          {/* Tartalom Szerkesztő & Élő Előnézet váltó */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="label text-xs font-bold text-ink-800">Hírlevél Üzenet Törzse *</label>
-              <span className="text-[11px] text-ink-500 italic">Használható dinamikus változó: <strong>&#123;&#123;NAME&#123;&#123;</strong> (a tag neve)</span>
+            <div className="flex flex-wrap items-center justify-between mb-2 gap-2">
+              <label className="label text-xs font-bold text-ink-800 m-0">Hírlevél Üzenet Törzse *</label>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-ink-500 italic hidden sm:inline">
+                  Változó: <strong>&#123;&#123;NAME&#123;&#123;</strong> (tag neve)
+                </span>
+                
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode((prev) => !prev)}
+                  className="btn-secondary btn-sm py-1 px-2.5 text-xs flex items-center gap-1.5 font-bold"
+                  title="Élő HTML előnézet és kattintható linkek megtekintése"
+                >
+                  {previewMode ? <Edit3 className="h-3.5 w-3.5 text-wine-600" /> : <Eye className="h-3.5 w-3.5 text-wine-600" />}
+                  {previewMode ? 'Szerkesztés' : 'Élő e-mail előnézet'}
+                </button>
+              </div>
             </div>
-            <textarea
-              rows={10}
-              required
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="input py-3 px-4 text-sm rounded-xl font-medium leading-relaxed"
-            />
+
+            {previewMode ? (
+              <div className="rounded-2xl border border-gold-300 bg-[#faf7f1] p-6 shadow-sm space-y-4">
+                <div className="text-center pb-3 border-b-2 border-wine-800">
+                  <h4 className="font-display font-bold text-wine-900 text-lg">Kőszegi Turisztikai Szövetség Egyesület</h4>
+                  <p className="text-xs text-ink-500">Hivatalos Egyesületi Tájékoztató &amp; Hírlevél (Élő előnézet)</p>
+                </div>
+                <div
+                  className="text-sm text-ink-800 leading-relaxed space-y-2"
+                  style={{ whiteSpace: 'pre-line' }}
+                  dangerouslySetInnerHTML={{
+                    __html: formatEmailBody(content.replace(/{{NAME}}/g, 'Példa Tagunk'))
+                  }}
+                />
+                <div className="pt-3 border-t border-sand-300 text-center text-xs text-ink-400">
+                  © {new Date().getFullYear()} Kőszegi Turisztikai Szövetség Egyesület | ktsze.hu
+                </div>
+              </div>
+            ) : (
+              <textarea
+                rows={12}
+                required
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="input py-3 px-4 text-sm rounded-xl font-medium leading-relaxed font-mono"
+                placeholder="Írd ide a hírlevél szövegét…"
+              />
+            )}
           </div>
 
           {/* Kiküldés Gomb */}

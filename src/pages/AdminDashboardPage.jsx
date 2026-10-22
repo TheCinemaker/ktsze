@@ -1,12 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { Users, Flower2, Newspaper, FileText, Wallet, Settings, UserPlus, Mail, HelpCircle, BarChart2, Gavel } from 'lucide-react';
+import { Users, Flower2, Newspaper, FileText, Wallet, Settings, UserPlus, Mail, HelpCircle, BarChart2, Gavel, Sparkles } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import { PageHeader } from '../components/ui';
 
 import { MemberManagement } from '../components/admin/MemberManagement';
-// Ideiglenesen kikapcsolva (megtartva későbbre): Elnökségi Ötletelő
-// import { BoardIdeasAdmin } from '../components/admin/BoardIdeasAdmin';
+import { AdventIdeasAdmin } from '../components/admin/AdventIdeasAdmin';
 import { SiteAnalyticsAdmin } from '../components/admin/SiteAnalyticsAdmin';
 import { WorkgroupAdmin } from '../components/admin/WorkgroupAdmin';
 import { WorkgroupApplications } from '../components/admin/WorkgroupApplications';
@@ -19,10 +18,9 @@ import { AdminSettings } from '../components/admin/AdminSettings';
 import { AdminUserManual } from '../components/admin/AdminUserManual';
 
 const ALL_TABS = [
+  { id: 'advent', label: '🎄 Adventi Ötletek & Kérdőív', icon: Sparkles, permission: 'members.view', Component: AdventIdeasAdmin },
   { id: 'members', label: 'Tagnyilvántartás', icon: Users, permission: 'members.view', Component: MemberManagement },
   { id: 'analytics', label: '📊 Látogatottság & Analitika', icon: BarChart2, permission: 'members.view', Component: SiteAnalyticsAdmin },
-  // Ideiglenesen kikapcsolva (megtartva későbbre): Elnökségi Ötletelő
-  // { id: 'ideas', label: 'Elnökségi Ötletelő', icon: Lightbulb, permission: 'members.view', Component: BoardIdeasAdmin },
   { id: 'newsletter', label: 'Hírlevél Küldése', icon: Mail, permission: 'members.view', Component: NewsletterBroadcaster },
   { id: 'news', label: 'Hírek', icon: Newspaper, permission: 'news.manage', Component: NewsEditor },
   { id: 'workgroups', label: 'Munkacsoportok', icon: Flower2, permission: 'workgroups.manage', Component: WorkgroupAdmin },
@@ -33,6 +31,7 @@ const ALL_TABS = [
   { id: 'manual', label: 'Elnökségi Útmutató', icon: HelpCircle, permission: 'members.view', Component: AdminUserManual },
   { id: 'settings', label: 'Beállítások', icon: Settings, permission: 'settings.view', Component: AdminSettings }
 ];
+
 
 export const AdminDashboardPage = () => {
   const { can, roleLabel, profile } = useAuth();
