@@ -3,11 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Sparkles, Lock, KeyRound, CheckCircle2, Send,
   Calendar, Phone, Mail, User, Tag, Coins, HeartHandshake,
-  Music, Utensils, Gift, Store, Users, ArrowRight, MessageSquare, AlertCircle
+  Music, Utensils, Gift, Store, Users, ArrowRight, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { submitAdventIdea, listAdventIdeas } from '../lib/db';
+import { submitAdventIdea } from '../lib/db';
 import { Spinner } from '../components/ui';
 
 const VALID_ACCESS_CODE = '99118822';
@@ -41,8 +41,6 @@ export const AdventIdeaPage = () => {
   // Űrlap állapot
   const [submitting, setSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
-  const [ideas, setIdeas] = useState([]);
-  const [loadingIdeas, setLoadingIdeas] = useState(false);
 
   const [formData, setFormData] = useState({
     submitter_name: '',
@@ -82,25 +80,6 @@ export const AdventIdeaPage = () => {
     }
   }, [profile]);
 
-  // Ötletek betöltése
-  const fetchIdeas = async () => {
-    setLoadingIdeas(true);
-    try {
-      const data = await listAdventIdeas();
-      setIdeas(data);
-    } catch (err) {
-      console.warn('Ötletek betöltése sikertelen:', err);
-    } finally {
-      setLoadingIdeas(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isUnlocked) {
-      fetchIdeas();
-    }
-  }, [isUnlocked]);
-
   // Kézi belépőkód ellenőrzés
   const handleUnlock = (e) => {
     e.preventDefault();
@@ -138,7 +117,6 @@ export const AdventIdeaPage = () => {
       });
       toast.success('Hálásan köszönjük az ötletedet! Sikeresen rögzítettük.');
       setSubmittedSuccess(true);
-      fetchIdeas();
       setFormData((prev) => ({
         ...prev,
         title: '',
@@ -594,77 +572,15 @@ export const AdventIdeaPage = () => {
 
         </div>
 
-        {/* -------------------------------------------------------------------- */}
-        {/* Eddig beérkezett ötletek listája (inspirációnak) */}
-        {/* -------------------------------------------------------------------- */}
+        {/* A beküldött ötletek NEM nyilvánosak — kizárólag az elnökség látja és dolgozza fel őket. */}
         <section className="pt-6 border-t border-sand-300">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-wine-700">Közösségi inspiráció</span>
-              <h2 className="font-display text-2xl text-ink-900">Eddig beérkezett tagi javaslatok</h2>
-            </div>
-            <span className="rounded-full bg-wine-100 text-wine-800 font-bold text-xs px-3 py-1">
-              {ideas.length} ötlet rögzítve
-            </span>
+          <div className="card bg-sand-50/70 border-sand-300 p-6 text-center">
+            <p className="font-display text-base text-ink-900">Köszönjük a javaslatokat! 🎄</p>
+            <p className="mx-auto mt-1 max-w-md text-xs text-ink-600">
+              A beküldött ötleteket kizárólag az egyesület elnöksége látja és dolgozza fel —
+              nem jelennek meg nyilvánosan.
+            </p>
           </div>
-
-          {loadingIdeas && (
-            <div className="py-12 text-center">
-              <Spinner />
-              <p className="mt-2 text-xs text-ink-500">Ötletek betöltése…</p>
-            </div>
-          )}
-
-          {!loadingIdeas && ideas.length === 0 && (
-            <div className="card p-8 text-center bg-white border-dashed border-sand-300">
-              <MessageSquare className="h-8 w-8 text-sand-400 mx-auto" />
-              <p className="mt-2 font-display text-base text-ink-800">Légy Te az első, aki ötletet küld be!</p>
-              <p className="text-xs text-ink-500 mt-1">
-                Töltsd ki a fenti űrlapot, és inspiráld a többi egyesületi tagot is!
-              </p>
-            </div>
-          )}
-
-          {!loadingIdeas && ideas.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {ideas.map((item) => (
-                <article
-                  key={item.id}
-                  className="card p-5 border-sand-300 bg-white flex flex-col justify-between hover:shadow-md transition-shadow"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-2 text-[11px]">
-                      <span className="rounded-md bg-sand-100 text-ink-700 font-semibold px-2 py-0.5">
-                        {item.category}
-                      </span>
-                      {item.target_weekend && (
-                        <span className="text-wine-700 font-medium truncate max-w-[140px]">
-                          {item.target_weekend.split('–')[0]}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-display text-base font-bold text-ink-900">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs text-ink-600 line-clamp-3 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-sand-200 flex items-center justify-between text-[11px] text-ink-500">
-                    <span className="font-medium text-ink-700">
-                      Beküldte: {item.submitter_name}
-                    </span>
-                    {item.price_or_cost && (
-                      <span className="rounded bg-gold-50 text-gold-900 border border-gold-200 px-1.5 py-0.5 font-mono">
-                        {item.price_or_cost}
-                      </span>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
         </section>
 
       </div>

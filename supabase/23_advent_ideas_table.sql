@@ -4,14 +4,12 @@
 --  Futtatás: Supabase Dashboard -> SQL Editor. Idempotens, újrafuttatható.
 --
 --  BIZTONSÁGI MODELL (miért így):
---    - A nyers táblát (benne beküldő e-mail/telefon, kapcsolattartó adatok) CSAK
---      az elnökség olvashatja. A publikus anon kulccsal NEM lehet lekérni a
---      személyes adatokat — ez adatvédelmi (GDPR) követelmény.
---    - A nyilvános/kóddal elérhető lista egy SECURITY DEFINER függvényen megy,
---      amely CSAK a nem-személyes mezőket adja vissza (ötlet címe, leírása,
---      kategória, beküldő NEVE mint attribúció — de e-mail/telefon SOHA).
---    - Beküldeni bárki tud a belépőkóddal (a kód csak enyhe spam-gát, nem
---      biztonsági védelem — ne tároljunk mögé érzékeny adatot láthatóságilag).
+--    - A beküldött ötletek NEM nyilvánosak: a táblát CSAK az elnökség olvashatja.
+--      A publikus anon kulccsal semmilyen beküldött adat nem kérhető le — ez
+--      adatvédelmi (GDPR) követelmény, és a felhasználó döntése (a beküldések
+--      kizárólag az elnökségre tartoznak).
+--    - Beküldeni bárki tud a belépőkóddal (a kód a tagi e-mailben megy ki; csak
+--      enyhe spam-gát, nem biztonsági védelem).
 --    - Módosítani/törölni CSAK a tartalomkezelő jogúak (elnök/alelnök/admin).
 -- =============================================================================
 
@@ -65,35 +63,10 @@ create policy "advent: elnökségi törlés" on public.advent_ideas for delete
   using (public.can_manage_content());
 
 -- -----------------------------------------------------------------------------
---  Publikus/kóddal elérhető lista — CSAK nem-személyes mezők.
---  SECURITY DEFINER: a tábla RLS-ét megkerülve fut, de kézzel válogatva csak a
---  biztonságos oszlopokat adja vissza (NINCS benne e-mail, telefon, kapcsolattartó).
+--  Nincs publikus listázó függvény: a beküldött ötletek nem nyilvánosak.
+--  (Ha egy korábbi futtatás létrehozta, eldobjuk.)
 -- -----------------------------------------------------------------------------
-create or replace function public.public_advent_ideas()
-returns table (
-  id                 uuid,
-  created_at         timestamptz,
-  submitter_name     text,
-  title              text,
-  category           text,
-  target_weekend     text,
-  description        text,
-  price_or_cost      text,
-  willing_to_sponsor boolean,
-  status             text
-)
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select id, created_at, submitter_name, title, category, target_weekend,
-         description, price_or_cost, willing_to_sponsor, status
-  from public.advent_ideas
-  order by created_at desc;
-$$;
-
-grant execute on function public.public_advent_ideas() to anon, authenticated;
+drop function if exists public.public_advent_ideas();
 
 -- Táblajogok: beküldés anon-nak is; a nyers olvasást/kezelést az RLS fenti
 -- szabályai döntik el. (A korábbi GRANT ALL TO anon túl tág volt.)
@@ -102,5 +75,6 @@ grant insert on public.advent_ideas to anon;
 grant select, insert, update, delete on public.advent_ideas to authenticated;
 
 -- =============================================================================
---  Kliens oldali pár: src/lib/db.js listAdventIdeas() -> rpc('public_advent_ideas').
+--  A beküldött ötleteket csak az elnökség látja (admin felület). A publikus
+--  oldal (src/pages/AdventIdeaPage.jsx) csak a beküldő űrlapot mutatja.
 -- =============================================================================
