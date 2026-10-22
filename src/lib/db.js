@@ -194,7 +194,7 @@ const BOARD_FALLBACK = [
     avatar_url: '/drescher_gabor.jpg',
     motto: '„Ha nincs közös szervezetünk, akkor nincs közös hangunk sem.”',
     bio: 'Kőszeg számomra nem csupán egy város, hanem közösség, otthon és közös felelősség. A Kőszegi Turisztikai Szövetség Egyesület elnökeként célom összefogni a turizmusban, vendéglátásban, szálláshely-szolgáltatásban, kultúrában és rendezvényszervezésben dolgozó helyi szereplőket.',
-    public_email: null,
+    public_email: 'g.drescher@ktsze.hu',
     public_phone: null
   },
   {
@@ -206,7 +206,7 @@ const BOARD_FALLBACK = [
     avatar_url: '/avar_szilveszter.jpg',
     motto: '„Ha valamit nem találsz a neten, azt nem is keresed igazán”',
     bio: 'Kőszegen születtem és nőttem fel. A „Digitális Kőszegért” munkacsoport szakmai vezetőjeként Kőszeg turizmusának teljes körű digitalizációjáért dolgozom: a helyi éttermek, szálláshelyek és turisztikai szereplők összekapcsolásáért modern megoldásokkal.',
-    public_email: 'avar.szilveszter@gmail.com',
+    public_email: 's.avar@ktsze.hu',
     public_phone: '+36 70 636 4745'
   },
   {
@@ -218,7 +218,7 @@ const BOARD_FALLBACK = [
     avatar_url: null,
     motto: null,
     bio: 'Az Ibrahim Boutique Hotel vezetője. Alelnökként a minőségi szálláshely-szolgáltatások, a városi vendégfogadási standardok és a turisztikai marketing fejlesztéséért felel.',
-    public_email: null,
+    public_email: 'p.farkas@ktsze.hu',
     public_phone: null
   },
   {
@@ -230,7 +230,7 @@ const BOARD_FALLBACK = [
     avatar_url: null,
     motto: '„Hiszek Kőszegben. Nem azért, mert minden készen van, hanem mert minden lehetőség benne van.”',
     bio: 'Több mint két évtizede dolgozom a turizmus és a vendéglátás területén. Alapító tagként azért dolgozom, hogy Kőszeg egész évben vonzó, többnapos tartózkodásra ösztönző úti cél legyen.',
-    public_email: 'szalok.adrienn@gmail.com',
+    public_email: 'a.szalok@ktsze.hu',
     public_phone: '+36 30 677 5777'
   },
   {
@@ -242,7 +242,7 @@ const BOARD_FALLBACK = [
     avatar_url: null,
     motto: null,
     bio: 'A Portré Étterem és Panzió tulajdonos-vezetője. Alelnökként a gasztronómiai és vendéglátóipari programok koordinációjáért felel.',
-    public_email: null,
+    public_email: 'r.voros@ktsze.hu',
     public_phone: null
   }
 ];
