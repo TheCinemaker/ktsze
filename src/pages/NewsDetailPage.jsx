@@ -6,6 +6,7 @@ import { supabase, unwrap } from '../lib/supabaseClient';
 import { useAsyncData } from '../lib/useAsyncData';
 import { LoadingBlock, ErrorBlock, EmptyState, FormattedText } from '../components/ui';
 import { SEO } from '../components/ui/SEO';
+import { ShareButtons } from '../components/public/ShareButtons';
 import { coverUrl, formatDate } from '../lib/format';
 
 const fetchBySlug = (slug) => async () =>
@@ -91,6 +92,10 @@ export const NewsDetailPage = () => {
           ))}
         </div>
       )}
+
+      <div className="mt-10 max-w-3xl border-t border-sand-300 pt-5">
+        <ShareButtons title={item.title} />
+      </div>
     </article>
   );
 };

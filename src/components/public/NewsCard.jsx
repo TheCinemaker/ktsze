@@ -2,11 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { coverUrl, formatDate } from '../../lib/format';
 import { FormattedText } from '../ui';
+import { ShareButtons } from './ShareButtons';
 
 export const NewsCard = ({ item }) => {
   const cover = coverUrl(item.cover_path);
   const timestamp = item.published_at || item.created_at;
   const published = formatDate(timestamp);
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://ktsze.hu';
+  const shareUrl = `${origin}/hirek/${item.slug}`;
 
   return (
     <article className="card-hover flex flex-col overflow-hidden">
@@ -36,12 +39,15 @@ export const NewsCard = ({ item }) => {
           </div>
         )}
 
-        <Link
-          to={`/hirek/${item.slug}`}
-          className="mt-4 inline-block self-start rounded text-sm font-medium text-wine-600 hover:underline"
-        >
-          Tovább olvasom
-        </Link>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-sand-200 pt-3">
+          <Link
+            to={`/hirek/${item.slug}`}
+            className="rounded text-sm font-medium text-wine-600 hover:underline"
+          >
+            Tovább olvasom
+          </Link>
+          <ShareButtons url={shareUrl} title={item.title} showLabel={false} />
+        </div>
       </div>
     </article>
   );
