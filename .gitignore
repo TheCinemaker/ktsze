@@ -29,6 +29,7 @@ lerna-debug.log*
 # Belső jegyzetek — hozzáférési adatokat tartalmazhatnak, ne kerüljenek git-be.
 # A már követett példányt egyszer ki kell venni:  git rm --cached HOZZAFERESEK.md
 HOZZAFERESEK.md
+EMAIL_BEALLITAS_UTMUTATO.txt
 
 # Helyi, egyszeri segédszkriptek — nem része a projektnek
 scratch/
