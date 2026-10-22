@@ -27,6 +27,9 @@ export const Footer = () => {
             <Link to="/dokumentumok" className="hover:text-wine-700 transition-colors">
               Hivatalos Dokumentumok
             </Link>
+            <Link to="/hatarozatok" className="hover:text-wine-700 transition-colors">
+              Határozatok Tára
+            </Link>
             <Link to="/kapcsolat" className="hover:text-wine-700 transition-colors">
               Kapcsolat &amp; Visszajelzés
             </Link>
@@ -39,8 +42,21 @@ export const Footer = () => {
           </nav>
         </div>
 
+        {/* Impresszum — kötelező azonosító adatok (Ekertv.) */}
+        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-ink-500">
+          <span className="font-semibold text-ink-600">Impresszum:</span>
+          <span>{ORGANIZATION.legalName}</span>
+          {address && <span>· Székhely: {address}</span>}
+          {ORGANIZATION.taxNumber && <span>· Adószám: {ORGANIZATION.taxNumber}</span>}
+          {ORGANIZATION.registrationNumber && (
+            <span>· Nyilvántartási szám: {ORGANIZATION.registrationNumber}</span>
+          )}
+          {ORGANIZATION.courtRegistration && <span>· Bejegyző bíróság: {ORGANIZATION.courtRegistration}</span>}
+          {ORGANIZATION.email && <span>· E-mail: {ORGANIZATION.email}</span>}
+        </div>
+
         {/* Alsó copyright, Cégjelzés & Közösségi hivatkozások */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-500">
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-500">
           <p>© {year} {ORGANIZATION.shortName}. Minden jog fenntartva.</p>
           <p>
             Fejlesztette és üzemelteti:{' '}

@@ -1,16 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { Users, Flower2, Newspaper, FileText, Wallet, Settings, UserPlus, Mail, HelpCircle, Lightbulb, BarChart2 } from 'lucide-react';
+import { Users, Flower2, Newspaper, FileText, Wallet, Settings, UserPlus, Mail, HelpCircle, BarChart2, Gavel } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import { PageHeader } from '../components/ui';
 
 import { MemberManagement } from '../components/admin/MemberManagement';
-import { BoardIdeasAdmin } from '../components/admin/BoardIdeasAdmin';
+// Ideiglenesen kikapcsolva (megtartva későbbre): Elnökségi Ötletelő
+// import { BoardIdeasAdmin } from '../components/admin/BoardIdeasAdmin';
 import { SiteAnalyticsAdmin } from '../components/admin/SiteAnalyticsAdmin';
 import { WorkgroupAdmin } from '../components/admin/WorkgroupAdmin';
 import { WorkgroupApplications } from '../components/admin/WorkgroupApplications';
 import { NewsEditor } from '../components/admin/NewsEditor';
 import { DocumentAdmin } from '../components/admin/DocumentAdmin';
+import { ResolutionsAdmin } from '../components/admin/ResolutionsAdmin';
 import { DuesRatesAdmin } from '../components/admin/DuesRatesAdmin';
 import { NewsletterBroadcaster } from '../components/admin/NewsletterBroadcaster';
 import { AdminSettings } from '../components/admin/AdminSettings';
@@ -19,12 +21,14 @@ import { AdminUserManual } from '../components/admin/AdminUserManual';
 const ALL_TABS = [
   { id: 'members', label: 'Tagnyilvántartás', icon: Users, permission: 'members.view', Component: MemberManagement },
   { id: 'analytics', label: '📊 Látogatottság & Analitika', icon: BarChart2, permission: 'members.view', Component: SiteAnalyticsAdmin },
-  { id: 'ideas', label: 'Elnökségi Ötletelő', icon: Lightbulb, permission: 'members.view', Component: BoardIdeasAdmin },
+  // Ideiglenesen kikapcsolva (megtartva későbbre): Elnökségi Ötletelő
+  // { id: 'ideas', label: 'Elnökségi Ötletelő', icon: Lightbulb, permission: 'members.view', Component: BoardIdeasAdmin },
   { id: 'newsletter', label: 'Hírlevél Küldése', icon: Mail, permission: 'members.view', Component: NewsletterBroadcaster },
   { id: 'news', label: 'Hírek', icon: Newspaper, permission: 'news.manage', Component: NewsEditor },
   { id: 'workgroups', label: 'Munkacsoportok', icon: Flower2, permission: 'workgroups.manage', Component: WorkgroupAdmin },
   { id: 'applications', label: 'Jelentkezések', icon: UserPlus, permission: 'workgroups.decide', Component: WorkgroupApplications },
   { id: 'documents', label: 'Dokumentumok', icon: FileText, permission: 'documents.manage', Component: DocumentAdmin },
+  { id: 'resolutions', label: 'Határozatok Tára', icon: Gavel, permission: 'documents.manage', Component: ResolutionsAdmin },
   { id: 'dues', label: 'Tagdíjtételek', icon: Wallet, permission: 'duesRates.manage', Component: DuesRatesAdmin },
   { id: 'manual', label: 'Elnökségi Útmutató', icon: HelpCircle, permission: 'members.view', Component: AdminUserManual },
   { id: 'settings', label: 'Beállítások', icon: Settings, permission: 'settings.view', Component: AdminSettings }

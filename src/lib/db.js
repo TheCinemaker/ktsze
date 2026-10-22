@@ -55,7 +55,15 @@ const PROFILE_FIELDS = [
   'service_street',
   'service_house_number',
   'service_contacts',
-  'custom_title'
+  'custom_title',
+  // Nyilvános elnökségi bemutatkozó mezők (21_board_members.sql).
+  // A board_public/board_order SZÁNDÉKOSAN nincs itt: a tag ne tudja magát
+  // felvenni a nyilvános elnökség oldalra — azt az elnökség/SQL állítja.
+  'avatar_url',
+  'bio',
+  'motto',
+  'public_email',
+  'public_phone'
 ];
 
 /** Csak a valóban létező oszlopokat engedjük át, üres stringből NULL lesz. */
@@ -170,130 +178,91 @@ export const deleteMemberProfile = async (profileId) => {
 };
 
 /**
- * Nyilvános elnökségi tagok (Elnök és Alelnökök).
- * Kizárja a technikai rendszergazda fiókot, és megmutatja a valódi elnökségi tagokat.
- * RLS-biztos: nem terheli a nyilvános kérést kényes joinokkal, és van garantált tartaléka.
+ * A nyilvános elnökségi oldal tartaléka — amíg a DB fel nem töltődik.
+ *
+ * SZÁNDÉKOSAN PII-mentes: csak név, tisztség, vállalt bemutatkozás és portré.
+ * E-mail/telefon csak ott, ahol az érintett nyilvánosan vállalta. A korábbi,
+ * kitalált céges e-mailek (…@ibrahim.hu, …@portre.hu) kikerültek.
+ */
+const BOARD_FALLBACK = [
+  {
+    id: 'fallback-drescher',
+    full_name: 'Drescher Gábor',
+    custom_title: 'Elnök',
+    service_location_name: 'Kőszegi Turisztikai Szövetség Egyesület',
+    business_activity: 'Turisztikai Képviselet & Vezetés',
+    avatar_url: '/drescher_gabor.jpg',
+    motto: '„Ha nincs közös szervezetünk, akkor nincs közös hangunk sem.”',
+    bio: 'Kőszeg számomra nem csupán egy város, hanem közösség, otthon és közös felelősség. A Kőszegi Turisztikai Szövetség Egyesület elnökeként célom összefogni a turizmusban, vendéglátásban, szálláshely-szolgáltatásban, kultúrában és rendezvényszervezésben dolgozó helyi szereplőket.',
+    public_email: null,
+    public_phone: null
+  },
+  {
+    id: 'fallback-avar',
+    full_name: 'Avar Szilveszter',
+    custom_title: 'Digitális Kőszeg alelnök',
+    service_location_name: 'SA Software & Network Solutions',
+    business_activity: 'Informatikai és Turisztikai Szoftverfejlesztés',
+    avatar_url: '/avar_szilveszter.jpg',
+    motto: '„Ha valamit nem találsz a neten, azt nem is keresed igazán”',
+    bio: 'Kőszegen születtem és nőttem fel. A „Digitális Kőszegért” munkacsoport szakmai vezetőjeként Kőszeg turizmusának teljes körű digitalizációjáért dolgozom: a helyi éttermek, szálláshelyek és turisztikai szereplők összekapcsolásáért modern megoldásokkal.',
+    public_email: 'avar.szilveszter@gmail.com',
+    public_phone: '+36 70 636 4745'
+  },
+  {
+    id: 'fallback-farkas',
+    full_name: 'Farkas Péter',
+    custom_title: 'Alelnök',
+    service_location_name: 'Ibrahim Boutique Hotel',
+    business_activity: 'Szálláshely-szolgáltatás',
+    avatar_url: null,
+    motto: null,
+    bio: 'Az Ibrahim Boutique Hotel vezetője. Alelnökként a minőségi szálláshely-szolgáltatások, a városi vendégfogadási standardok és a turisztikai marketing fejlesztéséért felel.',
+    public_email: null,
+    public_phone: null
+  },
+  {
+    id: 'fallback-kovacs-szalok',
+    full_name: 'Kovács-Szalók Adrienn',
+    custom_title: 'Alelnök',
+    service_location_name: 'Turisztikai Munkacsoport',
+    business_activity: 'Szállodaüzemeltetés & Vendégélmény',
+    avatar_url: null,
+    motto: '„Hiszek Kőszegben. Nem azért, mert minden készen van, hanem mert minden lehetőség benne van.”',
+    bio: 'Több mint két évtizede dolgozom a turizmus és a vendéglátás területén. Alapító tagként azért dolgozom, hogy Kőszeg egész évben vonzó, többnapos tartózkodásra ösztönző úti cél legyen.',
+    public_email: 'szalok.adrienn@gmail.com',
+    public_phone: '+36 30 677 5777'
+  },
+  {
+    id: 'fallback-voros',
+    full_name: 'Vörös Róbert',
+    custom_title: 'Alelnök',
+    service_location_name: 'Portré Étterem és Panzió',
+    business_activity: 'Gasztronómia & Szálláshely',
+    avatar_url: null,
+    motto: null,
+    bio: 'A Portré Étterem és Panzió tulajdonos-vezetője. Alelnökként a gasztronómiai és vendéglátóipari programok koordinációjáért felel.',
+    public_email: null,
+    public_phone: null
+  }
+];
+
+/**
+ * Nyilvános elnökségi tagok.
+ *
+ * Elsődleges forrás a DB: a public_board_members() SECURITY DEFINER RPC, amely
+ * kijelentkezve is működik, és csak a kifejezetten publikus mezőket adja vissza
+ * (lásd supabase/21_board_members.sql). Ha a DB még üres (nincs board_public=true
+ * profil) vagy az RPC nem elérhető, a PII-mentes BOARD_FALLBACK jelenik meg.
  */
 export const listPublicBoardMembers = async () => {
-  const fallbacks = [
-    {
-      id: 'gabor-drescher',
-      full_name: 'Drescher Gábor',
-      custom_title: 'Elnök',
-      service_location_name: 'Kőszegi Turisztikai Szövetség Egyesület',
-      business_activity: 'Turisztikai Képviselet & Vezetés',
-      private_email: 'info@visitkoszeg.hu',
-      avatar_url: null,
-      bio: null
-    },
-    {
-      id: 'adrienn-szalok',
-      full_name: 'Kovács-Szalók Adrienn',
-      custom_title: 'Alelnök',
-      service_location_name: 'Turisztikai Munkacsoport',
-      business_activity: 'Szállodaüzemeltetés & Vendégélmény',
-      private_email: 'szalok.adrienn@gmail.com',
-      avatar_url: null,
-      bio: null
-    },
-    {
-      id: 'peter-farkas',
-      full_name: 'Farkas Péter',
-      custom_title: 'Alelnök',
-      service_location_name: 'Ibrahim Boutique Hotel',
-      business_activity: 'Szálloda & Turisztikai Szolgáltatás',
-      private_email: 'farkas.peter@ibrahim.hu',
-      avatar_url: null,
-      bio: null
-    },
-    {
-      id: 'robert-voros',
-      full_name: 'Vörös Róbert',
-      custom_title: 'Alelnök',
-      service_location_name: 'Portré Étterem és Panzió',
-      business_activity: 'Gasztronómia & Szálláshely Kezelés',
-      private_email: 'voros.robert@portre.hu',
-      avatar_url: null,
-      bio: null
-    },
-    {
-      id: 'szilveszter-avar',
-      full_name: 'Avar Szilveszter',
-      custom_title: 'Digitális Kőszeg alelnök',
-      service_location_name: 'SA Software & Network Solutions',
-      business_activity: 'Informatikai és Turisztikai Szoftverfejlesztés',
-      private_email: 'avar.szilveszter@gmail.com',
-      avatar_url: null,
-      bio: null
-    }
-  ];
-
   try {
-    const { data: dbProfiles, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, custom_title, service_location_name, business_activity, account_email, private_email, avatar_url, bio');
-
-    // Még ha sikeres is a lekérdezés, a DB-ben lévő tagokat összefésüljük a fallbackekkel
-    const dbMembers = [];
-    if (!error && dbProfiles && dbProfiles.length > 0) {
-      dbProfiles.forEach((p) => {
-        if (!p.full_name || p.full_name.trim() === '' || p.full_name.toLowerCase() === 'rendszergazda') return;
-        if (p.account_email?.toLowerCase() === 'admin@visitkoszeg.hu') return;
-
-        dbMembers.push({
-          id: p.id,
-          full_name: p.full_name,
-          custom_title: p.custom_title || (
-            p.full_name?.toLowerCase().includes('szilveszter') ? 'Digitális Kőszeg alelnök' :
-            p.full_name?.toLowerCase().includes('adrienn') ? 'Alelnök' :
-            (p.full_name?.toLowerCase().includes('gábor') || p.full_name?.toLowerCase().includes('drescher')) ? 'Elnök' :
-            p.full_name?.toLowerCase().includes('péter') ? 'Alelnök' :
-            p.full_name?.toLowerCase().includes('róbert') ? 'Alelnök' :
-            'Elnökségi tag'
-          ),
-          service_location_name: p.service_location_name,
-          business_activity: p.business_activity,
-          private_email: p.private_email || p.account_email,
-          avatar_url: p.avatar_url || null,
-          bio: p.bio || null
-        });
-      });
-    }
-
-    const merged = [...dbMembers];
-    fallbacks.forEach((fb) => {
-      const isAlreadyInDb = dbMembers.some((dbm) => {
-        const dbmName = (dbm.full_name || '').toLowerCase();
-        const fbName = fb.full_name.toLowerCase();
-        const parts = fbName.split(' ');
-        // Ha a vezetéknév vagy keresztnév (min 4 karakter) egyezik a DB-ben lévővel
-        return parts.some((part) => part.length > 3 && dbmName.includes(part));
-      });
-      if (!isAlreadyInDb) {
-        merged.push(fb);
-      }
-    });
-
-    // Rendezzük a kártyákat: Elnök elöl, utána a többiek névsorban
-    return merged.sort((a, b) => {
-      const isAElnok = a.custom_title?.toLowerCase().includes('elnök') && !a.custom_title?.toLowerCase().includes('alelnök');
-      const isBElnok = b.custom_title?.toLowerCase().includes('elnök') && !b.custom_title?.toLowerCase().includes('alelnök');
-      if (isAElnok && !isBElnok) return -1;
-      if (!isAElnok && isBElnok) return 1;
-      return a.full_name.localeCompare(b.full_name, 'hu');
-    });
+    const rows = unwrap(await supabase.rpc('public_board_members'));
+    if (Array.isArray(rows) && rows.length > 0) return rows;
   } catch (err) {
-    console.warn('[db] listPublicBoardMembers hiba:', err);
+    console.warn('[db] public_board_members RPC nem elérhető, tartalékra váltás:', err);
   }
-
-  // Hiba esetén az összes fallback
-  return fallbacks.sort((a, b) => {
-    const isAElnok = a.custom_title?.toLowerCase().includes('elnök') && !a.custom_title?.toLowerCase().includes('alelnök');
-    const isBElnok = b.custom_title?.toLowerCase().includes('elnök') && !b.custom_title?.toLowerCase().includes('alelnök');
-    if (isAElnok && !isBElnok) return -1;
-    if (!isAElnok && isBElnok) return 1;
-    return a.full_name.localeCompare(b.full_name, 'hu');
-  });
+  return BOARD_FALLBACK;
 };
 
 /**
@@ -564,11 +533,16 @@ export const listDocuments = async (accessLevels = null) => {
 /** Fájl feltöltése + a dokumentum rekord létrehozása egy lépésben. */
 export const createDocument = async (input, file, uploadedBy = null) => {
   const slug = await uniqueSlug('documents', input.title);
+  const accessLevel = input.access_level || 'members';
   let storagePath = null;
 
   if (file) {
     const extension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'dat';
-    storagePath = `${new Date().getFullYear()}/${slug}.${extension}`;
+    const year = new Date().getFullYear();
+    // A nyilvános fájl a public/ prefixre kerül — így kijelentkezve is letölthető
+    // (lásd supabase/20_documents_and_resolutions.sql storage szabály).
+    storagePath =
+      accessLevel === 'public' ? `public/${year}/${slug}.${extension}` : `${year}/${slug}.${extension}`;
     const { error } = await supabase.storage
       .from('documents')
       .upload(storagePath, file, { upsert: true, contentType: file.type || undefined });
@@ -584,10 +558,15 @@ export const createDocument = async (input, file, uploadedBy = null) => {
           slug,
           category: input.category?.trim() || null,
           description: input.description?.trim() || null,
-          access_level: input.access_level || 'members',
+          access_level: accessLevel,
           storage_path: storagePath,
           file_size: file?.size ?? null,
           file_type: file?.type || null,
+          // Hivatalos metaadatok (20_documents_and_resolutions.sql):
+          document_date: input.document_date || null,
+          reference_no: input.reference_no?.trim() || null,
+          body_type: input.body_type || null,
+          is_official: Boolean(input.is_official),
           uploaded_by: uploadedBy
         })
         .select()
@@ -598,6 +577,69 @@ export const createDocument = async (input, file, uploadedBy = null) => {
     if (storagePath) await supabase.storage.from('documents').remove([storagePath]);
     throw err;
   }
+};
+
+/**
+ * Meglévő dokumentum módosítása.
+ *
+ *  - Metaadatok mindig frissülnek.
+ *  - Ha `newFile` érkezik, feltölti és lecseréli a régit (a slug stabil marad,
+ *    így az útvonal kiszámítható; a régi fájlt töröljük, ha más az útvonala).
+ *  - Ha nincs új fájl, de az access szint váltása miatt a `public/` prefix már
+ *    nem stimmel, a meglévő fájlt áthelyezzük a helyes útvonalra — különben egy
+ *    nyilvánossá tett dokumentum fájlját kijelentkezve nem lehetne letölteni.
+ */
+export const updateDocument = async (doc, patch, newFile = null) => {
+  const accessLevel = patch.access_level || doc.access_level || 'members';
+  const slug = doc.slug;
+  let storagePath = doc.storage_path;
+
+  if (newFile) {
+    const extension = newFile.name.includes('.') ? newFile.name.split('.').pop().toLowerCase() : 'dat';
+    const year = (patch.document_date ? new Date(patch.document_date) : new Date()).getFullYear();
+    const newPath =
+      accessLevel === 'public' ? `public/${year}/${slug}.${extension}` : `${year}/${slug}.${extension}`;
+
+    const { error } = await supabase.storage
+      .from('documents')
+      .upload(newPath, newFile, { upsert: true, contentType: newFile.type || undefined });
+    if (error) throw new Error(`A fájl feltöltése nem sikerült: ${error.message}`);
+
+    if (storagePath && storagePath !== newPath) {
+      await supabase.storage.from('documents').remove([storagePath]);
+    }
+    storagePath = newPath;
+  } else if (storagePath) {
+    const isPublicPath = storagePath.startsWith('public/');
+    const shouldBePublic = accessLevel === 'public';
+    if (isPublicPath !== shouldBePublic) {
+      const movedPath = shouldBePublic ? `public/${storagePath}` : storagePath.replace(/^public\//, '');
+      const { error } = await supabase.storage.from('documents').move(storagePath, movedPath);
+      // Ha a mozgatás nem sikerül, nem blokkoljuk a mentést — a metaadat frissül.
+      if (!error) storagePath = movedPath;
+    }
+  }
+
+  return unwrap(
+    await supabase
+      .from('documents')
+      .update({
+        title: patch.title?.trim() || doc.title,
+        category: patch.category?.trim() || null,
+        description: patch.description?.trim() || null,
+        access_level: accessLevel,
+        document_date: patch.document_date || null,
+        reference_no: patch.reference_no?.trim() || null,
+        body_type: patch.body_type || null,
+        is_official: Boolean(patch.is_official),
+        storage_path: storagePath,
+        file_size: newFile ? newFile.size : doc.file_size,
+        file_type: newFile ? newFile.type || null : doc.file_type
+      })
+      .eq('id', doc.id)
+      .select()
+      .single()
+  );
 };
 
 export const deleteDocument = async (doc) => {
@@ -617,6 +659,63 @@ export const getDocumentUrl = async (doc) => {
     .createSignedUrl(doc.storage_path, 300);
   if (error) throw new Error(`A letöltési link készítése nem sikerült: ${error.message}`);
   return data.signedUrl;
+};
+
+// -----------------------------------------------------------------------------
+//  Határozatok tára (alapszabály XIV.)
+//
+//  Séma: supabase/20_documents_and_resolutions.sql
+//  A nyilvános lista csak a publikált (is_published) sorokat hozza — ezt az RLS
+//  is kikényszeríti, de a nyilvános oldalon kifejezetten szűrünk is rá.
+// -----------------------------------------------------------------------------
+
+/** Határozatok listája. publishedOnly=true esetén csak a nyilvánosak. */
+export const listResolutions = async (publishedOnly = false) => {
+  let query = supabase
+    .from('resolutions')
+    .select('*')
+    .order('decision_date', { ascending: false })
+    .order('created_at', { ascending: false });
+  if (publishedOnly) query = query.eq('is_published', true);
+  return unwrap(await query) || [];
+};
+
+const RESOLUTION_FIELDS = (input) => ({
+  resolution_no: input.resolution_no?.trim(),
+  body_type: input.body_type || 'elnokseg',
+  decision_date: input.decision_date || null,
+  subject: input.subject?.trim(),
+  decision_text: input.decision_text?.trim() || null,
+  effect: input.effect?.trim() || null,
+  votes_for: input.votes_for === '' || input.votes_for == null ? null : Number(input.votes_for),
+  votes_against:
+    input.votes_against === '' || input.votes_against == null ? null : Number(input.votes_against),
+  votes_abstain:
+    input.votes_abstain === '' || input.votes_abstain == null ? null : Number(input.votes_abstain),
+  is_published: input.is_published ?? true,
+  document_id: input.document_id || null
+});
+
+export const createResolution = async (input, createdBy = null) => {
+  const payload = RESOLUTION_FIELDS(input);
+  if (!payload.resolution_no) throw new Error('A határozatszám megadása kötelező.');
+  if (!payload.decision_date) throw new Error('A határozat dátumának megadása kötelező.');
+  if (!payload.subject) throw new Error('A határozat tárgyának megadása kötelező.');
+  return unwrap(
+    await supabase
+      .from('resolutions')
+      .insert({ ...payload, created_by: createdBy })
+      .select()
+      .single()
+  );
+};
+
+export const updateResolution = async (id, input) =>
+  unwrap(await supabase.from('resolutions').update(RESOLUTION_FIELDS(input)).eq('id', id).select().single());
+
+export const deleteResolution = async (id) => {
+  unwrap(await supabase.from('resolutions').delete().eq('id', id));
+  return true;
 };
 
 // -----------------------------------------------------------------------------

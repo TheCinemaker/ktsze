@@ -11,6 +11,13 @@ const ACCESS_LABELS = {
   admin: 'Rendszergazda'
 };
 
+const BODY_TYPE_LABELS = {
+  kozgyules: 'Közgyűlés',
+  elnokseg: 'Elnökségi ülés',
+  munkamegbeszeles: 'Munkamegbeszélés',
+  egyeb: 'Egyéb'
+};
+
 /**
  * Dokumentumlista letöltéssel.
  *
@@ -57,10 +64,14 @@ export const DocumentList = ({ documents, showAccessLevel = false, emptyState })
               <h3 className="font-display text-base text-ink-900">{doc.title}</h3>
 
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-500">
+                {doc.reference_no && <span className="badge-neutral font-mono">{doc.reference_no}</span>}
+                {doc.body_type && <span className="badge-neutral">{BODY_TYPE_LABELS[doc.body_type] || doc.body_type}</span>}
+                {doc.document_date && <span>{doc.document_date}</span>}
                 {doc.category && <span className="badge-neutral">{doc.category}</span>}
                 {showAccessLevel && doc.access_level && (
                   <span className="badge-neutral">{ACCESS_LABELS[doc.access_level] || doc.access_level}</span>
                 )}
+                {doc.is_official && <span className="badge-neutral text-wine-800">Hitelesített</span>}
                 {size && <span>{size}</span>}
                 {!hasFile && <span className="badge-caution">Nincs feltöltött fájl</span>}
               </div>

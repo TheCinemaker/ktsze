@@ -53,6 +53,7 @@ export const CommandPalette = ({ isOpen: propOpen, onClose: propOnClose }) => {
       { id: 'wg', label: 'Munkacsoportok', hint: 'Csatlakozás, projektek', icon: Users, group: 'Navigáció', run: go('/munkacsoportok') },
       { id: 'news', label: 'Hírek', hint: 'Közlemények és programok', icon: Newspaper, group: 'Navigáció', run: go('/hirek') },
       { id: 'docs', label: 'Dokumentumok', hint: 'Nyilvános iratok', icon: FileText, group: 'Navigáció', run: go('/dokumentumok') },
+      { id: 'resolutions', label: 'Határozatok Tára', hint: 'Közgyűlési és elnökségi határozatok', icon: FileText, group: 'Navigáció', run: go('/hatarozatok') },
       { id: 'join', label: 'Tagság', hint: 'Tagdíjak, csatlakozás', icon: Wallet, group: 'Navigáció', run: go('/tagsag') },
       { id: 'contact', label: 'Kapcsolat', hint: 'Elérhetőségek', icon: Mail, group: 'Navigáció', run: go('/kapcsolat') }
     ];

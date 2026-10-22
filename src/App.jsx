@@ -15,6 +15,7 @@ import { AboutPage } from './pages/AboutPage';
 import { NewsPage } from './pages/NewsPage';
 import { NewsDetailPage } from './pages/NewsDetailPage';
 import { DocumentsPage } from './pages/DocumentsPage';
+import { ResolutionsPage } from './pages/ResolutionsPage';
 import { MembershipPage } from './pages/MembershipPage';
 import { ContactPage } from './pages/ContactPage';
 import { LoginPage } from './pages/LoginPage';
@@ -46,18 +47,17 @@ const AdminDashboardPage = safeLazy(() =>
 //   import('./pages/FlowerMapPage').then((m) => ({ default: m.FlowerMapPage }))
 // );
 
-import { useAuth } from './context/AuthContext';
 import { trackPageView } from './lib/analytics';
 
 /** Oldalváltásnál ugorjunk a lap tetejére ÉS rögzítsük az analitikai látogatást. */
 const ScrollToTop = () => {
   const { pathname } = useLocation();
-  const { user } = useAuth();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    trackPageView(pathname, null, user?.email || null);
-  }, [pathname, user]);
+    // Anonim, aggregált látogatottság — nem adunk át felhasználói azonosítót.
+    trackPageView(pathname);
+  }, [pathname]);
 
   return null;
 };
@@ -81,6 +81,7 @@ export default function App() {
           <Route path="/hirek" element={<NewsPage />} />
           <Route path="/hirek/:slug" element={<NewsDetailPage />} />
           <Route path="/dokumentumok" element={<DocumentsPage />} />
+          <Route path="/hatarozatok" element={<ResolutionsPage />} />
           <Route path="/tagsag" element={<MembershipPage />} />
           <Route path="/kapcsolat" element={<ContactPage />} />
           <Route path="/belepes" element={<LoginPage />} />

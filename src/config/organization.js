@@ -10,6 +10,19 @@
 //  önkormányzati együttműködés. Ezek mind el lettek távolítva.
 // =============================================================================
 
+/**
+ * Funkciókapcsolók.
+ *
+ *  donations: az online adománygyűjtés (Barion) jelenleg CSAK sandbox/teszt
+ *  módban van (lásd src/lib/barion.js). Élesítésig kikapcsolva, hogy senki ne
+ *  találkozzon valódinak tűnő, de nem éles fizetéssel. Élesítéshez valódi
+ *  Barion-szerződés + ÁSZF/adományozási feltételek + adatkezelési tájékoztató
+ *  szükséges, és csak utána állítható true-ra.
+ */
+export const FEATURES = {
+  donations: false
+};
+
 export const ORGANIZATION = {
   legalName: 'Kőszegi Turisztikai Szövetség Egyesület',
   shortName: 'Kőszegi Turisztikai Szövetség',
@@ -35,9 +48,13 @@ export const ORGANIZATION = {
   addressStreet: 'Freh Alfonz utca 1.',
 
   // --- Hivatalos azonosítók ---
-  taxNumber: '',            // adószám
-  registrationNumber: '',   // nyilvántartási szám
-  courtRegistration: '',    // bejegyző bíróság
+  // Forrás: birosag.hu civil szervezet nyilvántartás + NAV értesítés.
+  // Jogerőre emelkedés: 2026.08.25; létesítő okirat kelte: 2026.06.30.
+  taxNumber: '19445478-1-18',                 // adószám
+  registrationNumber: '18-02-0201140',        // civil szervezet nyilvántartási száma
+  courtRegistration: 'Szombathelyi Törvényszék', // bejegyző/eljáró bíróság
+  statisticalNumber: '19445478-9499-529-18',  // statisztikai számjel (nem kötelező az impresszumban)
+  registryCaseNumber: '1800/Pk.60029/2026',   // bírósági ügyszám
 
   // --- Pénzügy ---
   // Csak akkor írd be, ha ez tényleg az egyesület számlaszáma.

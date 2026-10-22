@@ -3,7 +3,7 @@ import { Save, Key, Lock, CheckCircle2 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { TextInput, Select, Spinner } from '../ui';
+import { TextInput, TextArea, Select, Spinner } from '../ui';
 
 const ACTIVITY_OPTIONS = [
   { value: 'szállásadó', label: 'Szállásadó' },
@@ -23,11 +23,17 @@ const EDITABLE = [
   'service_location_name',
   'service_street',
   'service_house_number',
-  'service_contacts'
+  'service_contacts',
+  // Nyilvános elnökségi bemutatkozó mezők (csak staff-nak jelennek meg)
+  'public_email',
+  'public_phone',
+  'motto',
+  'bio',
+  'avatar_url'
 ];
 
 export const ProfileForm = () => {
-  const { profile, roleLabel, updateOwnProfile, updatePassword } = useAuth();
+  const { profile, roleLabel, can, updateOwnProfile, updatePassword } = useAuth();
   const toast = useToast();
   const [form, setForm] = useState({});
   const [pending, setPending] = useState(false);
@@ -173,6 +179,58 @@ export const ProfileForm = () => {
             hint="Telefonszám, weboldal vagy nyitvatartás, amit vállalsz nyilvánosan."
           />
         </fieldset>
+
+        {/* Nyilvános elnökségi bemutatkozás — csak az elnökségi felülethez
+            hozzáférő tisztségviselőknek. A nyilvános Elnökség oldalon jelenik meg. */}
+        {can('admin.access') && (
+          <fieldset className="space-y-4 rounded-xl border border-wine-300 bg-wine-50/40 p-4">
+            <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-wine-700">
+              Nyilvános elnökségi bemutatkozás
+            </legend>
+            <p className="text-xs text-ink-500">
+              Ezek az adatok a nyilvános <strong>Egyesületünk → Elnökség</strong> oldalon jelennek meg.
+              Csak azt az e-mailt/telefont add meg, amit nyilvánosan is vállalsz.
+            </p>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextInput
+                label="Nyilvános e-mail"
+                type="email"
+                value={form.public_email || ''}
+                onChange={set('public_email')}
+                hint="A nyilvános oldalon jelenik meg. Hagyd üresen, ha nem kéred."
+              />
+              <TextInput
+                label="Nyilvános telefon"
+                value={form.public_phone || ''}
+                onChange={set('public_phone')}
+                hint="Pl. +36 70 123 4567. Hagyd üresen, ha nem kéred."
+              />
+            </div>
+
+            <TextInput
+              label="Mottó"
+              value={form.motto || ''}
+              onChange={set('motto')}
+              hint="Rövid, egysoros idézet a kártyádhoz (opcionális)."
+            />
+
+            <TextInput
+              label="Portré kép URL"
+              value={form.avatar_url || ''}
+              onChange={set('avatar_url')}
+              hint="A fotód nyilvános webcíme. Feltöltés később is kérhető."
+            />
+
+            <TextArea
+              label="Bemutatkozás"
+              value={form.bio || ''}
+              onChange={set('bio')}
+              rows={6}
+              hint="Néhány bekezdés magadról és a szerepedről az egyesületben."
+            />
+          </fieldset>
+        )}
 
         <button type="submit" disabled={pending} className="btn-primary">
           {pending ? (

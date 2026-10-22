@@ -2,72 +2,17 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Award, Crown, Mail, Phone, Building2, CheckCircle2, ArrowRight, ShieldCheck, Newspaper, Target, Quote } from 'lucide-react';
 
-import { ORGANIZATION, formattedAddress, BOARD_MEMBERS_BIO, PRESS_RELEASE } from '../config/organization';
+import { ORGANIZATION, formattedAddress, PRESS_RELEASE } from '../config/organization';
 import { listPublicBoardMembers } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
 import { PageHeader, Spinner, DetailRow, FormattedText } from '../components/ui';
 import { SEO } from '../components/ui/SEO';
 
-const getMemberKey = (member) => {
-  const nameLower = (member.full_name || '').toLowerCase();
-  const emailLower = (member.private_email || '').toLowerCase();
+const DEFAULT_BIO =
+  'Az egyesület elnökségi tagja, aki aktív szerepet vállal Kőszeg turisztikai és szakmai fejlődésének támogatásában.';
 
-  if (nameLower.includes('szilveszter') || emailLower.includes('szilveszter')) {
-    return 'szilveszter';
-  }
-  if (nameLower.includes('adrienn') || nameLower.includes('szalók') || emailLower.includes('adrienn')) {
-    return 'adrienn';
-  }
-  if (nameLower.includes('róbert') || nameLower.includes('vörös') || emailLower.includes('robert')) {
-    return 'robert';
-  }
-  if (nameLower.includes('péter') || nameLower.includes('farkas') || emailLower.includes('peter')) {
-    return 'peter';
-  }
-  if (member.custom_title?.toLowerCase().includes('elnök') || nameLower.includes('gábor') || nameLower.includes('drescher')) {
-    return 'elnok';
-  }
-  return null;
-};
-
-const getMemberBio = (member) => {
-  if (member.bio) return member.bio;
-  const key = getMemberKey(member);
-  if (key && BOARD_MEMBERS_BIO[key]?.bio) {
-    return BOARD_MEMBERS_BIO[key].bio;
-  }
-  return 'Az egyesület elnökségi tagja, aki aktív szerepet vállal Kőszeg turisztikai és szakmai fejlődésének támogatásában.';
-};
-
-const getMemberPhoto = (member) => {
-  if (member.avatar_url) return member.avatar_url;
-  const key = getMemberKey(member);
-  if (key && BOARD_MEMBERS_BIO[key]?.photoUrl) {
-    return BOARD_MEMBERS_BIO[key].photoUrl;
-  }
-  return null;
-};
-
-const getMemberMotto = (member) => {
-  if (member.motto) return member.motto;
-  const key = getMemberKey(member);
-  if (key && BOARD_MEMBERS_BIO[key]?.motto) {
-    return BOARD_MEMBERS_BIO[key].motto;
-  }
-  return null;
-};
-
-const getMemberPhone = (member) => {
-  if (member.phone) return { phone: member.phone, formatted: member.phone };
-  const key = getMemberKey(member);
-  if (key && BOARD_MEMBERS_BIO[key]?.phone) {
-    return {
-      phone: BOARD_MEMBERS_BIO[key].phone,
-      formatted: BOARD_MEMBERS_BIO[key].phoneFormatted || BOARD_MEMBERS_BIO[key].phone
-    };
-  }
-  return null;
-};
+/** `tel:` link csak a számjegyekből (szóközök, kötőjelek nélkül). */
+const telHref = (phone) => `tel:${String(phone).replace(/[^+0-9]/g, '')}`;
 
 // Nyilvános partnerek és csatlakozási felhívások
 const PUBLIC_PARTNERS = [
@@ -82,7 +27,7 @@ const PUBLIC_PARTNERS = [
   {
     name: 'Itt a Te Helyed!',
     category: 'Szálláshely / Vendéglátás / Borászat',
-    description: 'Jelenjen meg vállalkozásával a Kőszegi Turisztikai Szövetség hivatalos felületén és vegyen részt a város közös turisztikai fejlesztéseiben.',
+    description: 'Jelenj meg vállalkozásoddal a Kőszegi Turisztikai Szövetség hivatalos felületén, és vegyél részt a város közös turisztikai fejlesztéseiben.',
     badge: 'Legyél Támogató Partnertag',
     url: '/tagsag',
     isCta: true
@@ -90,7 +35,7 @@ const PUBLIC_PARTNERS = [
   {
     name: 'Csatlakozz Vállalkozásoddal!',
     category: 'Kulturális & Szabadidős Szolgáltató',
-    description: 'Legyen része a kőszegi turisztikai összefogásnak! A szövetség tagjaként közös hangon, megerősítve jelenhet meg.',
+    description: 'Legyél része a kőszegi turisztikai összefogásnak! A szövetség tagjaként közös hangon, megerősítve jelenhetsz meg.',
     badge: 'Lépj be a Szövetségbe',
     url: '/tagsag',
     isCta: true
@@ -98,7 +43,7 @@ const PUBLIC_PARTNERS = [
   {
     name: 'Támogasd Kőszeg Turizmusát!',
     category: 'Pártoló & Szakmai Partnertag',
-    description: 'Dolgozzunk együtt a kőszegi turizmus jövőjén. Vegye fel velünk a kapcsolatot és csatlakozzon az egyesülethez!',
+    description: 'Dolgozzunk együtt a kőszegi turizmus jövőjén! Vedd fel velünk a kapcsolatot, és csatlakozz az egyesülethez!',
     badge: 'Városi Összefogás',
     url: '/kapcsolat',
     isCta: true
@@ -117,7 +62,7 @@ export const AboutPage = () => {
     <div className="container-page py-12 sm:py-16 space-y-16">
       <SEO
         title="Egyesületünkről &amp; Vezetőség"
-        description="Ismerje meg a Kőszegi Turisztikai Szövetség Egyesület elnökségét, tisztségviselőit, támogató tagjait és hivatalos adatait."
+        description="Ismerd meg a Kőszegi Turisztikai Szövetség Egyesület elnökségét, tisztségviselőit, támogató tagjait és hivatalos adatait."
       />
 
       <PageHeader eyebrow="Egyesületünkről" title={ORGANIZATION.legalName} description={ORGANIZATION.mission} />
@@ -150,9 +95,9 @@ export const AboutPage = () => {
                 >
                   {/* Egységes, elegáns 1/4 méretű portré kép */}
                   <div className="relative h-40 sm:h-44 w-full bg-sand-200 overflow-hidden flex items-center justify-center border-b border-sand-300 shrink-0">
-                    {getMemberPhoto(member) ? (
+                    {member.avatar_url ? (
                       <img
-                        src={getMemberPhoto(member)}
+                        src={member.avatar_url}
                         alt={member.full_name}
                         className="h-full max-h-full max-w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
                       />
@@ -184,41 +129,41 @@ export const AboutPage = () => {
                         </p>
                       )}
 
-                      {getMemberMotto(member) && (
+                      {member.motto && (
                         <blockquote className="text-xs italic font-medium text-wine-900 bg-sand-100 p-2.5 rounded-lg border-l-2 border-wine-600 my-2">
-                          {getMemberMotto(member)}
+                          {member.motto}
                         </blockquote>
                       )}
 
                       <div className="text-xs leading-relaxed text-ink-600 pt-2 border-t border-sand-200 h-32 overflow-y-auto pr-1 custom-scrollbar">
-                        <FormattedText>{getMemberBio(member)}</FormattedText>
+                        <FormattedText>{member.bio || DEFAULT_BIO}</FormattedText>
                       </div>
                     </div>
 
-                    {/* Elérhetőség */}
-                    {(member.private_email || getMemberPhone(member)) && (
+                    {/* Elérhetőség — csak a nyilvánosan vállalt adatok */}
+                    {(member.public_email || member.public_phone) && (
                       <div className="pt-3 border-t border-sand-200 space-y-1.5">
                         <div className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Elérhetőség:</div>
-                        {member.private_email && (
+                        {member.public_email && (
                           <div>
                             <a
-                              href={`mailto:${member.private_email}`}
+                              href={`mailto:${member.public_email}`}
                               className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
                             >
                               <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                              {member.private_email}
+                              {member.public_email}
                             </a>
                           </div>
                         )}
 
-                        {getMemberPhone(member) && (
+                        {member.public_phone && (
                           <div>
                             <a
-                              href={`tel:${getMemberPhone(member).phone}`}
+                              href={telHref(member.public_phone)}
                               className="inline-flex items-center gap-2 text-xs font-medium text-wine-700 hover:text-wine-900 transition-colors"
                             >
                               <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                              {getMemberPhone(member).formatted}
+                              {member.public_phone}
                             </a>
                           </div>
                         )}
@@ -317,7 +262,7 @@ export const AboutPage = () => {
           </div>
 
           <Link to="/tagsag" className="btn-primary btn-sm rounded-xl font-bold shadow-xs">
-            Csatlakozzon Vállalkozásával
+            Csatlakozz Vállalkozásoddal
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -380,7 +325,7 @@ export const AboutPage = () => {
               „Egy város akkor erős, ha a szereplői egy irányba néznek.”
             </h3>
             <p className="text-sm text-ink-600 max-w-xl leading-relaxed">
-              Szálláshely, vendéglátóhely, borászat vagy kulturális szolgáltató: a szövetség tagjaként közös felületen, közös hanggal jelenhet meg.
+              Szálláshely, vendéglátóhely, borászat vagy kulturális szolgáltató: a szövetség tagjaként közös felületen, közös hanggal jelenhetsz meg.
             </p>
           </div>
           <Link to="/tagsag" className="btn-gold btn-md whitespace-nowrap font-bold shrink-0 shadow-md">

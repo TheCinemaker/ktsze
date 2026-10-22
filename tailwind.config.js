@@ -23,6 +23,16 @@ export default {
           400: '#E2D7C7',
           500: '#C5A880'
         },
+        // Visszafogott, antik arany — ünnepélyes akcentus a borszín és homok mellé.
+        gold: {
+          50: '#FAF4E6',
+          100: '#F3E7C6',
+          200: '#E9D39A',
+          300: '#DCBE6E',
+          400: '#C9A24B',
+          500: '#A9842F',
+          600: '#8A6A22'
+        },
         ink: {
           400: '#A39288',
           500: '#7C6C63',

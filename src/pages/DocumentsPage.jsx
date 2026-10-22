@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FileText, Download, Eye, ShieldCheck, BookOpen, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { FileText, Download, Eye, ShieldCheck, BookOpen, ArrowRight, Gavel } from 'lucide-react';
 
 import { listDocuments } from '../lib/db';
 import { useAsyncData } from '../lib/useAsyncData';
@@ -18,7 +19,7 @@ export const DocumentsPage = () => {
     <div className="container-page py-12 sm:py-16 space-y-12">
       <SEO
         title="Nyilvános Dokumentumok & Alapszabály"
-        description="Tekintse meg és töltse le a Kőszegi Turisztikai Szövetség Egyesület hivatalos alapszabályát és stratégiai programfüzetét."
+        description="Tekintsd meg és töltsd le a Kőszegi Turisztikai Szövetség Egyesület hivatalos alapszabályát és stratégiai programfüzetét."
       />
 
       <PageHeader
@@ -26,6 +27,26 @@ export const DocumentsPage = () => {
         title="Nyilvános Dokumentumok"
         description="Az egyesület hivatalos alapszabálya, stratégiai városszépítési programfüzete és nyilvánosan közzétett iratai egy helyen."
       />
+
+      {/* Kereszt-hivatkozás a Határozatok tárára */}
+      <Link
+        to="/hatarozatok"
+        className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-wine-200 bg-wine-50/50 p-4 sm:p-5 transition-colors hover:border-wine-400 hover:bg-wine-50"
+      >
+        <div className="flex items-center gap-3">
+          <Gavel className="h-6 w-6 text-wine-700 shrink-0" aria-hidden="true" />
+          <div>
+            <p className="font-display text-base font-bold text-ink-900">Határozatok Tára</p>
+            <p className="text-xs text-ink-600">
+              Az egyesület közgyűlési és elnökségi határozatainak sorszámozott, nyilvános nyilvántartása.
+            </p>
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-wine-800">
+          Megnyitom
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </span>
+      </Link>
 
       {/* 1. Kiemelt Alapító és Stratégiai Dokumentumok */}
       <section className="space-y-6">

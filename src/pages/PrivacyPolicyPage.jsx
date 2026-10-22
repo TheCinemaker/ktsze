@@ -43,7 +43,7 @@ export const PrivacyPolicyPage = () => {
               <h2 className="font-display text-xl text-ink-900">1. Az Adatkezelő adatai</h2>
             </div>
             <p>
-              A <strong>{ORGANIZATION.legalName}</strong> (a továbbiakban: <em>Adatkezelő</em> vagy <em>Egyesület</em>) elkötelezett a tagok, tisztségviselők és a weboldal látogatóinak személyes adatai védelme iránt. Az adatkezelés során az Európai Parlament és a Tanács (EU) 2016/679 Rendelete (GDPR), valamint az információönrendelkezési jogról és az információszabadságról szóló 2011. évi CXII. törvény (Infotv.) rendelkezéseit 100%-ban betartjuk.
+              A <strong>{ORGANIZATION.legalName}</strong> (a továbbiakban: <em>Adatkezelő</em> vagy <em>Egyesület</em>) elkötelezett a tagok, tisztségviselők és a weboldal látogatóinak személyes adatai védelme iránt. Az adatkezelés során az Európai Parlament és a Tanács (EU) 2016/679 Rendelete (GDPR), valamint az információs önrendelkezési jogról és az információszabadságról szóló 2011. évi CXII. törvény (Infotv.) rendelkezéseinek megfelelően járunk el.
             </p>
             <dl className="grid gap-2 sm:grid-cols-2 pt-2 border-t border-sand-300 text-xs">
               <div>
@@ -56,6 +56,10 @@ export const PrivacyPolicyPage = () => {
                   <dd className="text-ink-600">{address}</dd>
                 </div>
               )}
+              <div>
+                <dt className="font-bold text-ink-900">Képviselő:</dt>
+                <dd className="text-ink-600">Drescher Gábor elnök</dd>
+              </div>
               {ORGANIZATION.email && (
                 <div>
                   <dt className="font-bold text-ink-900">E-mail kapcsolat:</dt>
@@ -66,6 +70,18 @@ export const PrivacyPolicyPage = () => {
                 <div>
                   <dt className="font-bold text-ink-900">Adószám:</dt>
                   <dd className="text-ink-600">{ORGANIZATION.taxNumber}</dd>
+                </div>
+              )}
+              {ORGANIZATION.registrationNumber && (
+                <div>
+                  <dt className="font-bold text-ink-900">Nyilvántartási szám:</dt>
+                  <dd className="text-ink-600">{ORGANIZATION.registrationNumber}</dd>
+                </div>
+              )}
+              {ORGANIZATION.courtRegistration && (
+                <div>
+                  <dt className="font-bold text-ink-900">Bejegyző bíróság:</dt>
+                  <dd className="text-ink-600">{ORGANIZATION.courtRegistration}</dd>
                 </div>
               )}
             </dl>
@@ -92,6 +108,9 @@ export const PrivacyPolicyPage = () => {
               <li>
                 <strong>Munkacsoport-jelentkezések kezelése (GDPR 6. cikk (1) a) pont - Hozzájárulás)</strong>: Az egyesületi munkacsoportokhoz való önkéntes csatlakozási kérelmek elbírálása és a szakmai munkaszervezés.
               </li>
+              <li>
+                <strong>Anonim látogatottsági statisztika</strong>: A weboldal fejlesztéséhez összesített, <strong>személyes azonosító nélküli</strong> látogatottsági adatokat (megtekintett oldal, eszköztípus) tartunk nyilván. Ezek az adatok önmagukban senkit nem azonosítanak, így nem minősülnek személyes adatnak; sem e-mail-címet, sem IP-címet nem tárolunk hozzájuk, és nem követjük a látogatókat oldalak között.
+              </li>
             </ul>
           </section>
 
@@ -116,6 +135,12 @@ export const PrivacyPolicyPage = () => {
                 <p className="text-ink-600">Tagdíjfizetési státusz, összegek, befizetés dátuma, feltöltött banki átutalási igazolások (kizárólag zárt tárolóban).</p>
               </div>
             </div>
+            <div className="pt-2 border-t border-sand-300">
+              <h3 className="font-bold text-ink-900 text-sm mb-1">Az adatkezelés időtartama</h3>
+              <p className="text-xs text-ink-600">
+                A tagsági adatokat a tagsági jogviszony fennállása alatt, majd annak megszűnését követően a jogszabályi (pl. számviteli, elévülési) kötelezettségek teljesítéséig kezeljük, ezt követően töröljük vagy anonimizáljuk. A számviteli bizonylatokat a hatályos jogszabály szerinti ideig (jellemzően 8 év) őrizzük. A tag kérésére adatait a jogviszony megszűnése után — a kötelező megőrzési körön kívül — töröljük.
+              </p>
+            </div>
           </section>
 
           {/* 4. Adatfeldolgozók */}
@@ -127,29 +152,43 @@ export const PrivacyPolicyPage = () => {
               <h2 className="font-display text-xl text-ink-900">4. Adatfeldolgozók és technológiai partnerek</h2>
             </div>
             <p>
-              Az Egyesület a Platform biztonságos üzemeltetéséhez az alábbi minősített adatfeldolgozókat veszi igénybe. Minden partner megfelel a GDPR szigorú követelményeinek:
+              Az Egyesület a weboldal és a tagi portál üzemeltetéséhez az alábbi adatfeldolgozókat veszi igénybe:
             </p>
             <div className="space-y-3 pt-2">
               <div className="p-4 rounded-xl border border-sand-300 bg-white">
                 <h3 className="font-bold text-ink-900 text-sm">1. Supabase Inc. (Adatbázis, Autentikáció &amp; Felhő Tárhely)</h3>
                 <p className="text-xs text-ink-600 mt-1">
-                  Szolgáltatás: Felhőalapú PostgreSQL adatbázis, jelszó-hashing és zárt dokumentumtároló (EU Frankfurt régió / SOC2 Type 2 tanúsítvány).
+                  Szolgáltatás: Felhőalapú PostgreSQL adatbázis, jelszó-hashing és zárt dokumentumtároló (EU, Frankfurt régió).
                 </p>
               </div>
 
               <div className="p-4 rounded-xl border border-sand-300 bg-white">
                 <h3 className="font-bold text-ink-900 text-sm">2. Netlify Inc. (Weboldal tárhely &amp; CDN hálózat)</h3>
                 <p className="text-xs text-ink-600 mt-1">
-                  Szolgáltatás: Globális biztonságos webszerver hálózat, HTTPS SSL titkosítás.
+                  Szolgáltatás: Globális webszerver-hálózat, HTTPS/SSL titkosítás. Székhely: USA.
                 </p>
               </div>
 
               <div className="p-4 rounded-xl border border-sand-300 bg-white">
-                <h3 className="font-bold text-ink-900 text-sm">3. SA Software &amp; Network Solutions (Informatikai Rendszergazda)</h3>
+                <h3 className="font-bold text-ink-900 text-sm">3. Resend, Inc. (E-mail kézbesítés)</h3>
                 <p className="text-xs text-ink-600 mt-1">
-                  Képviselő: Avar Szilveszter | Szolgáltatás: Rendszerfejlesztés, technikai karbantartás és üzemeltetési SLA felügyelet.
+                  Szolgáltatás: Rendszer- és hírlevél-e-mailek kézbesítése (pl. üdvözlő levél, értesítések). Kezelt adat: címzett neve és e-mail címe. Székhely: USA.
                 </p>
               </div>
+
+              <div className="p-4 rounded-xl border border-sand-300 bg-white">
+                <h3 className="font-bold text-ink-900 text-sm">4. SA Software &amp; Network Solutions (Informatikai rendszergazda)</h3>
+                <p className="text-xs text-ink-600 mt-1">
+                  Képviselő: Avar Szilveszter | Szolgáltatás: Rendszerfejlesztés, technikai karbantartás és üzemeltetés.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 p-4 rounded-xl bg-sand-100 border border-sand-300">
+              <h3 className="font-bold text-ink-900 text-sm">Nemzetközi adattovábbítás</h3>
+              <p className="text-xs text-ink-600 mt-1">
+                Az USA-ban székhellyel rendelkező szolgáltatók (Netlify, Resend) esetében az adattovábbítás a GDPR szerinti megfelelő garanciák — így az Európai Bizottság által elfogadott általános szerződési feltételek (SCC) — alapján történik. Az Egyesület törekszik a lehető legkevesebb adat továbbítására.
+              </p>
             </div>
           </section>
 
@@ -162,14 +201,15 @@ export const PrivacyPolicyPage = () => {
               <h2 className="font-display text-xl text-ink-900">5. Sütik (Cookie-k) és Munkamenet Tárolás</h2>
             </div>
             <p>
-              A weboldal <strong>NEM HASZNÁL reklámcélú, analitikai vagy harmadik féltől származó nyomkövető sütiket</strong>.
+              A weboldal <strong>NEM használ reklámcélú vagy harmadik féltől származó nyomkövető sütiket</strong>, és nem követi a látogatókat oldalak között (nincs Google Analytics, Facebook Pixel vagy hasonló megoldás).
             </p>
             <p>
-              Kizárólag <strong>technikai szempontból elengedhetetlen (munkamenet) sütiket és tárolókat</strong> használunk:
+              Kizárólag <strong>technikai szempontból szükséges (munkamenet) sütiket és böngészőben tárolt adatokat</strong> használunk:
             </p>
             <ul className="list-disc pl-5 text-xs text-ink-600 space-y-1">
               <li><strong>Supabase Auth Token (localStorage/sessionStorage)</strong>: A belépett tag munkamenetének megőrzése böngészés közben. Kijelentkezéskor automatikusan törlődik.</li>
               <li><strong>Süti hozzájárulás állapota</strong>: Annak tárolása, hogy a látogató elfogadta a tájékoztatót.</li>
+              <li><strong>Anonim látogatottsági napló (helyi tartalék)</strong>: Személyes azonosító nélküli, összesített statisztikához (megtekintett oldal, eszköztípus). Nem tartalmaz e-mailt, nevet vagy IP-címet, és nem alkalmas a látogató azonosítására.</li>
             </ul>
           </section>
 
@@ -185,16 +225,16 @@ export const PrivacyPolicyPage = () => {
               Az Egyesület tagjai és a weboldal használói bármikor élhetnek az alábbi jogaikkal:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-xs">
-              <li><strong>Tájékoztatáshoz és hozzáféréshez való jog</strong>: Kérheti a róla kezelt adatok másolatát.</li>
-              <li><strong>Helyesbítéshez való jog</strong>: Kérheti a pontatlan adatok javítását (a tagi felületen közvetlenül is módosítható).</li>
-              <li><strong>Törléshez való jog („elfeledtetés”)</strong>: A tagsági jogviszony megszűnése után kérheti adatainak törlését.</li>
+              <li><strong>Tájékoztatáshoz és hozzáféréshez való jog</strong>: Kérheted a rólad kezelt adatok másolatát.</li>
+              <li><strong>Helyesbítéshez való jog</strong>: Kérheted a pontatlan adatok javítását (a tagi felületen közvetlenül is módosíthatod).</li>
+              <li><strong>Törléshez való jog („elfeledtetés”)</strong>: A tagsági jogviszony megszűnése után kérheted az adataid törlését.</li>
               <li><strong>Adatkezelés korlátozása és tiltakozás</strong>.</li>
             </ul>
 
             <div className="mt-6 p-4 rounded-xl bg-sand-100 border border-sand-300 space-y-2">
               <h3 className="font-bold text-ink-900 text-sm">Felügyeleti Hatóság (NAIH) Panaszkezelés:</h3>
               <p className="text-xs text-ink-600">
-                Amennyiben úgy érzi, hogy az Adatkezelő megsértette a jogait, panaszt tehet a Nemzeti Adatvédelmi és Információszabadság Hatóságnál:
+                Amennyiben úgy érzed, hogy az Adatkezelő megsértette a jogaidat, panaszt tehetsz a Nemzeti Adatvédelmi és Információszabadság Hatóságnál:
               </p>
               <div className="text-xs text-ink-800 space-y-0.5 font-mono pt-1">
                 <p><strong>NAIH</strong> | 1055 Budapest, Falk Miksa utca 9-11.</p>

@@ -31,13 +31,18 @@ const saveLocalAnalytics = (events) => {
   }
 };
 
-/** Oldalmegtekintés vagy kattintás rögzítése */
-export const trackPageView = async (path, title = null, userEmail = null) => {
+/**
+ * Oldalmegtekintés rögzítése — ANONIM, aggregált látogatottsághoz.
+ *
+ * SZÁNDÉKOSAN nem tárolunk személyes azonosítót (sem e-mailt, sem IP-t):
+ * csak az útvonalat és az eszköztípust. Így a mérés személyes adat nélkül,
+ * adatvédelmi szempontból tisztán végezhető, és a tájékoztató is ezt mondja.
+ */
+export const trackPageView = async (path, title = null) => {
   const event = {
     id: `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     path: path || window.location.pathname,
     title: title || document.title || path,
-    user_email: userEmail || null,
     device_type: getDeviceType(),
     created_at: new Date().toISOString()
   };
@@ -94,7 +99,6 @@ export const getAnalyticsStats = async () => {
   let desktopCount = 0;
 
   const pageCounts = {};
-  const userLoginMap = {};
 
   events.forEach((evt) => {
     const evtDate = new Date(evt.created_at);
@@ -110,21 +114,12 @@ export const getAnalyticsStats = async () => {
     // Oldal számláló
     const pathKey = evt.path || '/';
     pageCounts[pathKey] = (pageCounts[pathKey] || 0) + 1;
-
-    // Tagok belépési számlálója
-    if (evt.user_email) {
-      userLoginMap[evt.user_email] = (userLoginMap[evt.user_email] || 0) + 1;
-    }
   });
 
   const topPages = Object.entries(pageCounts)
     .map(([path, count]) => ({ path, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
-
-  const topUsers = Object.entries(userLoginMap)
-    .map(([email, count]) => ({ email, count }))
-    .sort((a, b) => b.count - a.count);
 
   return {
     totalEvents: events.length,
@@ -134,7 +129,6 @@ export const getAnalyticsStats = async () => {
     mobileCount,
     desktopCount,
     topPages,
-    topUsers,
     recentEvents: events.slice(0, 20)
   };
 };

@@ -12,6 +12,7 @@ import { WorkgroupProjectsSection } from '../components/workgroups/WorkgroupProj
 import { getWorkgroupDonationStats, fetchWorkgroupDonationStats } from '../lib/barion';
 import { formatHuf } from '../lib/format';
 import { supabase } from '../lib/supabaseClient';
+import { FEATURES } from '../config/organization';
 
 export const WorkgroupDetailPage = () => {
   const { slug } = useParams();
@@ -27,7 +28,8 @@ export const WorkgroupDetailPage = () => {
   );
 
   const workgroup = group.data;
-  const isCrowdfundingEnabled = Boolean(workgroup?.enable_crowdfunding);
+  // Az online adománygyűjtés központilag kikapcsolva élesítésig (FEATURES.donations).
+  const isCrowdfundingEnabled = FEATURES.donations && Boolean(workgroup?.enable_crowdfunding);
   const [donationStats, setDonationStats] = useState(null);
 
   const approvedMembersData = useAsyncData(

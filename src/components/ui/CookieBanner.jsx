@@ -29,7 +29,7 @@ export const CookieBanner = () => {
           <div className="space-y-1">
             <h3 className="font-display text-sm font-bold text-white">Sütik &amp; Adatvédelem</h3>
             <p className="text-xs text-sand-300 leading-relaxed">
-              Az oldal kizárólag technikai szempontból elengedhetetlen sütiket (bejelentkezési munkamenet) használ. Reklám- vagy nyomkövető sütiket nem alkalmazunk.
+              Az oldal technikai sütiket (bejelentkezési munkamenet) és névtelen, személyes azonosító nélküli látogatottsági statisztikát használ. Reklám- vagy nyomkövető sütiket nem alkalmazunk.
             </p>
           </div>
         </div>

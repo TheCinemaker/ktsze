@@ -7,10 +7,12 @@ import { FormattedText } from '../ui';
 import { getWorkgroupDonationStats, fetchWorkgroupDonationStats } from '../../lib/barion';
 import { formatHuf } from '../../lib/format';
 import { supabase } from '../../lib/supabaseClient';
+import { FEATURES } from '../../config/organization';
 
 export const WorkgroupCard = ({ workgroup, stats, membership, onChanged }) => {
   const [donationOpen, setDonationOpen] = useState(false);
-  const isCrowdfundingEnabled = Boolean(workgroup.enable_crowdfunding);
+  // Az online adománygyűjtés központilag kikapcsolva élesítésig (FEATURES.donations).
+  const isCrowdfundingEnabled = FEATURES.donations && Boolean(workgroup.enable_crowdfunding);
   const [donationStats, setDonationStats] = useState(() =>
     isCrowdfundingEnabled ? getWorkgroupDonationStats(workgroup.id, workgroup.target_amount || 250000) : null
   );

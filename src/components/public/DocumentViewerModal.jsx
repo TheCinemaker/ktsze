@@ -8,10 +8,29 @@ export const DocumentViewerModal = ({ doc, open, onClose }) => {
 
   if (!doc) return null;
 
-  const handleCopyText = () => {
-    navigator.clipboard.writeText(doc.fullText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // HTML-escape — hogy a dokumentum szövege (akár DB-ből) ne tudjon kódot
+  // injektálni a nyomtatási ablakba vagy a title-be.
+  const escapeHtml = (value) =>
+    String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const handleCopyText = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(doc.fullText || '');
+      } else {
+        throw new Error('A vágólap nem elérhető.');
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Csendes visszajelzés helyett: a felhasználó a Letöltés/Nyomtatás gombot használhatja.
+      window.alert('A szöveg másolása nem sikerült. Használd a Letöltés vagy a Nyomtatás gombot.');
+    }
   };
 
   const handlePrint = () => {
@@ -20,7 +39,7 @@ export const DocumentViewerModal = ({ doc, open, onClose }) => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>${doc.title}</title>
+          <title>${escapeHtml(doc.title)}</title>
           <style>
             body { font-family: sans-serif; line-height: 1.6; padding: 40px; color: #1e1b26; }
             h1 { color: #701a2e; border-bottom: 2px solid #701a2e; padding-bottom: 10px; }
@@ -29,9 +48,9 @@ export const DocumentViewerModal = ({ doc, open, onClose }) => {
           </style>
         </head>
         <body>
-          <h1>${doc.title}</h1>
-          <div class="meta">Kelt: ${doc.date} | ${doc.category}</div>
-          <pre>${doc.fullText}</pre>
+          <h1>${escapeHtml(doc.title)}</h1>
+          <div class="meta">Kelt: ${escapeHtml(doc.date)} | ${escapeHtml(doc.category)}</div>
+          <pre>${escapeHtml(doc.fullText)}</pre>
         </body>
       </html>
     `);
@@ -46,7 +65,7 @@ export const DocumentViewerModal = ({ doc, open, onClose }) => {
       onClose={onClose}
       title={doc.title}
       description={`${doc.category} • ${doc.date}`}
-      maxWidth="max-w-4xl"
+      size="lg"
     >
       <div className="space-y-4">
         {/* Fejléc sáv & Akciógombok */}

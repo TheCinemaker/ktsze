@@ -140,8 +140,18 @@
            hover:bg-wine-50 hover:border-wine-600;
   }
 
+  /* Ünnepélyes arany gomb — kiemelt csatlakozási/CTA helyekre. */
+  .btn-gold {
+    @apply btn border-gold-400 bg-gold-300 text-wine-900
+           hover:bg-gold-400 hover:border-gold-500;
+  }
+
   .btn-sm {
     @apply px-3 py-1.5 text-xs;
+  }
+
+  .btn-md {
+    @apply px-5 py-2.5 text-sm;
   }
 
   /* --- Felületek --- */

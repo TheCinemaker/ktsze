@@ -30,6 +30,9 @@ lerna-debug.log*
 # A már követett példányt egyszer ki kell venni:  git rm --cached HOZZAFERESEK.md
 HOZZAFERESEK.md
 
+# Helyi, egyszeri segédszkriptek — nem része a projektnek
+scratch/
+
 # Environment files
 .env
 .env.local

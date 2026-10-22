@@ -1,13 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Trash2, FileText, Upload, Download } from 'lucide-react';
+import { Plus, Trash2, FileText, Upload, Download, Pencil } from 'lucide-react';
 
-import { listDocuments, createDocument, deleteDocument, getDocumentUrl } from '../../lib/db';
+import { listDocuments, createDocument, updateDocument, deleteDocument, getDocumentUrl } from '../../lib/db';
 import { useAsyncData } from '../../lib/useAsyncData';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import {
   EmptyState, LoadingBlock, ErrorBlock, Modal, ConfirmDialog,
-  TextInput, TextArea, Select, Spinner
+  TextInput, TextArea, Select, Spinner, Checkbox
 } from '../ui';
 /** Aláírt, időlimitált linken nyitja meg a fájlt. */
 const DocumentOpenButton = ({ doc }) => {
@@ -47,16 +47,42 @@ const ACCESS_OPTIONS = [
   { value: 'admin', label: 'Rendszergazda' }
 ];
 
+const BODY_TYPE_OPTIONS = [
+  { value: '', label: '— Nem testületi irat —' },
+  { value: 'kozgyules', label: 'Közgyűlés' },
+  { value: 'elnokseg', label: 'Elnökségi ülés' },
+  { value: 'munkamegbeszeles', label: 'Munkamegbeszélés' },
+  { value: 'egyeb', label: 'Egyéb' }
+];
+
+export const BODY_TYPE_LABELS = {
+  kozgyules: 'Közgyűlés',
+  elnokseg: 'Elnökségi ülés',
+  munkamegbeszeles: 'Munkamegbeszélés',
+  egyeb: 'Egyéb'
+};
+
 const MAX_DOC_BYTES = 20 * 1024 * 1024;
 
-const UploadModal = ({ open, onClose, onSaved }) => {
+const UploadModal = ({ open, onClose, onSaved, editing }) => {
   const { profile } = useAuth();
   const toast = useToast();
   const fileRef = useRef(null);
 
-  const [form, setForm] = useState({ title: '', category: '', description: '', access_level: 'members' });
+  const [form, setForm] = useState({
+    title: editing?.title || '',
+    category: editing?.category || '',
+    description: editing?.description || '',
+    access_level: editing?.access_level || 'members',
+    document_date: editing?.document_date || '',
+    reference_no: editing?.reference_no || '',
+    body_type: editing?.body_type || '',
+    is_official: editing?.is_official || false
+  });
   const [file, setFile] = useState(null);
   const [pending, setPending] = useState(false);
+
+  const hasExistingFile = Boolean(editing?.storage_path || editing?.drive_url);
 
   const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
 
@@ -82,8 +108,13 @@ const UploadModal = ({ open, onClose, onSaved }) => {
     }
     setPending(true);
     try {
-      await createDocument(form, file, profile?.id || null);
-      toast.success(file ? 'A dokumentumot feltöltöttük.' : 'A dokumentum rekord létrejött (fájl nélkül).');
+      if (editing) {
+        await updateDocument(editing, form, file);
+        toast.success('A dokumentumot módosítottuk.');
+      } else {
+        await createDocument(form, file, profile?.id || null);
+        toast.success(file ? 'A dokumentumot feltöltöttük.' : 'A dokumentum rekord létrejött (fájl nélkül).');
+      }
       await onSaved();
       onClose();
     } catch (err) {
@@ -97,14 +128,20 @@ const UploadModal = ({ open, onClose, onSaved }) => {
     <Modal
       open={open}
       onClose={onClose}
-      title="Dokumentum feltöltése"
+      title={editing ? 'Dokumentum szerkesztése' : 'Dokumentum feltöltése'}
       footer={
         <>
           <button type="button" className="btn-secondary" onClick={onClose} disabled={pending}>
             Mégsem
           </button>
           <button type="button" className="btn-primary" onClick={handleSave} disabled={pending}>
-            {pending ? <Spinner label="Feltöltés…" className="text-white" /> : 'Feltöltés'}
+            {pending ? (
+              <Spinner label="Mentés…" className="text-white" />
+            ) : editing ? (
+              'Mentés'
+            ) : (
+              'Feltöltés'
+            )}
           </button>
         </>
       }
@@ -124,17 +161,22 @@ const UploadModal = ({ open, onClose, onSaved }) => {
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" onClick={() => fileRef.current?.click()} className="btn-secondary btn-sm">
               <Upload className="h-4 w-4" aria-hidden="true" />
-              Fájl kiválasztása
+              {editing && hasExistingFile ? 'Fájl cseréje' : 'Fájl kiválasztása'}
             </button>
             {file ? (
               <span className="text-sm text-ink-900">{file.name}</span>
+            ) : editing && hasExistingFile ? (
+              <span className="text-sm text-positive-700">Jelenlegi fájl megmarad</span>
             ) : (
               <span className="text-sm text-ink-500">Nincs kiválasztva</span>
             )}
           </div>
           <p className="hint">
-            Legfeljebb 20 MB. Fájl nélkül is létrehozható a rekord — ilyenkor a listában jelezzük, hogy nincs
-            letölthető állomány.
+            {editing
+              ? hasExistingFile
+                ? 'Legfeljebb 20 MB. Új fájl választása lecseréli a jelenlegit; ha nem választasz, a meglévő marad.'
+                : 'Legfeljebb 20 MB. Most tölthetsz fel fájlt a rekordhoz (pl. az elfelejtett PDF-et).'
+              : 'Legfeljebb 20 MB. Fájl nélkül is létrehozható a rekord — ilyenkor a listában jelezzük, hogy nincs letölthető állomány.'}
           </p>
         </div>
 
@@ -156,6 +198,40 @@ const UploadModal = ({ open, onClose, onSaved }) => {
         </div>
 
         <TextArea label="Leírás" value={form.description} onChange={set('description')} rows={2} />
+
+        {/* Hivatalos irat metaadatok (jegyzőkönyvek, határozatok, beszámolók) */}
+        <div className="rounded-xl border border-sand-300 bg-sand-50/60 p-4 space-y-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-wine-800">
+            Hivatalos irat adatai (opcionális)
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextInput
+              label="Irat kelte / ülés napja"
+              type="date"
+              value={form.document_date}
+              onChange={set('document_date')}
+              hint="A tényleges dátum, nem a feltöltésé."
+            />
+            <TextInput
+              label="Iktató- / határozatszám"
+              value={form.reference_no}
+              onChange={set('reference_no')}
+              hint="Pl. 2/2026. (VI. 30.)"
+            />
+          </div>
+          <Select
+            label="Kiállító testület"
+            value={form.body_type}
+            onChange={set('body_type')}
+            options={BODY_TYPE_OPTIONS}
+          />
+          <Checkbox
+            label="Hitelesített hivatalos irat"
+            hint="Jelöld be, ha ez aláírt/záradékolt hivatalos dokumentum (nem munkaanyag)."
+            checked={form.is_official}
+            onChange={(e) => setForm((prev) => ({ ...prev, is_official: e.target.checked }))}
+          />
+        </div>
       </div>
     </Modal>
   );
@@ -165,6 +241,7 @@ export const DocumentAdmin = () => {
   const toast = useToast();
   const { data, loading, error, reload } = useAsyncData(() => listDocuments());
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [deletePending, setDeletePending] = useState(false);
 
@@ -216,11 +293,15 @@ export const DocumentAdmin = () => {
               <div className="min-w-0 flex-1">
                 <h3 className="font-display text-base text-ink-900">{doc.title}</h3>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-500">
+                  {doc.reference_no && <span className="badge-neutral font-mono">{doc.reference_no}</span>}
+                  {doc.body_type && <span className="badge-neutral">{BODY_TYPE_LABELS[doc.body_type] || doc.body_type}</span>}
+                  {doc.document_date && <span>{doc.document_date}</span>}
                   {doc.category && <span className="badge-neutral">{doc.category}</span>}
                   <span className="badge-neutral">
                     {ACCESS_OPTIONS.find((o) => o.value === doc.access_level)?.label.split(' —')[0] ||
                       doc.access_level}
                   </span>
+                  {doc.is_official && <span className="badge-neutral text-wine-800">Hitelesített</span>}
                   {!doc.storage_path && !doc.drive_url && (
                     <span className="badge-caution">Nincs feltöltött fájl</span>
                   )}
@@ -230,6 +311,14 @@ export const DocumentAdmin = () => {
 
               <div className="flex shrink-0 gap-1.5">
                 <DocumentOpenButton doc={doc} />
+                <button
+                  type="button"
+                  onClick={() => setEditing(doc)}
+                  className="btn-secondary btn-sm"
+                  aria-label={`${doc.title} szerkesztése`}
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
                 <button
                   type="button"
                   onClick={() => setDeleting(doc)}
@@ -244,7 +333,17 @@ export const DocumentAdmin = () => {
         </ul>
       )}
 
-      {uploadOpen && <UploadModal open onClose={() => setUploadOpen(false)} onSaved={reload} />}
+      {(uploadOpen || editing) && (
+        <UploadModal
+          open
+          editing={editing}
+          onClose={() => {
+            setUploadOpen(false);
+            setEditing(null);
+          }}
+          onSaved={reload}
+        />
+      )}
 
       <ConfirmDialog
         open={Boolean(deleting)}

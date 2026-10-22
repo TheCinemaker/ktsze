@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Smartphone, Monitor, TrendingUp, Users, RefreshCw, BarChart2, CheckCircle2 } from 'lucide-react';
+import { Eye, Smartphone, Monitor, TrendingUp, RefreshCw, BarChart2, CheckCircle2 } from 'lucide-react';
 import { useAsyncData } from '../../lib/useAsyncData';
 import { getAnalyticsStats } from '../../lib/analytics';
 import { LoadingBlock, ErrorBlock } from '../ui';
@@ -11,14 +11,12 @@ export const SiteAnalyticsAdmin = () => {
   if (error) return <ErrorBlock message={error} onRetry={reload} />;
 
   const {
-    totalEvents = 0,
     todayViews = 0,
     weekViews = 0,
     monthViews = 0,
     mobileCount = 0,
     desktopCount = 0,
     topPages = [],
-    topUsers = [],
     recentEvents = []
   } = stats || {};
 
@@ -47,10 +45,10 @@ export const SiteAnalyticsAdmin = () => {
         <div>
           <h3 className="font-bold text-ink-900 text-lg flex items-center gap-2">
             <BarChart2 className="h-5 w-5 text-wine-700" />
-            Weboldal Látogatottság &amp; Tagi Aktivitás Analitika
+            Weboldal Látogatottság (anonim)
           </h3>
           <p className="text-xs text-ink-600">
-            Valós idejű látogatottsági adatok, kattintások és tagi aktiváció nyomon követése.
+            Aggregált, személyes azonosító nélküli látogatottsági adatok — oldalanként és eszköztípus szerint.
           </p>
         </div>
         <button
@@ -114,8 +112,8 @@ export const SiteAnalyticsAdmin = () => {
         </div>
       </div>
 
-      {/* Részletes bontások */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Részletes bontások — anonim, aggregált (tagi azonosítás nélkül) */}
+      <div>
         {/* Legnépszerűbb Oldalak */}
         <div className="p-5 rounded-2xl bg-white border border-sand-300 shadow-xs space-y-4">
           <h4 className="font-bold text-ink-900 text-sm uppercase tracking-wider flex items-center gap-2">
@@ -148,33 +146,6 @@ export const SiteAnalyticsAdmin = () => {
           )}
         </div>
 
-        {/* Legaktívabb Belépett Tagok */}
-        <div className="p-5 rounded-2xl bg-white border border-sand-300 shadow-xs space-y-4">
-          <h4 className="font-bold text-ink-900 text-sm uppercase tracking-wider flex items-center gap-2">
-            <Users className="h-4 w-4 text-emerald-700" />
-            Legaktívabb Belépett Tagjaink
-          </h4>
-
-          {topUsers.length === 0 ? (
-            <p className="text-xs text-ink-500">Még egyetlen bejelentkezett tag sem végzett aktivitást.</p>
-          ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {topUsers.map((u, idx) => (
-                <div
-                  key={idx}
-                  className="p-2.5 rounded-xl border border-sand-200 bg-sand-50/50 flex justify-between items-center text-xs"
-                >
-                  <div className="font-bold text-ink-900 truncate max-w-[240px]">
-                    {u.email}
-                  </div>
-                  <div className="text-emerald-800 font-bold font-mono bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 text-[11px]">
-                    {u.count} művelet
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Legutóbbi Események Naplója */}
@@ -190,7 +161,6 @@ export const SiteAnalyticsAdmin = () => {
               <tr className="border-b border-sand-300 text-left text-ink-500 bg-sand-50">
                 <th className="p-2">Időpont</th>
                 <th className="p-2">Oldal</th>
-                <th className="p-2">Felhasználó</th>
                 <th className="p-2">Készülék</th>
               </tr>
             </thead>
@@ -201,7 +171,6 @@ export const SiteAnalyticsAdmin = () => {
                     {evt.created_at ? new Date(evt.created_at).toLocaleTimeString('hu-HU') : '—'}
                   </td>
                   <td className="p-2 font-bold text-wine-800">{evt.path}</td>
-                  <td className="p-2 text-ink-800">{evt.user_email || '— Vendég / Anonim —'}</td>
                   <td className="p-2 uppercase text-[10px] font-bold text-ink-600">{evt.device_type}</td>
                 </tr>
               ))}
